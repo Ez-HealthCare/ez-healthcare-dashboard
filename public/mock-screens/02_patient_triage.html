@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#0D9488",
+            "primary-dark": "#0f766e",
+            "primary-light": "#F0FDFA",
+            background: "#F8FAFC"
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            display: ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    @layer base {
+      html, body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #F8FAFC;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 16px);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] font-sans text-slate-900 min-h-screen flex flex-col antialiased">
+<!-- Step Navigation / Header -->
+<header class="fixed top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md pt-safe border-b border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+<div class="max-w-[420px] mx-auto px-4 h-14 flex items-center justify-between">
+<button aria-label="Quay lại" class="w-9 h-9 -ml-1 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition-all" id="prev-step-btn">
+<span class="material-symbols-outlined text-[24px]">chevron_left</span>
+</button>
+<!-- Interactive Step Switcher Pill -->
+<div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-full text-xs font-semibold text-slate-500">
+<button class="px-2.5 py-1 rounded-full bg-white text-teal-700 shadow-xs transition-all" id="pill-step-1" onclick="setStep(1)" type="button">Bước 1</button>
+<button class="px-2.5 py-1 rounded-full hover:text-slate-800 transition-all" id="pill-step-2" onclick="setStep(2)" type="button">Bước 2</button>
+<button class="px-2.5 py-1 rounded-full hover:text-slate-800 transition-all" id="pill-step-3" onclick="setStep(3)" type="button">Bước 3</button>
+</div>
+<button aria-label="Đóng" class="w-9 h-9 -mr-1 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Segmented 3-Step Progress Bar -->
+<div class="max-w-[420px] mx-auto px-4 pb-2.5 pt-0.5">
+<div class="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1.5">
+<span class="text-teal-700 font-bold uppercase tracking-wider text-[11px]" id="step-indicator-label">Bước 1/3: Khảo sát triệu chứng</span>
+<span class="text-slate-400 font-medium" id="step-percent">33%</span>
+</div>
+<div class="grid grid-cols-3 gap-1.5 h-1.5 w-full">
+<div class="bg-[#0D9488] h-full rounded-full transition-all duration-300" id="bar-seg-1"></div>
+<div class="bg-slate-200 h-full rounded-full transition-all duration-300" id="bar-seg-2"></div>
+<div class="bg-slate-200 h-full rounded-full transition-all duration-300" id="bar-seg-3"></div>
+</div>
+</div>
+</header>
+<!-- Main Screen View Container (390px Mobile Viewport Focused) -->
+<main class="flex-1 flex flex-col w-full max-w-[420px] mx-auto pt-[112px] pb-[110px] px-4">
+<!-- STEP 1: Khảo sát triệu chứng (ACTIVE) -->
+<div class="flex flex-col flex-1 space-y-5 animate-[fadeIn_0.25s_ease-out]" id="step-1-content">
+<!-- Headline & Subtitle -->
+<div class="space-y-1.5 pt-1">
+<h1 class="font-display text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+<span>🤔</span> Bạn đang thấy gì?
+        </h1>
+<p class="text-slate-500 text-[13.5px] leading-relaxed">
+          Chọn các triệu chứng bạn đang gặp phải để hệ thống AI sắp xếp chuyên khoa phù hợp.
+        </p>
+</div>
+<!-- Clean Search Input -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-teal-100 shadow-xs transition-all" placeholder="Tìm kiếm triệu chứng..." type="text"/>
+</div>
+<!-- Large Comfortable Tappable Chips (Min 48px height, rounded-2xl) -->
+<div class="space-y-2 pt-1">
+<div class="text-[12px] font-semibold text-slate-400 uppercase tracking-wider">Gợi ý phổ biến</div>
+<div class="flex flex-wrap gap-2.5">
+<!-- Selected Chip 1 -->
+<button class="symptom-chip group flex items-center gap-2 h-12 px-4 rounded-2xl bg-[#F0FDFA] border-2 border-[#0D9488] text-[#0D9488] text-[14px] font-semibold shadow-xs transition-all active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px] text-[#0D9488] font-bold">check</span>
+<span>Sốt cao</span>
+</button>
+<!-- Selected Chip 2 -->
+<button class="symptom-chip group flex items-center gap-2 h-12 px-4 rounded-2xl bg-[#F0FDFA] border-2 border-[#0D9488] text-[#0D9488] text-[14px] font-semibold shadow-xs transition-all active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px] text-[#0D9488] font-bold">check</span>
+<span>Đau thượng vị</span>
+</button>
+<!-- Unselected Chips -->
+<button class="symptom-chip group flex items-center gap-2 h-12 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 text-[14px] font-medium hover:border-slate-300 hover:bg-slate-50/50 active:scale-95 transition-all shadow-xs" type="button">
+<span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-slate-600">add</span>
+<span>Đau đầu / Chóng mặt</span>
+</button>
+<button class="symptom-chip group flex items-center gap-2 h-12 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 text-[14px] font-medium hover:border-slate-300 hover:bg-slate-50/50 active:scale-95 transition-all shadow-xs" type="button">
+<span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-slate-600">add</span>
+<span>Khó thở</span>
+</button>
+<button class="symptom-chip group flex items-center gap-2 h-12 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 text-[14px] font-medium hover:border-slate-300 hover:bg-slate-50/50 active:scale-95 transition-all shadow-xs" type="button">
+<span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-slate-600">add</span>
+<span>Buồn nôn &amp; Nôn</span>
+</button>
+<button class="symptom-chip group flex items-center gap-2 h-12 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 text-[14px] font-medium hover:border-slate-300 hover:bg-slate-50/50 active:scale-95 transition-all shadow-xs" type="button">
+<span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-slate-600">add</span>
+<span>Đau mỏi khớp</span>
+</button>
+<button class="symptom-chip group flex items-center gap-2 h-12 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 text-[14px] font-medium hover:border-slate-300 hover:bg-slate-50/50 active:scale-95 transition-all shadow-xs" type="button">
+<span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-slate-600">add</span>
+<span>Mệt mỏi kéo dài</span>
+</button>
+<button class="symptom-chip group flex items-center gap-2 h-12 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 text-[14px] font-medium hover:border-slate-300 hover:bg-slate-50/50 active:scale-95 transition-all shadow-xs" type="button">
+<span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-slate-600">add</span>
+<span>Ho khan / Đau họng</span>
+</button>
+</div>
+</div>
+<!-- Subtle Next Step Teaser -->
+<div class="mt-auto pt-4 flex items-center justify-center gap-2 text-center text-xs text-slate-400">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+<span>Bước 2 sẽ kiểm tra điều kiện lâm sàng • Bước 3 tạo lộ trình</span>
+</div>
+</div>
+<!-- STEP 2: Sàng lọc lâm sàng (Hidden by default, clean one-step view) -->
+<div class="hidden flex-col flex-1 space-y-6 animate-[fadeIn_0.25s_ease-out]" id="step-2-content">
+<div class="space-y-1.5 pt-1">
+<h1 class="font-display text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+<span>📋</span> Điều kiện cận lâm sàng
+        </h1>
+<p class="text-slate-500 text-[13.5px] leading-relaxed">
+          Xác định tình trạng chuẩn bị để bệnh viện ưu tiên chỉ định xét nghiệm ngay.
+        </p>
+</div>
+<!-- Focused Single Question Card -->
+<div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-5">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-xl bg-teal-50 text-[#0D9488] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">no_meals</span>
+</div>
+<div>
+<h2 class="text-[16px] font-bold text-slate-900 leading-snug">Bạn có đang nhịn ăn sáng không?</h2>
+<p class="text-[13px] text-slate-500">Cần thiết cho xét nghiệm máu &amp; sinh hóa</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3 pt-1">
+<button class="py-3.5 px-4 rounded-xl bg-[#0D9488] text-white text-[14px] font-semibold shadow-xs flex items-center justify-center gap-2 active:scale-98" type="button">
+<span class="material-symbols-outlined text-[18px]">check</span>
+<span>Có, đang nhịn</span>
+</button>
+<button class="py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[14px] font-medium transition-all flex items-center justify-center active:scale-98" type="button">
+<span>Không</span>
+</button>
+</div>
+</div>
+<div class="bg-teal-50/70 border border-teal-100 rounded-xl p-3.5 flex items-start gap-3">
+<span class="material-symbols-outlined text-[#0D9488] text-[20px] shrink-0 mt-0.5">info</span>
+<p class="text-[12px] text-teal-900 leading-relaxed">
+          Các chỉ định X-quang hoặc siêu âm sẽ được bác sĩ chuyên khoa chỉ định trực tiếp tại buồng khám.
+        </p>
+</div>
+</div>
+<!-- STEP 3: Xác nhận & Lộ trình (Hidden by default) -->
+<div class="hidden flex-col flex-1 space-y-6 animate-[fadeIn_0.25s_ease-out]" id="step-3-content">
+<div class="space-y-1.5 pt-1">
+<h1 class="font-display text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+<span>✨</span> Sẵn sàng điều phối
+        </h1>
+<p class="text-slate-500 text-[13.5px] leading-relaxed">
+          Hệ thống AI sẽ phân tích dữ liệu để điều phối số thứ tự và buồng khám tối ưu nhất.
+        </p>
+</div>
+<div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
+<div class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Tóm tắt thông tin đã khai báo</div>
+<div class="space-y-2.5">
+<div class="flex items-center justify-between py-2 border-b border-slate-100">
+<span class="text-[13px] text-slate-500">Triệu chứng chính</span>
+<span class="text-[13px] font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md">Sốt cao, Đau thượng vị</span>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-slate-100">
+<span class="text-[13px] text-slate-500">Chuẩn bị nhịn ăn</span>
+<span class="text-[13px] font-semibold text-slate-800">Có, đủ điều kiện</span>
+</div>
+<div class="flex items-center justify-between py-2">
+<span class="text-[13px] text-slate-500">Thời gian ước tính</span>
+<span class="text-[13px] font-bold text-[#0D9488]">~ 45 phút hoàn thành</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Sticky Bottom Action Bar -->
+<footer class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 px-4 pt-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
+<div class="max-w-[420px] mx-auto flex flex-col items-center space-y-2">
+<button class="w-full h-[52px] bg-[#0D9488] hover:bg-teal-700 active:scale-[0.98] text-white font-bold text-[15px] rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all" id="main-action-btn" onclick="nextStep()" type="button">
+<span id="action-btn-text">Tiếp theo</span>
+<span class="material-symbols-outlined text-[20px]" id="action-btn-icon">arrow_forward</span>
+</button>
+<p class="text-[12px] text-slate-500 text-center tracking-tight pb-1" id="action-microcopy">
+        Đã chọn 2 triệu chứng • Dự kiến chuyển tiếp 30 giây
+      </p>
+</div>
+</footer>
+<!-- Wizard State Logic -->
+<script>
+    let currentStep = 1;
+
+    function setStep(step) {
+      currentStep = step;
+      updateUI();
+    }
+
+    function nextStep() {
+      if (currentStep < 3) {
+        currentStep++;
+        updateUI();
+      } else {
+        alert("Đã khởi tạo lộ trình khám thành công!");
+      }
+    }
+
+    document.getElementById("prev-step-btn").addEventListener("click", () => {
+      if (currentStep > 1) {
+        currentStep--;
+        updateUI();
+      }
+    });
+
+    function updateUI() {
+      // Content views
+      document.getElementById("step-1-content").classList.toggle("hidden", currentStep !== 1);
+      document.getElementById("step-1-content").classList.toggle("flex", currentStep === 1);
+
+      document.getElementById("step-2-content").classList.toggle("hidden", currentStep !== 2);
+      document.getElementById("step-2-content").classList.toggle("flex", currentStep === 2);
+
+      document.getElementById("step-3-content").classList.toggle("hidden", currentStep !== 3);
+      document.getElementById("step-3-content").classList.toggle("flex", currentStep === 3);
+
+      // Header Progress Segment Bars
+      const seg1 = document.getElementById("bar-seg-1");
+      const seg2 = document.getElementById("bar-seg-2");
+      const seg3 = document.getElementById("bar-seg-3");
+
+      seg1.className = currentStep >= 1 ? "bg-[#0D9488] h-full rounded-full transition-all duration-300" : "bg-slate-200 h-full rounded-full transition-all duration-300";
+      seg2.className = currentStep >= 2 ? "bg-[#0D9488] h-full rounded-full transition-all duration-300" : "bg-slate-200 h-full rounded-full transition-all duration-300";
+      seg3.className = currentStep >= 3 ? "bg-[#0D9488] h-full rounded-full transition-all duration-300" : "bg-slate-200 h-full rounded-full transition-all duration-300";
+
+      // Pill Tabs
+      for (let i = 1; i <= 3; i++) {
+        const pill = document.getElementById(`pill-step-${i}`);
+        if (i === currentStep) {
+          pill.className = "px-2.5 py-1 rounded-full bg-white text-teal-700 shadow-xs transition-all";
+        } else {
+          pill.className = "px-2.5 py-1 rounded-full text-slate-500 hover:text-slate-800 transition-all";
+        }
+      }
+
+      // Progress Label & Micro-copy
+      const label = document.getElementById("step-indicator-label");
+      const percent = document.getElementById("step-percent");
+      const btnText = document.getElementById("action-btn-text");
+      const btnIcon = document.getElementById("action-btn-icon");
+      const microcopy = document.getElementById("action-microcopy");
+
+      if (currentStep === 1) {
+        label.textContent = "Bước 1/3: Khảo sát triệu chứng";
+        percent.textContent = "33%";
+        btnText.textContent = "Tiếp theo";
+        btnIcon.textContent = "arrow_forward";
+        microcopy.textContent = "Đã chọn 2 triệu chứng • Dự kiến chuyển tiếp 30 giây";
+      } else if (currentStep === 2) {
+        label.textContent = "Bước 2/3: Sàng lọc cận lâm sàng";
+        percent.textContent = "66%";
+        btnText.textContent = "Xác nhận & Sang bước 3";
+        btnIcon.textContent = "arrow_forward";
+        microcopy.textContent = "Kiểm tra điều kiện nhịn ăn và chuẩn bị";
+      } else if (currentStep === 3) {
+        label.textContent = "Bước 3/3: Xác nhận & Tạo lộ trình";
+        percent.textContent = "100%";
+        btnText.textContent = "Tạo Lộ Trình Khám Tối Ưu";
+        btnIcon.textContent = "bolt";
+        microcopy.textContent = "Thuật toán DAG sẽ sắp xếp phòng có thời gian chờ ngắn nhất";
+      }
+    }
+  </script>
+</body></html>

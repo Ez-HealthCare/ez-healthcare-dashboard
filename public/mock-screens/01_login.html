@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Đăng nhập - EZHealth EMR</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-between items-center text-slate-800 p-4 sm:p-6 selection:bg-teal-500 selection:text-white">
+<!-- Minimalist Top Bar / Subtle Corner Logo -->
+<header class="w-full max-w-6xl flex justify-between items-center py-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-teal-600/10 flex items-center justify-center text-teal-600">
+<span class="material-symbols-outlined text-[18px]">health_and_safety</span>
+</div>
+<span class="text-sm font-semibold tracking-tight text-slate-700">EZHealth</span>
+</div>
+<div class="flex items-center gap-2 text-xs font-medium text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span>Hệ thống hoạt động bình thường</span>
+</div>
+</header>
+<!-- Centered Card Container -->
+<main class="w-full max-w-[450px] mx-auto my-auto py-4">
+<div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm shadow-slate-200/50 p-8 sm:p-10">
+<!-- Top Branding -->
+<div class="flex flex-col items-center text-center mb-7">
+<div class="w-12 h-12 rounded-xl bg-teal-600/10 flex items-center justify-center text-teal-600 mb-3.5 shadow-sm">
+<span class="material-symbols-outlined text-[26px]">vital_signs</span>
+</div>
+<span class="text-xs font-semibold uppercase tracking-wider text-teal-600 mb-1">EZHealth EMR</span>
+<h1 class="text-2xl font-bold text-slate-900 tracking-[-0.02em]">Đăng nhập hệ thống</h1>
+<p class="text-sm text-slate-500 font-normal mt-1.5 leading-snug">
+          Hệ thống Quản lý Bệnh án &amp; Điều phối Lộ trình Khám
+        </p>
+</div>
+<!-- Role Switcher Segmented Control (Apple / Linear style) -->
+<div class="mb-6">
+<div class="bg-slate-100 p-1 rounded-xl flex gap-1 text-xs" id="roleTabGroup" role="tablist">
+<button class="role-btn flex-1 py-1.5 rounded-lg font-medium transition-all text-center bg-white shadow-xs text-slate-900 font-medium" data-role="patient" type="button">
+            Bệnh nhân
+          </button>
+<button class="role-btn flex-1 py-1.5 rounded-lg font-medium transition-all text-center text-slate-500 hover:text-slate-700" data-role="doctor" type="button">
+            Bác sĩ
+          </button>
+<button class="role-btn flex-1 py-1.5 rounded-lg font-medium transition-all text-center text-slate-500 hover:text-slate-700" data-role="technician" type="button">
+            Kỹ thuật viên
+          </button>
+<button class="role-btn flex-1 py-1.5 rounded-lg font-medium transition-all text-center text-slate-500 hover:text-slate-700" data-role="admin" type="button">
+            Quản trị
+          </button>
+</div>
+</div>
+<!-- Main Login Form -->
+<form class="space-y-4" id="loginForm" onsubmit="event.preventDefault(); handleSubmit();">
+<!-- Input 1: Identifier -->
+<div class="space-y-1.5">
+<label class="block text-xs font-medium text-slate-700" for="identifierInput">
+            Số điện thoại / Email / Mã định danh
+          </label>
+<div class="relative">
+<input class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-all" id="identifierInput" placeholder="0987 654 321 hoặc BS-8890" required="" type="text" value="0987 654 321"/>
+</div>
+</div>
+<!-- Input 2: Password -->
+<div class="space-y-1.5">
+<div class="flex items-center justify-between">
+<label class="block text-xs font-medium text-slate-700" for="passwordInput">
+              Mật khẩu
+            </label>
+</div>
+<div class="relative flex items-center">
+<input class="w-full h-11 pl-3.5 pr-10 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 tracking-wider focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-all" id="passwordInput" placeholder="••••••••••••" required="" type="password" value="SecurePass@2026"/>
+<button class="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none p-1 flex items-center justify-center transition-colors" id="togglePasswordBtn" title="Ẩn / Hiện mật khẩu" type="button">
+<span class="material-symbols-outlined text-[19px]" id="eyeIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Action Row: Remember me + Forgot password -->
+<div class="flex items-center justify-between pt-1 text-sm">
+<label class="flex items-center gap-2 cursor-pointer select-none">
+<input checked="" class="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/20 focus:ring-offset-0 transition-colors" id="rememberMe" type="checkbox"/>
+<span class="text-xs text-slate-500">Ghi nhớ đăng nhập</span>
+</label>
+<a class="text-xs font-medium text-teal-600 hover:text-teal-700 transition-colors" href="#">
+            Quên mật khẩu?
+          </a>
+</div>
+<!-- Primary CTA Button -->
+<div class="pt-2">
+<button class="bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-medium py-3 rounded-xl shadow-sm transition-all text-sm w-full flex items-center justify-center gap-2" id="submitBtn" type="submit">
+<span>Đăng Nhập</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Secondary Action: Quick Fill Demo -->
+<button class="border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium py-2.5 rounded-xl w-full text-xs transition-colors flex items-center justify-center gap-1.5" id="quickFillBtn" type="button">
+<span class="material-symbols-outlined text-[16px] text-teal-600">magic_button</span>
+<span>Điền nhanh tài khoản thử nghiệm</span>
+</button>
+</form>
+<!-- Minimalist Security Note inside Card -->
+<div class="text-slate-400 text-xs text-center mt-6 flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>Bảo mật theo tiêu chuẩn y tế AES-256-GCM &amp; HL7/FHIR</span>
+</div>
+</div>
+</main>
+<!-- Small Footer at Viewport Bottom -->
+<footer class="w-full text-slate-400 text-xs text-center py-4">
+<p>© 2026 EZHealth Systems • Hỗ trợ kỹ thuật: 1900 8899</p>
+</footer>
+<!-- Script for interactions -->
+<script>
+    (function () {
+      const credentials = {
+        patient: {
+          id: "0987 654 321",
+          pwd: "PatientPass@2026",
+          placeholder: "0987 654 321 hoặc số CCCD"
+        },
+        doctor: {
+          id: "dr.nguyenan@ezhealth.vn",
+          pwd: "DocSecure#8890",
+          placeholder: "BS-8890 hoặc email bệnh viện"
+        },
+        technician: {
+          id: "ktv.lethanh@ezhealth.vn",
+          pwd: "LabTech#404",
+          placeholder: "KTV-2044 hoặc email khoa"
+        },
+        admin: {
+          id: "admin@ezhealth.vn",
+          pwd: "MasterAdmin!99",
+          placeholder: "Mã quản trị viên / Email"
+        }
+      };
+
+      let currentRole = "patient";
+
+      const tabs = document.querySelectorAll(".role-btn");
+      const identifierInput = document.getElementById("identifierInput");
+      const passwordInput = document.getElementById("passwordInput");
+      const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+      const eyeIcon = document.getElementById("eyeIcon");
+      const quickFillBtn = document.getElementById("quickFillBtn");
+
+      function setRole(roleKey) {
+        currentRole = roleKey;
+        tabs.forEach(btn => {
+          if (btn.dataset.role === roleKey) {
+            btn.className = "role-btn flex-1 py-1.5 rounded-lg font-medium transition-all text-center bg-white shadow-xs text-slate-900 font-medium";
+          } else {
+            btn.className = "role-btn flex-1 py-1.5 rounded-lg font-medium transition-all text-center text-slate-500 hover:text-slate-700";
+          }
+        });
+        identifierInput.placeholder = credentials[roleKey].placeholder;
+      }
+
+      function fillDemo() {
+        const cred = credentials[currentRole];
+        identifierInput.value = cred.id;
+        passwordInput.value = cred.pwd;
+        identifierInput.classList.add("ring-2", "ring-teal-500/20");
+        setTimeout(() => identifierInput.classList.remove("ring-2", "ring-teal-500/20"), 300);
+      }
+
+      tabs.forEach(btn => {
+        btn.addEventListener("click", () => {
+          setRole(btn.dataset.role);
+          fillDemo();
+        });
+      });
+
+      quickFillBtn.addEventListener("click", fillDemo);
+
+      togglePasswordBtn.addEventListener("click", () => {
+        const isPassword = passwordInput.type === "password";
+        passwordInput.type = isPassword ? "text" : "password";
+        eyeIcon.textContent = isPassword ? "visibility_off" : "visibility";
+      });
+
+      window.handleSubmit = function () {
+        const btn = document.getElementById("submitBtn");
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `
+          <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Đang xác thực...</span>
+        `;
+        setTimeout(() => {
+          btn.innerHTML = `
+            <span class="material-symbols-outlined text-[18px]">check</span>
+            <span>Đăng nhập thành công</span>
+          `;
+          btn.classList.remove("bg-teal-600", "hover:bg-teal-700");
+          btn.classList.add("bg-emerald-600");
+        }, 800);
+      };
+    })();
+  </script>
+</body></html>

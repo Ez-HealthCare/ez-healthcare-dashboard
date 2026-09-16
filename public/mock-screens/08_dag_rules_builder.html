@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EZHealth - Cấu hình Luồng Khám (DAG)</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Plus Jakarta Sans & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus Jakarta Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface-variant": "#3d4947",
+            "surface-dim": "#d2d9f4",
+            "on-primary-fixed": "#00201d",
+            "primary-fixed-dim": "#6bd8cb",
+            "secondary": "#006c4a",
+            "on-surface": "#131b2e",
+            "primary-container": "#008378",
+            "on-error-container": "#93000a",
+            "error": "#ba1a1a",
+            "on-tertiary": "#ffffff",
+            "on-secondary-fixed-variant": "#005137",
+            "surface": "#faf8ff",
+            "on-primary": "#ffffff",
+            "on-error": "#ffffff",
+            "background": "#faf8ff",
+            "tertiary-fixed": "#c9e6ff",
+            "surface-variant": "#dae2fd",
+            "secondary-fixed": "#85f8c4",
+            "surface-bright": "#faf8ff",
+            "on-background": "#131b2e",
+            "surface-container-highest": "#dae2fd",
+            "secondary-fixed-dim": "#68dba9",
+            "on-secondary": "#ffffff",
+            "on-secondary-fixed": "#002114",
+            "on-primary-fixed-variant": "#005049",
+            "inverse-on-surface": "#eef0ff",
+            "tertiary-container": "#007cb1",
+            "primary-fixed": "#89f5e7",
+            "on-tertiary-fixed": "#001e2f",
+            "on-secondary-container": "#00714e",
+            "on-tertiary-container": "#fcfcff",
+            "inverse-primary": "#6bd8cb",
+            "on-tertiary-fixed-variant": "#004c6e",
+            "secondary-container": "#82f5c1",
+            "surface-container-low": "#f2f3ff",
+            "tertiary": "#00628d",
+            "primary": "#00685f",
+            "outline": "#6d7a77",
+            "inverse-surface": "#283044",
+            "outline-variant": "#bcc9c6",
+            "surface-container-high": "#e2e7ff",
+            "surface-container": "#eaedff",
+            "surface-tint": "#006a61",
+            "on-primary-container": "#f4fffc",
+            "surface-container-lowest": "#ffffff",
+            "tertiary-fixed-dim": "#89ceff",
+            "error-container": "#ffdad6",
+            "slate-canvas": "#F8FAFC"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-desktop": "2rem",
+            "space-md": "1rem",
+            "space-xl": "2rem",
+            "margin": "1rem",
+            "gutter": "1rem",
+            "gutter-tablet": "1.25rem",
+            "space-sm": "0.5rem",
+            "margin-tablet": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "gutter-desktop": "1.5rem"
+          },
+          "fontFamily": {
+            "label-lg": ["Inter"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "clinical-data-md": ["Inter"],
+            "label-caps": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "display-lg-mobile": ["Plus Jakarta Sans"],
+            "body-sm": ["Inter"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-lg": ["Inter"],
+            "body-md": ["Inter"],
+            "clinical-data-lg": ["Inter"]
+          },
+          "fontSize": {
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+            "headline-md": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "clinical-data-md": ["15px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-xl": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "headline-lg": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "clinical-data-lg": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .canvas-dot-grid {
+      background-color: #F8FAFC;
+      background-image: radial-gradient(#CBD5E1 1.2px, transparent 1.2px);
+      background-size: 20px 20px;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #E2E8F0;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #CBD5E1;
+    }
+  </style>
+</head>
+<body class="h-full bg-slate-canvas text-on-surface font-body-md text-body-md antialiased flex flex-col overflow-hidden">
+<!-- ================= TOP APP BAR / PAGE HEADER ================= -->
+<header class="h-16 bg-surface-container-lowest border-b border-slate-200 px-6 flex items-center justify-between shrink-0 z-30">
+<!-- Brand and Module Title -->
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined text-[20px]" data-icon="hub">hub</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">EZHealth</span>
+<span class="text-slate-300 font-light">|</span>
+<h1 class="font-headline-md text-headline-md font-bold text-slate-800">Cấu hình Luồng Khám (DAG)</h1>
+</div>
+<p class="font-body-sm text-body-sm text-slate-500">Hệ thống định tuyến lâm sàng tự động</p>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>DAG Engine: v2.4 Active</span>
+</div>
+<button class="h-10 px-4 rounded-lg border border-slate-200 bg-white font-label-lg text-label-lg text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[18px] text-slate-500" data-icon="history">history</span>
+<span>Khôi phục mặc định</span>
+</button>
+<button class="h-10 px-4 rounded-lg bg-[#0D9488] hover:bg-[#0F766E] active:scale-[0.98] text-white font-label-lg text-label-lg transition-all shadow-sm flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="check_circle">check_circle</span>
+<span>Lưu toàn bộ thay đổi</span>
+</button>
+</div>
+</header>
+<!-- ================= MAIN 3-COLUMN LAYOUT ================= -->
+<main class="flex-1 flex overflow-hidden">
+<!-- -------------------------------------------------------------
+         COLUMN 1: LEFT PANEL - Presets (350px width)
+    ------------------------------------------------------------- -->
+<aside class="w-[350px] bg-white border-r border-slate-200 flex flex-col shrink-0">
+<!-- Panel Header -->
+<div class="p-5 border-b border-slate-100 flex items-center justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-slate-900">Quy Tắc Lộ Trình (Presets)</h2>
+<p class="font-body-sm text-body-sm text-slate-500 mt-0.5">6 cấu hình phân luồng khoa phòng</p>
+</div>
+<button class="h-8 px-3 rounded-md bg-teal-50 border border-teal-200 text-[#0D9488] hover:bg-teal-100 font-label-md text-label-md flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="add">add</span>
+<span>Thêm mới</span>
+</button>
+</div>
+<!-- Presets List -->
+<div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+<!-- Item 1: Active State -->
+<div class="p-3.5 rounded-xl bg-teal-50/40 border-2 border-[#0D9488] shadow-xs relative transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[#0D9488] text-[18px]" data-icon="account_tree">account_tree</span>
+<h3 class="font-label-lg text-label-lg text-slate-900 font-bold">Khám Nội Tổng Quát</h3>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-label-caps text-label-caps">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Đang kích hoạt
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-slate-600 mt-1.5">Luồng khám tiêu chuẩn cho triệu chứng thông thường (5 bước)</p>
+<div class="mt-3 pt-2.5 border-t border-teal-100/80 flex items-center justify-between">
+<span class="font-label-md text-label-md text-slate-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> ~37 phút
+            </span>
+<button class="px-2.5 py-1 rounded bg-white border border-teal-200 hover:border-teal-300 text-[#0D9488] font-label-md text-label-md font-semibold transition-colors" type="button">
+              Sửa
+            </button>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-slate-500 text-[18px]" data-icon="child_care">child_care</span>
+<h3 class="font-label-lg text-label-lg text-slate-800">Khám Nhi Tiêu Hoá</h3>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-label-caps text-label-caps">
+              Dự phòng
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-slate-500 mt-1.5">Ưu tiên khám lâm sàng trước cận lâm sàng (4 bước)</p>
+<div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+<span class="font-label-md text-label-md text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> ~28 phút
+            </span>
+<button class="px-2.5 py-1 rounded bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 font-label-md text-label-md transition-colors" type="button">
+              Sửa
+            </button>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-slate-500 text-[18px]" data-icon="cardiology">cardiology</span>
+<h3 class="font-label-lg text-label-lg text-slate-800">Khám Tim Mạch &amp; Huyết Áp</h3>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-label-caps text-label-caps">
+              Dự phòng
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-slate-500 mt-1.5">Điện tâm đồ và siêu âm tim song song (5 bước)</p>
+<div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+<span class="font-label-md text-label-md text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> ~45 phút
+            </span>
+<button class="px-2.5 py-1 rounded bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 font-label-md text-label-md transition-colors" type="button">
+              Sửa
+            </button>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-slate-500 text-[18px]" data-icon="pregnant_woman">pregnant_woman</span>
+<h3 class="font-label-lg text-label-lg text-slate-800">Khám Sản Phụ Khoa</h3>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-label-caps text-label-caps">
+              Dự phòng
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-slate-500 mt-1.5">Tích hợp siêu âm đầu dò và xét nghiệm nước tiểu (4 bước)</p>
+<div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+<span class="font-label-md text-label-md text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> ~35 phút
+            </span>
+<button class="px-2.5 py-1 rounded bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 font-label-md text-label-md transition-colors" type="button">
+              Sửa
+            </button>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-rose-500 text-[18px]" data-icon="e911_emergency">e911_emergency</span>
+<h3 class="font-label-lg text-label-lg text-slate-800">Khám Khẩn Cấp / Ưu Tiên</h3>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-label-caps text-label-caps">
+              Stat Path
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-slate-500 mt-1.5">Đẩy thẳng trạm cấp cứu &amp; rút ngắn thời gian chờ (3 bước)</p>
+<div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+<span class="font-label-md text-label-md text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> ~12 phút
+            </span>
+<button class="px-2.5 py-1 rounded bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 font-label-md text-label-md transition-colors" type="button">
+              Sửa
+            </button>
+</div>
+</div>
+<!-- Item 6 -->
+<div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-slate-500 text-[18px]" data-icon="visibility">visibility</span>
+<h3 class="font-label-lg text-label-lg text-slate-800">Khám Mắt &amp; Đo Thị Lực</h3>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-label-caps text-label-caps">
+              Dự phòng
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-slate-500 mt-1.5">Đo khúc xạ trước khi khám bác sĩ chuyên khoa (3 bước)</p>
+<div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+<span class="font-label-md text-label-md text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> ~20 phút
+            </span>
+<button class="px-2.5 py-1 rounded bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 font-label-md text-label-md transition-colors" type="button">
+              Sửa
+            </button>
+</div>
+</div>
+</div>
+</aside>
+<!-- -------------------------------------------------------------
+         COLUMN 2: CENTER CANVAS - Visual DAG Workflow (Flexible)
+    ------------------------------------------------------------- -->
+<section class="flex-1 flex flex-col bg-slate-canvas overflow-hidden">
+<!-- Canvas Sub-header -->
+<div class="h-14 bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-3">
+<span class="font-headline-md text-headline-md font-bold text-slate-800">Sơ đồ luồng: Khám Nội Tổng Quát (DAG Active)</span>
+<span class="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-label-md text-label-md">
+            5 trạm khám
+          </span>
+<span class="px-2 py-0.5 rounded text-teal-700 bg-teal-50 border border-teal-200 font-label-caps text-label-caps">
+            Directed Acyclic Graph
+          </span>
+</div>
+<div class="flex items-center gap-2">
+<button class="h-8 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-label-md text-label-md flex items-center gap-1.5 shadow-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-slate-500" data-icon="auto_fix_high">auto_fix_high</span>
+<span>Tự động sắp xếp (Auto Layout)</span>
+</button>
+<div class="h-5 w-px bg-slate-200 mx-1"></div>
+<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="zoom_in">zoom_in</span>
+</button>
+<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="zoom_out">zoom_out</span>
+</button>
+</div>
+</div>
+<!-- Graph Canvas Container -->
+<div class="flex-1 canvas-dot-grid relative overflow-auto p-10 flex items-center justify-center">
+<!-- Interactive DAG Layout (Relative flow container) -->
+<div class="relative w-[860px] h-[520px] select-none">
+<!-- SVG Connector Layer with Crisp Directional Arrows -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<!-- Standard Arrow -->
+<marker id="arrow-teal" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="8" refy="5" viewbox="0 0 10 10">
+<path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0D9488"></path>
+</marker>
+<marker id="arrow-slate" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="8" refy="5" viewbox="0 0 10 10">
+<path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#94A3B8"></path>
+</marker>
+</defs>
+<!-- Edge 1: Node 1 (Root) -> Node 2 (P.201 Lấy Máu) -->
+<!-- From (230, 260) to (310, 140) -->
+<path d="M 230 230 C 265 230, 265 140, 310 140" fill="none" marker-end="url(#arrow-slate)" stroke="#94A3B8" stroke-dasharray="0" stroke-width="2"></path>
+<!-- Edge 2: Node 1 (Root) -> Node 3 (P.104 Siêu Âm) -->
+<!-- From (230, 275) to (310, 370) -->
+<path d="M 230 270 C 265 270, 265 370, 310 370" fill="none" marker-end="url(#arrow-teal)" stroke="#0D9488" stroke-width="2.5"></path>
+<!-- Edge 3: Node 3 (P.104 Siêu Âm) -> Node 4 (P.108 Lấy Nước Tiểu) -->
+<!-- Direct Horizontal / Gentle Curve from (535, 370) to (595, 370) -->
+<path d="M 535 370 L 595 370" fill="none" marker-end="url(#arrow-teal)" stroke="#0D9488" stroke-width="2.5"></path>
+<!-- Edge 4: Node 2 (P.201 Lấy Máu) -> Node 5 (P.102 Bác Sĩ Kết Luận) -->
+<!-- From (535, 140) to (610, 230) -->
+<path d="M 535 140 C 565 140, 565 230, 605 230" fill="none" marker-end="url(#arrow-slate)" stroke="#94A3B8" stroke-width="2"></path>
+<!-- Edge 5: Node 4 (P.108 Nước Tiểu) -> Node 5 (P.102 Bác Sĩ Kết Luận) -->
+<!-- From (815, 370) to Convergence into Node 5 (left-bottom) -->
+<path d="M 705 320 C 705 295, 705 275, 705 275" fill="none" marker-end="url(#arrow-slate)" stroke="#94A3B8" stroke-width="2"></path>
+</svg>
+<!-- Floating Condition Badge between Node 3 & Node 4 -->
+<div class="absolute left-[520px] top-[345px] -translate-x-1/2 z-10">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-teal-50 border border-teal-300 text-[#0D9488] font-label-caps text-label-caps shadow-xs">
+<span class="material-symbols-outlined text-[12px]" data-icon="arrow_forward">arrow_forward</span>
+              Sau siêu âm
+            </span>
+</div>
+<!-- NODE 1 (ROOT): P.101 - Tiếp Đón & Triage -->
+<div class="absolute left-0 top-[200px] w-[230px] bg-white rounded-xl border border-slate-200 shadow-sm p-3.5 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer z-10">
+<div class="flex items-center justify-between mb-2">
+<span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-label-caps text-label-caps border border-blue-200 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Gốc (Root)
+              </span>
+<span class="font-label-md text-label-md text-slate-500 font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="timer">timer</span> 3 phút
+              </span>
+</div>
+<h4 class="font-headline-md text-headline-md font-bold text-slate-800 text-[15px] leading-tight">P.101 - Tiếp Đón &amp; Triage</h4>
+<div class="mt-2.5 flex items-center justify-between text-slate-500 font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-slate-400" data-icon="desk">desk</span> Khoa Tiếp Đón
+              </span>
+<span class="w-2 h-2 rounded-full bg-emerald-500" title="Trực sẵn sàng"></span>
+</div>
+</div>
+<!-- NODE 2: P.201 - Lấy Mẫu Máu -->
+<div class="absolute left-[310px] top-[90px] w-[225px] bg-white rounded-xl border border-slate-200 shadow-sm p-3.5 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer z-10">
+<div class="flex items-center justify-between mb-2">
+<span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-label-caps text-label-caps border border-amber-200">
+                Song song A
+              </span>
+<span class="font-label-md text-label-md text-slate-500 font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="timer">timer</span> 5 phút
+              </span>
+</div>
+<h4 class="font-headline-md text-headline-md font-bold text-slate-800 text-[15px] leading-tight">P.201 - Lấy Mẫu Máu</h4>
+<div class="mt-2.5 flex items-center justify-between text-slate-500 font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-slate-400" data-icon="biotechnology">chips</span> Khoa Xét Nghiệm
+              </span>
+<span class="font-label-caps text-label-caps text-slate-400">Queue: 2</span>
+</div>
+</div>
+<!-- NODE 3 (SELECTED): P.104 - Siêu Âm Ổ Bụng -->
+<div class="absolute left-[310px] top-[320px] w-[225px] bg-white rounded-xl border-2 border-[#0D9488] shadow-md ring-4 ring-teal-50 p-3.5 transition-all cursor-pointer z-20">
+<div class="flex items-center justify-between mb-2">
+<span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 font-label-caps text-label-caps border border-teal-200 font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-teal-600" data-icon="check_circle">check_circle</span> Đang chọn
+              </span>
+<span class="font-label-md text-label-md text-[#0D9488] font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="timer">timer</span> 15 phút
+              </span>
+</div>
+<h4 class="font-headline-md text-headline-md font-bold text-slate-900 text-[15px] leading-tight">P.104 - Siêu Âm Ổ Bụng</h4>
+<div class="mt-2.5 flex items-center justify-between text-slate-600 font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-[#0D9488]" data-icon="radiology">radiology</span> Chẩn Đoán Hình Ảnh
+              </span>
+<span class="font-label-caps text-label-caps text-amber-600 font-bold">Ưu tiên cao</span>
+</div>
+</div>
+<!-- NODE 4: P.108 - Lấy Nước Tiểu -->
+<div class="absolute left-[595px] top-[320px] w-[220px] bg-white rounded-xl border border-slate-200 shadow-sm p-3.5 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer z-10">
+<div class="flex items-center justify-between mb-2">
+<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-label-caps text-label-caps">
+                Bước tiếp theo
+              </span>
+<span class="font-label-md text-label-md text-slate-500 font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="timer">timer</span> 4 phút
+              </span>
+</div>
+<h4 class="font-headline-md text-headline-md font-bold text-slate-800 text-[15px] leading-tight">P.108 - Lấy Nước Tiểu</h4>
+<div class="mt-2.5 flex items-center justify-between text-slate-500 font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-slate-400" data-icon="water_drop">water_drop</span> Khoa Xét Nghiệm
+              </span>
+<span class="font-label-caps text-label-caps text-slate-400">Queue: 1</span>
+</div>
+</div>
+<!-- NODE 5 (CONVERGENCE): P.102 - Bác Sĩ Kết Luận & Kê Đơn -->
+<div class="absolute left-[605px] top-[180px] w-[245px] bg-white rounded-xl border border-emerald-300 shadow-sm p-3.5 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer z-10">
+<div class="flex items-center justify-between mb-2">
+<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-label-caps text-label-caps border border-emerald-200 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Điểm hội tụ (Sink)
+              </span>
+<span class="font-label-md text-label-md text-slate-500 font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="timer">timer</span> 10 phút
+              </span>
+</div>
+<h4 class="font-headline-md text-headline-md font-bold text-slate-800 text-[15px] leading-tight">P.102 - Bác Sĩ Kết Luận &amp; Kê Đơn</h4>
+<div class="mt-2.5 flex items-center justify-between text-slate-500 font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-slate-400" data-icon="stethoscope">stethoscope</span> Khoa Nội
+              </span>
+<span class="font-label-caps text-label-caps text-emerald-700 font-semibold">Khám Bác Sĩ</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Canvas Footer Status Strip -->
+<div class="h-10 bg-white border-t border-slate-200 px-6 flex items-center justify-between text-slate-500 font-body-sm text-body-sm shrink-0">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Không phát hiện chu trình (No cyclic dependency)
+          </span>
+<span class="text-slate-300">•</span>
+<span>Đường đi tới hạn (Critical Path): <strong>32 phút</strong></span>
+</div>
+<div class="flex items-center gap-3 font-label-md text-label-md">
+<span class="flex items-center gap-1 text-slate-600">
+<kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[11px]">Space</kbd> Kéo canvas
+          </span>
+<span class="flex items-center gap-1 text-slate-600">
+<kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[11px]">Click</kbd> Chọn Node
+          </span>
+</div>
+</div>
+</section>
+<!-- -------------------------------------------------------------
+         COLUMN 3: RIGHT PANEL - Node Attributes (300px width)
+    ------------------------------------------------------------- -->
+<aside class="w-[300px] bg-white border-l border-slate-200 flex flex-col shrink-0">
+<!-- Panel Header -->
+<div class="p-5 border-b border-slate-100 flex items-center justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-slate-900">Thuộc Tính Node</h2>
+<p class="font-body-sm text-body-sm text-slate-500 mt-0.5">Thông số điều hướng động</p>
+</div>
+<span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 font-label-caps text-label-caps">
+          Đang chọn: P.104
+        </span>
+</div>
+<!-- Form Fields Body -->
+<div class="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+<!-- Field 1: Tên phòng khám -->
+<div>
+<label class="block font-label-md text-label-md text-slate-700 mb-1.5">Tên phòng khám</label>
+<div class="relative">
+<input class="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-body-md text-body-md focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-teal-100 transition-all" type="text" value="P.104 - Siêu Âm Ổ Bụng"/>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-slate-400 text-[18px]" data-icon="edit">edit</span>
+</div>
+</div>
+<!-- Field 2: Khoa / Phòng -->
+<div>
+<label class="block font-label-md text-label-md text-slate-700 mb-1.5">Khoa / Phòng</label>
+<div class="relative">
+<select class="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-body-md text-body-md appearance-none focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-teal-100 transition-all">
+<option selected="">Chẩn Đoán Hình Ảnh</option>
+<option>Khoa Xét Nghiệm</option>
+<option>Khoa Khám Bệnh (Nội)</option>
+<option>Khoa Tiếp Đón</option>
+<option>Khoa Dược Ngoại Trú</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-slate-400 text-[18px] pointer-events-none" data-icon="arrow_drop_down">arrow_drop_down</span>
+</div>
+</div>
+<!-- Field 3: Mức độ ưu tiên -->
+<div>
+<label class="block font-label-md text-label-md text-slate-700 mb-1.5">Mức độ ưu tiên</label>
+<div class="relative">
+<select class="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-body-md text-body-md appearance-none focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-teal-100 transition-all">
+<option>Mức 1 - Tiêu chuẩn</option>
+<option>Mức 2 - Trung bình</option>
+<option>Mức 3 - Nhanh</option>
+<option selected="">Mức 4 - Ưu tiên cao</option>
+<option>Mức 5 - Khẩn cấp / STAT</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-slate-400 text-[18px] pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+<p class="font-body-sm text-body-sm text-slate-400 mt-1">Hệ thống sẽ xếp lịch ưu tiên khi bệnh nhân đến sảnh.</p>
+</div>
+<!-- Field 4: Thời gian dự kiến -->
+<div>
+<label class="block font-label-md text-label-md text-slate-700 mb-1.5">Thời gian dự kiến (T_service)</label>
+<div class="relative flex items-center">
+<input class="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-body-md text-body-md focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-teal-100 transition-all" type="text" value="15 phút"/>
+<span class="material-symbols-outlined absolute right-2.5 text-slate-400 text-[18px]" data-icon="schedule">schedule</span>
+</div>
+</div>
+<!-- Field 5: Điều kiện tiên quyết (Prerequisite) -->
+<div>
+<label class="block font-label-md text-label-md text-slate-700 mb-1.5">Điều kiện tiên quyết (Prerequisite)</label>
+<div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-label-md text-label-md shadow-xs mb-2">
+<span class="material-symbols-outlined text-[15px] text-[#0D9488]" data-icon="info">info</span>
+<span>Nhịn tiểu trước khi siêu âm</span>
+<button class="text-slate-400 hover:text-slate-600 ml-1" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="close">close</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-slate-500">Chỉ dẫn tự động gửi tới ứng dụng người bệnh qua SMS/Kiosk.</p>
+</div>
+</div>
+<!-- Node Status Card -->
+<div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-teal-600 text-[20px]" data-icon="dns">dns</span>
+<div>
+<p class="font-label-md text-label-md text-slate-800">Trạng thái trạm</p>
+<p class="font-body-sm text-body-sm text-slate-500">Thiết bị siêu âm 4D #02</p>
+</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+</div>
+</div>
+<!-- Bottom Panel CTAs -->
+<div class="p-5 border-t border-slate-200 bg-white space-y-2">
+<button class="w-full py-2.5 px-4 rounded-lg bg-[#0D9488] hover:bg-[#0F766E] text-white font-label-lg text-label-lg font-semibold transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="save">save</span>
+<span>Lưu Quy Tắc</span>
+</button>
+<button class="w-full py-2 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-label-lg text-label-lg font-medium transition-all active:scale-[0.98]" type="button">
+          Huỷ bỏ
+        </button>
+</div>
+</aside>
+</main>
+<script>
+    // Lightweight interactivity for visual feedback
+    document.addEventListener('DOMContentLoaded', () => {
+      // Node selection click interaction
+      const nodes = document.querySelectorAll('section [class*="absolute bg-white rounded-xl"]');
+      nodes.forEach(node => {
+        node.addEventListener('click', () => {
+          nodes.forEach(n => {
+            n.classList.remove('border-2', 'border-[#0D9488]', 'ring-4', 'ring-teal-50', 'z-20');
+            n.classList.add('border', 'border-slate-200', 'z-10');
+          });
+          node.classList.remove('border', 'border-slate-200', 'z-10');
+          node.classList.add('border-2', 'border-[#0D9488]', 'ring-4', 'ring-teal-50', 'z-20');
+        });
+      });
+    });
+  </script>
+</body></html>

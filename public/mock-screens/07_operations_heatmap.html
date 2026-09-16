@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EZHealth • Trung Tâm Điều Hành Tác Chiến</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      background-color: #F8FAFC;
+      color: #0F172A;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased bg-[#F8FAFC] text-slate-800 flex flex-col">
+<!-- 1. COMPACT HEADER -->
+<header class="w-full bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-sm">
+<div class="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between">
+<!-- Brand & Shift info -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-sm shadow-teal-600/20">
+<span class="material-symbols-outlined text-[22px]">local_hospital</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-display font-extrabold text-[17px] tracking-tight text-slate-900">EZHealth</span>
+<span class="text-slate-300">•</span>
+<span class="font-display font-semibold text-[14px] text-slate-700">Trung Tâm Điều Hành Tác Chiến</span>
+</div>
+</div>
+</div>
+<div class="h-5 w-[1px] bg-slate-200 hidden md:block"></div>
+<div class="hidden lg:flex items-center gap-3 text-xs text-slate-600 bg-slate-50 border border-slate-200/70 px-3 py-1.5 rounded-lg">
+<span class="flex items-center gap-1.5 font-medium text-emerald-700">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Hệ thống trực tiếp
+          </span>
+<span class="text-slate-300">|</span>
+<span class="text-slate-600 font-medium">Ca Sáng: 07:00 - 15:30 (Thứ Tư, 24/10/2026)</span>
+</div>
+</div>
+<!-- Right controls: Refresh & Profile -->
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-teal-700 hover:bg-teal-50 border border-slate-200 rounded-lg transition-all" id="refreshBtn" onclick="handleRefresh()">
+<span class="material-symbols-outlined text-[16px] text-teal-600" id="refreshIcon">autorenew</span>
+<span>Làm mới</span>
+</button>
+<div class="h-5 w-[1px] bg-slate-200"></div>
+<div class="flex items-center gap-2.5 pl-1">
+<img alt="TS.BS Nguyễn Văn An" class="w-9 h-9 rounded-full object-cover border border-teal-500/20 ring-2 ring-teal-500/10" src="https://lh3.googleusercontent.com/aida/AEtjO1Xq77hCjheFiGde5U-xpnEppm36bS-Ie4NQefRMl-8ggeXeSfk6njndN2U9thgTtT_FubO_gYE9jSyDug1VZ8cYSFmNccYIrIl3P8Bhy1AVf4BSmZuLlBW6i506C2NXwpMM5qjeihG9uo4rK3u8ksC9xNZKalbj6ePoET5BkE23-KNei7tTl0SWMCLPqYL9XWFMvYDqD7tj-2tHLRGXhlavkCarXfT1PHfSq8VBtwgunDWJ1j7VMU_lQY4"/>
+<div class="text-left leading-tight hidden sm:block">
+<p class="text-xs font-bold text-slate-800">TS.BS Nguyễn Văn An</p>
+<p class="text-[11px] text-slate-500 font-medium">Giám đốc</p>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- MAIN CONTAINER (Fixed 1440px viewport centered) -->
+<main class="w-full max-w-[1440px] mx-auto px-6 py-6 flex-1 flex flex-col gap-6">
+<!-- 2. TOP ROW (4 Large KPI Summary Cards) -->
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+<!-- Card 1 -->
+<div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between text-slate-500 mb-2">
+<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tổng bệnh nhân hôm nay</span>
+<div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">groups</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<span class="font-display font-bold text-3xl text-slate-900 tracking-tight">842</span>
+<span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+<span class="material-symbols-outlined text-[13px]">arrow_upward</span> +12% so với hôm qua
+          </span>
+</div>
+<p class="text-[11px] text-slate-400 mt-3 font-normal">842 lượt tiếp nhận tính đến thời điểm hiện tại</p>
+</div>
+<!-- Card 2 -->
+<div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between text-slate-500 mb-2">
+<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tổng chờ trung bình</span>
+<div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">timer</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<div class="flex items-baseline gap-1">
+<span class="font-display font-bold text-3xl text-slate-900 tracking-tight">18.4</span>
+<span class="text-sm font-medium text-slate-500">phút</span>
+</div>
+<span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+<span class="material-symbols-outlined text-[13px]">arrow_downward</span> 35% tối ưu luồng
+          </span>
+</div>
+<p class="text-[11px] text-slate-400 mt-3 font-normal">Giảm 9.8 phút so với tuần trước khi áp dụng định tuyến</p>
+</div>
+<!-- Card 3 -->
+<div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between text-slate-500 mb-2">
+<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Khu vực quá tải</span>
+<div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">error</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<div class="flex items-baseline gap-1">
+<span class="font-display font-bold text-3xl text-rose-600 tracking-tight">2</span>
+<span class="text-sm font-medium text-slate-500">phòng</span>
+</div>
+<span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200/70">
+<span class="material-symbols-outlined text-[13px]">warning</span> Cần điều phối
+          </span>
+</div>
+<p class="text-[11px] text-rose-600/80 mt-3 font-medium">P.301 X-Quang (28 ph) và P.104 Siêu Âm (22 ph)</p>
+</div>
+<!-- Card 4 -->
+<div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between text-slate-500 mb-2">
+<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Hiệu suất tối ưu</span>
+<div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<span class="font-display font-bold text-3xl text-slate-900 tracking-tight">94.6%</span>
+<span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+            ✓ Đạt chuẩn SLA
+          </span>
+</div>
+<p class="text-[11px] text-slate-400 mt-3 font-normal">Mục tiêu SLA viện &gt; 90% thời gian xử lý toàn trình</p>
+</div>
+</section>
+<!-- 3. MAIN WORKSPACE (2-column split: Heatmap Grid + Right 300px Sidebar) -->
+<section class="flex flex-col lg:flex-row gap-6 items-start w-full">
+<!-- LEFT MAIN AREA (flex-1): Hospital Heatmap Grid -->
+<div class="flex-1 w-full bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+<!-- Header bar for Heatmap with Legend -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 mb-5 border-b border-slate-100">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-teal-600 text-[22px]">grid_view</span>
+<h2 class="font-display font-bold text-lg text-slate-900">Bản Đồ Nhiệt Tải Trọng Phòng Khám</h2>
+</div>
+<p class="text-xs text-slate-500 mt-0.5">Thời gian thực dựa trên số lượng bệnh nhân check-in và đang chờ lâm sàng</p>
+</div>
+<!-- Clean Legend -->
+<div class="flex items-center gap-3 flex-wrap">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-medium border border-emerald-100">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>&lt; 10 phút (Thông thoáng)</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-medium border border-amber-200">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+<span>10 - 20 phút (Tải vừa)</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 text-xs font-medium border border-rose-200">
+<span class="w-2 h-2 rounded-full bg-rose-500"></span>
+<span>&gt; 20 phút (Quá tải)</span>
+</div>
+</div>
+</div>
+<!-- Heatmap Grid (16 Rooms - Responsive 1 to 4/5 cols) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+<!-- 1. P.101 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.101</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 4 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Tiếp Đón &amp; Phân Luồng</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 1 • Khu Đón Tiếp</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">2/8 ca</span>
+</div>
+</div>
+<!-- 2. P.102 (Yellow) -->
+<div class="p-4 rounded-xl border border-amber-200/80 bg-amber-50/20 hover:border-amber-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.102</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> 12 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Khám Nội Tổng Quát</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 1 • Khám Bệnh</p>
+</div>
+<div class="pt-2 border-t border-amber-100/60 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-md">4/8 ca</span>
+</div>
+</div>
+<!-- 3. P.103 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.103</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 6 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Khám Nhi Khoa</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 1 • Khám Bệnh</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">2/8 ca</span>
+</div>
+</div>
+<!-- 4. P.104 (Red - Quá tải) -->
+<div class="p-4 rounded-xl border-2 border-rose-300 bg-rose-50/40 hover:border-rose-400 hover:shadow-sm transition-all flex flex-col justify-between group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-2 h-full bg-rose-500"></div>
+<div class="flex items-start justify-between pr-2">
+<div class="flex items-center gap-1.5">
+<span class="font-display font-extrabold text-sm text-rose-700">P.104</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white uppercase">Quá tải</span>
+</div>
+<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping"></span> 22 phút
+              </span>
+</div>
+<div class="my-3 pr-2">
+<p class="font-semibold text-sm text-rose-950 leading-snug">Siêu Âm Ổ Bụng</p>
+<p class="text-xs text-rose-700/70 mt-0.5">Tầng 1 • CĐHA</p>
+</div>
+<div class="pt-2 border-t border-rose-200/60 flex items-center justify-between text-xs pr-2">
+<span class="text-rose-800 font-medium">Đang phục vụ:</span>
+<span class="font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md">7/8 ca</span>
+</div>
+</div>
+<!-- 5. P.105 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.105</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 8 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Siêu Âm Tim</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 1 • CĐHA</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">3/8 ca</span>
+</div>
+</div>
+<!-- 6. P.201 (Yellow) -->
+<div class="p-4 rounded-xl border border-amber-200/80 bg-amber-50/20 hover:border-amber-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.201</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> 16 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Lấy Mẫu Xét Nghiệm</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 2 • Khoa Xét Nghiệm</p>
+</div>
+<div class="pt-2 border-t border-amber-100/60 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-md">6/8 ca</span>
+</div>
+</div>
+<!-- 7. P.202 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.202</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 5 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Điện Tâm Đồ (ECG)</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 2 • Thăm Dò CN</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">2/8 ca</span>
+</div>
+</div>
+<!-- 8. P.203 (Yellow) -->
+<div class="p-4 rounded-xl border border-amber-200/80 bg-amber-50/20 hover:border-amber-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.203</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> 14 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Nội Soi Tiêu Hóa</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 2 • Thăm Dò CN</p>
+</div>
+<div class="pt-2 border-t border-amber-100/60 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-md">5/8 ca</span>
+</div>
+</div>
+<!-- 9. P.204 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.204</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 7 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Đo Mật Độ Xương</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 2 • Thăm Dò CN</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">1/8 ca</span>
+</div>
+</div>
+<!-- 10. P.205 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.205</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 9 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Khám Tai Mũi Họng</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 2 • Chuyên Khoa</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">3/8 ca</span>
+</div>
+</div>
+<!-- 11. P.301 (Red - Quá tải) -->
+<div class="p-4 rounded-xl border-2 border-rose-300 bg-rose-50/40 hover:border-rose-400 hover:shadow-sm transition-all flex flex-col justify-between group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-2 h-full bg-rose-500"></div>
+<div class="flex items-start justify-between pr-2">
+<div class="flex items-center gap-1.5">
+<span class="font-display font-extrabold text-sm text-rose-700">P.301</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white uppercase">Quá tải</span>
+</div>
+<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping"></span> 28 phút
+              </span>
+</div>
+<div class="my-3 pr-2">
+<p class="font-semibold text-sm text-rose-950 leading-snug">X-Quang Kỹ Thuật Số</p>
+<p class="text-xs text-rose-700/70 mt-0.5">Tầng 3 • CĐHA Kỹ Thuật Cao</p>
+</div>
+<div class="pt-2 border-t border-rose-200/60 flex items-center justify-between text-xs pr-2">
+<span class="text-rose-800 font-medium">Đang phục vụ:</span>
+<span class="font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md">9/8 ca</span>
+</div>
+</div>
+<!-- 12. P.302 (Yellow) -->
+<div class="p-4 rounded-xl border border-amber-200/80 bg-amber-50/20 hover:border-amber-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.302</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> 11 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">CT Scanner 128 Dãy</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 3 • CĐHA Kỹ Thuật Cao</p>
+</div>
+<div class="pt-2 border-t border-amber-100/60 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-md">4/8 ca</span>
+</div>
+</div>
+<!-- 13. P.303 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.303</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 6 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Khám Tim Mạch &amp; THA</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 3 • Chuyên Khoa Sâu</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">2/8 ca</span>
+</div>
+</div>
+<!-- 14. P.304 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.304</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 8 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Khám Răng Hàm Mặt</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 3 • Chuyên Khoa</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">3/8 ca</span>
+</div>
+</div>
+<!-- 15. P.305 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.305</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 5 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Khám Mắt &amp; Đo Thị Lực</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 3 • Chuyên Khoa</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">2/8 ca</span>
+</div>
+</div>
+<!-- 16. P.306 (Green) -->
+<div class="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between group">
+<div class="flex items-start justify-between">
+<span class="font-display font-bold text-sm text-slate-900 group-hover:text-teal-700 transition-colors">P.306</span>
+<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 7 phút
+              </span>
+</div>
+<div class="my-3">
+<p class="font-medium text-sm text-slate-800 leading-snug">Nhà Thuốc Bệnh Viện</p>
+<p class="text-xs text-slate-400 mt-0.5">Tầng 1 • Cấp Phát Thuốc</p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="text-slate-500 font-medium">Đang phục vụ:</span>
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">4/10 ca</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT SIDEBAR (300px width fixed): Top 5 Overloaded Rooms -->
+<aside class="w-full lg:w-[300px] lg:min-w-[300px] bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+<div>
+<div class="flex items-center justify-between">
+<h3 class="font-display font-bold text-base text-slate-900">Top 5 Phòng Quá Tải</h3>
+<span class="w-2 h-2 rounded-full bg-rose-500"></span>
+</div>
+<p class="text-xs text-slate-500 mt-0.5">Cần can thiệp điều phối dòng bệnh</p>
+</div>
+<!-- Ranked list (1 to 5) -->
+<div class="flex flex-col gap-3">
+<!-- Rank 1: P.301 -->
+<div class="p-3.5 rounded-xl bg-rose-50/50 border border-rose-200/90 flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-rose-600 text-white text-[11px] font-bold flex items-center justify-center">1</span>
+<div>
+<p class="font-bold text-xs text-slate-900">P.301 - X-Quang KTS</p>
+<p class="text-[11px] text-slate-500">Chờ 28 phút • <strong class="text-rose-700">9 ca</strong></p>
+</div>
+</div>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">Quá tải</span>
+</div>
+<button class="w-full mt-0.5 py-1.5 px-2.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm" onclick="handleIntervention('P.301', 'Tái định tuyến luồng chụp sang P.302 CT và X-Quang dự phòng')">
+<span class="material-symbols-outlined text-[15px]">alt_route</span>
+<span>Tái định tuyến</span>
+</button>
+</div>
+<!-- Rank 2: P.104 -->
+<div class="p-3.5 rounded-xl bg-rose-50/50 border border-rose-200/90 flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-rose-600 text-white text-[11px] font-bold flex items-center justify-center">2</span>
+<div>
+<p class="font-bold text-xs text-slate-900">P.104 - Siêu Âm Bụng</p>
+<p class="text-[11px] text-slate-500">Chờ 22 phút • <strong class="text-rose-700">7 ca</strong></p>
+</div>
+</div>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">Quá tải</span>
+</div>
+<button class="w-full mt-0.5 py-1.5 px-2.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm" onclick="handleIntervention('P.104', 'Kích hoạt phòng đệm và bàn siêu âm lưu động 104B')">
+<span class="material-symbols-outlined text-[15px]">meeting_room</span>
+<span>Mở phòng đệm</span>
+</button>
+</div>
+<!-- Rank 3: P.201 -->
+<div class="p-3 rounded-xl bg-amber-50/40 border border-amber-200/70 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center">3</span>
+<div>
+<p class="font-semibold text-xs text-slate-800">P.201 - Lấy Mẫu Máu</p>
+<p class="text-[11px] text-slate-500">Chờ 16 phút (6 ca)</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800">Tải vừa</span>
+</div>
+<!-- Rank 4: P.203 -->
+<div class="p-3 rounded-xl bg-amber-50/40 border border-amber-200/70 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center">4</span>
+<div>
+<p class="font-semibold text-xs text-slate-800">P.203 - Nội Soi Tiêu Hoá</p>
+<p class="text-[11px] text-slate-500">Chờ 14 phút (5 ca)</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800">Tải vừa</span>
+</div>
+<!-- Rank 5: P.102 -->
+<div class="p-3 rounded-xl bg-amber-50/40 border border-amber-200/70 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center">5</span>
+<div>
+<p class="font-semibold text-xs text-slate-800">P.102 - Khám Nội Tổng Quát</p>
+<p class="text-[11px] text-slate-500">Chờ 12 phút (4 ca)</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800">Tải vừa</span>
+</div>
+</div>
+<!-- Quick Summary Note in Sidebar -->
+<div class="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200/60 text-[11px] text-slate-500 leading-relaxed">
+<div class="flex items-center gap-1 text-teal-700 font-semibold mb-1">
+<span class="material-symbols-outlined text-[15px]">info</span>
+<span>Gợi ý tự động DAG:</span>
+</div>
+          Hệ thống đã chuẩn bị phương án dự phòng định tuyến tự động sau 5 phút nếu thời gian chờ tại P.301 vượt quá 30 phút.
+        </div>
+</aside>
+</section>
+</main>
+<!-- Interactive toast confirmation -->
+<div class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none" id="toastNotification">
+<span class="material-symbols-outlined text-emerald-400 text-[20px]" id="toastIcon">check_circle</span>
+<span class="text-xs font-medium" id="toastMessage">Đã thực hiện lệnh điều phối thành công.</span>
+</div>
+<script>
+    function showToast(message, icon = 'check_circle') {
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMessage');
+      const iconEl = document.getElementById('toastIcon');
+      msg.textContent = message;
+      iconEl.textContent = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3200);
+    }
+
+    function handleIntervention(room, action) {
+      showToast(`Lệnh can thiệp [${room}]: ${action}`, 'alt_route');
+    }
+
+    function handleRefresh() {
+      const icon = document.getElementById('refreshIcon');
+      icon.classList.add('animate-spin');
+      setTimeout(() => {
+        icon.classList.remove('animate-spin');
+        showToast('Dữ liệu toàn viện đã được đồng bộ trực tiếp');
+      }, 600);
+    }
+  </script>
+</body></html>
