@@ -3,15 +3,15 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: ez_auth
-      POSTGRES_PASSWORD: local-auth-test-only
-      POSTGRES_DB: ez_auth_test
+      POSTGRES_USER: ${AUTH_DB_USERNAME:?Set AUTH_DB_USERNAME in .env}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD in .env}
+      POSTGRES_DB: ${AUTH_DB_DATABASE:?Set AUTH_DB_DATABASE in .env}
     ports:
       - "127.0.0.1:5434:5432"
     volumes:
       - auth_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ez_auth -d ez_auth_test"]
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 2s
       timeout: 3s
       retries: 30
@@ -28,12 +28,13 @@ services:
       PORT: 3000
       DB_HOST: db
       DB_PORT: 5432
-      DB_USERNAME: ez_auth
-      DB_PASSWORD: local-auth-test-only
-      DB_DATABASE: ez_auth_test
+      DB_USERNAME: ${AUTH_DB_USERNAME:?Set AUTH_DB_USERNAME in .env}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD in .env}
+      DB_DATABASE: ${AUTH_DB_DATABASE:?Set AUTH_DB_DATABASE in .env}
       DB_SYNC: "false"
       DB_LOGGING: "false"
-      JWT_ACCESS_SECRET: local-docker-auth-test-secret-at-least-32-characters
+      JWT_ACCESS_SECRET: ${AUTH_JWT_ACCESS_SECRET:?Set AUTH_JWT_ACCESS_SECRET in .env}
+      SIGNATURE_SECRET: ${AUTH_SIGNATURE_SECRET:?Set AUTH_SIGNATURE_SECRET in .env}
       CORS_ORIGINS: http://localhost:3001
       OTP_DELIVERY_URL: http://mailpit:8025/api/v1/send
     ports:

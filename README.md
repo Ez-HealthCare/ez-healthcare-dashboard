@@ -51,7 +51,7 @@ These are one source per application, not a new cross-repo shared package.
 Keep cookie/endpoint/OTP contracts compatible across both apps when changing them.
 Do not extract request state, React/service instances, framework exports, or
 historical migrations into constants. Component markup and CSS remain presentation.
-Local verification: `npm run test:unit` (20 web tests). API config delivery:
+Local verification: `npm run test:unit` (21 web tests). API config delivery:
 `npm test -- --runInBand` (205 tests); see the dated delivery evidence in the plan.
 
 ### API and data-flow boundaries
@@ -123,9 +123,107 @@ dashboard/
 
 ## 🚀 Getting Started
 
+### Partner quick start (PowerShell)
+
+Hai repo phải nằm cạnh nhau với tên thư mục `api` và `dashboard`. Dùng nhánh
+`repair` ở cả hai. Các bước tạo env/database bên dưới dành cho lần thiết lập đầu;
+không ghi đè `.env`, reset database hoặc seed đè dữ liệu đang dùng.
+
+```powershell
+# Chạy từ thư mục cha mong muốn; bỏ qua clone nếu đã có repo.
+git clone --branch repair git@github.com:Ez-HealthCare/ez-healthcare-api.git api
+git clone --branch repair git@github.com:Ez-HealthCare/ez-healthcare-dashboard.git dashboard
+cd dashboard
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Nếu đã có checkout: kiểm tra `git status`, chuyển sang `repair` và dùng
+`git pull --ff-only` trong từng repo khi working tree sạch. Không reset/stash thay
+đổi của người khác. `.env` thật không được push; mỗi người tự cấu hình từ template.
+
+**Cách A — Docker toàn bộ, phù hợp dựng demo mới:** cần Docker Desktop đang chạy
+Linux engine. Trong `dashboard/.env`, thay các placeholder `AUTH_DB_PASSWORD`,
+`AUTH_JWT_ACCESS_SECRET` (ít nhất 32 ký tự) và `AUTH_SIGNATURE_SECRET` bằng giá trị
+local riêng; không đưa secret vào biến `NEXT_PUBLIC_` hoặc commit file này.
+
+```powershell
+docker compose -f compose.auth.yml config --quiet
+docker compose -f compose.auth.yml up -d --build
+docker compose -f compose.auth.yml ps
+```
+
+API container tự chạy migration còn thiếu và seed tài khoản `--auth-only` trước
+khi phục vụ. Đây là database auth-test riêng (host port 5434), không phải database
+PostgreSQL local trên port 5432. Chỉ dùng stack này với dữ liệu test; nếu volume đã
+tồn tại, giữ credential cũ và rà migration/seed trước khi chạy lại. Clinical seed
+đầy đủ và nghiệp vụ Phase B chưa hoàn tất. Tài khoản demo nằm ở bảng bên dưới.
+
+- Dashboard: <http://localhost:3001>
+- API/Swagger: <http://localhost:3000/api/docs>
+- Mailpit, lấy OTP đúng email và thư mới nhất: <http://localhost:8025>
+
+Chạy lại hằng ngày dùng `docker compose -f compose.auth.yml up -d`.
+Dừng bằng `docker compose -f compose.auth.yml stop`, giữ nguyên volume. Không dùng
+`down -v` để xử lý lỗi đăng nhập. Với OTP, chờ đủ 60 giây giữa các lần yêu cầu lại.
+
+**Cách B — FE/BE local để phát triển:** dùng Node.js 24 đã được kiểm thử và Docker
+cho DB/Mailpit. Không chạy cùng lúc container API/dashboard và app local vì trùng
+port 3000/3001. Các lệnh migration/seed sau chỉ dành cho DB auth-test mới/cô lập.
+
+Trong terminal tại `dashboard`:
+
+```powershell
+docker compose -f compose.auth.yml stop api dashboard
+docker compose -f compose.auth.yml up -d db mailpit
+npm ci
+```
+
+Trong terminal tại `api`, cài dependency và tạo env nếu chưa có:
+
+```powershell
+npm ci
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Sửa `api/.env`: `PORT=3000`, `DB_HOST=localhost`, `DB_PORT=5434`;
+`DB_USERNAME`/`DB_PASSWORD`/`DB_DATABASE` phải khớp các giá trị `AUTH_DB_*` trong
+`dashboard/.env`. Đặt JWT/signature secret riêng, `DB_SYNC=false`,
+`CORS_ORIGINS=http://localhost:3001`,
+`OTP_DELIVERY_URL=http://localhost:8025/api/v1/send`. Frontend giữ
+`API_URL=http://localhost:3000/api` và `APP_ORIGIN=http://localhost:3001`.
+
+Khởi tạo **DB test mới** rồi chạy backend:
+
+```powershell
+npm run build
+node --loader ./esm-loader.mjs dist/database/setup.js
+node --loader ./esm-loader.mjs dist/database/seeds/seed.js --auth-only
+npm run dev
+```
+
+Terminal frontend tại `dashboard`:
+
+```powershell
+npm run dev
+```
+
+Sau lần thiết lập đầu, chỉ cần bật DB/Mailpit và `npm run dev` ở mỗi repo; không
+cần chạy migration/seed mỗi lần, không cần `$env:API_URL` hay `--port` thủ công.
+FE mặc định **3001**, BE đọc `.env` với `PORT=3000`. Ctrl+C trong mỗi terminal để
+dừng app; từ dashboard chạy `docker compose -f compose.auth.yml stop db mailpit`
+để dừng hạ tầng.
+
+**Nếu dùng database local đã có:** giữ nguyên kết nối/credential của nó (có thể
+là port 5432), không chuyển sang 5434 hoặc seed lại một cách tự động. Backup và
+kiểm tra migration trước khi nâng schema. Migration chạy trên máy một thành viên
+không tự áp dụng sang máy khác qua Git. Lỗi OTP `value too long ... varchar(10)`
+hoặc thiếu `auth_sessions` cho thấy DB chưa có `AddAuthSessions1792050000000`;
+không sửa bằng cách cắt hash, bật `DB_SYNC=true` hay đổi UI. Xem hướng dẫn kiểm tra
+migration trong README backend. Đọc `todo.md` để biết phạm vi Phase B hiện tại.
+
 ### Prerequisites
 
-- **Node.js**: >= 20.x
+- **Node.js**: 24 (validated local/Docker runtime)
 - **Package Manager**: `npm` (or `pnpm` / `yarn`)
 
 ### Installation
@@ -142,16 +240,43 @@ npm install
 
 ### Running the Development Server
 
+Create `.env` from `.env.example` on first setup only, then configure its values.
+Do not overwrite an existing `.env`. Next loads `API_URL` and `APP_ORIGIN` from
+this file; no PowerShell `$env:` setup is needed. Keep secrets server-only, never
+prefix them with `NEXT_PUBLIC_`. Existing `.env.local` or process env overrides
+take precedence; remove stale overrides if you change `.env`.
+
 ```bash
 npm run dev
 ```
 
-When using the API on port 3000, start the dashboard with
-`npm run dev -- --port 3001` and open [http://localhost:3001](http://localhost:3001).
+The dashboard defaults to [http://localhost:3001](http://localhost:3001) for both
+`npm run dev` and `npm start` (build first for production). The port is explicit
+in `package.json` because Next cannot read its startup port from `.env`.
+In `../api`, `npm run dev` (alias of `npm run start:dev`) starts the API on
+port 3000 using the API repo's own `.env` and `ApiConfigService`.
+
+Start the database configured in `../api/.env` before the local backend. On the
+existing machine its container is `ezhealthcare_postgres` (`docker start
+ezhealthcare_postgres`). Local OTP needs Mailpit; from this repo run
+`docker compose -f compose.auth.yml up -d mailpit` if needed. The auth-test database
+below is separate, on port 5434; do not silently switch the API's local DB settings.
+
+Do not start Docker `api`/`dashboard` alongside local apps on the same ports.
+Stop the existing app with Ctrl+C, or the Compose service with `docker compose
+-f compose.auth.yml stop api dashboard`, before switching modes. Never kill all
+Node processes; other tools may be using them.
 
 ### Authentication with Docker and seed data
 
-Keep the API repository at `../api`, then run:
+Keep the API repository at `../api`.
+
+First configure `AUTH_DB_USERNAME`, `AUTH_DB_PASSWORD`, `AUTH_DB_DATABASE`,
+`AUTH_JWT_ACCESS_SECRET` and `AUTH_SIGNATURE_SECRET` in this repo's ignored `.env`.
+Compose requires these values rather than embedding credentials in YAML. Keep
+the original database credentials when reusing an existing volume; changing an
+env value does not change PostgreSQL's existing user/password. `test:auth` reads
+the same env file (or an explicit `AUTH_TEST_SECRET` override for its signing check).
 
 ```bash
 docker compose -f compose.auth.yml up -d --build
@@ -240,8 +365,10 @@ expire after 15 minutes. Refresh tokens rotate and are revoked by logout.
 Without remember-me the refresh cookie lasts for the browser session, with an
 8-hour server limit; remember-me persists it for up to 30 days.
 
-For a local dashboard, set `API_URL=http://localhost:3000/api` (or the existing
-`NEXT_PUBLIC_API_URL`) and `APP_ORIGIN=http://localhost:3001`. In Docker the API URL
+For a local dashboard, configure `API_URL=http://localhost:3000/api` and
+`APP_ORIGIN=http://localhost:3001` in `.env`. The legacy `NEXT_PUBLIC_API_URL`
+fallback is retained, but new configuration should use server-only `API_URL`.
+In Docker the API URL
 is `http://api:3000/api`. API configuration is documented in `../api/.env.example`:
 set a strong `JWT_ACCESS_SECRET`, exact `CORS_ORIGINS`, and `OTP_DELIVERY_URL`.
 The mail endpoint uses the [Mailpit send API](https://mailpit.axllent.org/docs/usage/sending-messages/).
@@ -264,9 +391,9 @@ docker compose -f compose.auth.yml down
 
 | Command                | Description                                               |
 | :--------------------- | :-------------------------------------------------------- |
-| `npm run dev`          | Starts the development server with Turbopack on port 3000 |
+| `npm run dev`          | Starts the development server with Turbopack on port 3001 |
 | `npm run build`        | Compiles and builds the production bundle                 |
-| `npm run start`        | Runs the production server locally                        |
+| `npm run start`        | Runs the production server locally on port 3001           |
 | `npm run lint`         | Inspects code quality and potential issues using ESLint   |
 | `npm run lint:fix`     | Automatically fixes autofixable ESLint issues             |
 | `npm run format`       | Formats all supported files using Prettier                |

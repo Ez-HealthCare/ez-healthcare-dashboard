@@ -6,4 +6,5 @@ RUN npm ci
 COPY . .
 RUN npm run build
 EXPOSE 3000
-CMD ["npm", "start"]
+# Docker keeps internal port 3000; Compose publishes it as localhost:3001.
+CMD ["node", "node_modules/next/dist/bin/next", "start", "--port", "3000"]

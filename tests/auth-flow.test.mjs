@@ -5,8 +5,8 @@ import { createHmac } from "node:crypto";
 const API = process.env.AUTH_TEST_API || "http://localhost:3000/api";
 const WEB = process.env.AUTH_TEST_WEB || "http://localhost:3001";
 const MAIL = process.env.AUTH_TEST_MAIL || "http://localhost:8025";
-const TEST_SECRET =
-  process.env.AUTH_TEST_SECRET || "local-docker-auth-test-secret-at-least-32-characters";
+const TEST_SECRET = process.env.AUTH_TEST_SECRET || process.env.AUTH_JWT_ACCESS_SECRET;
+assert.ok(TEST_SECRET, "Configure AUTH_JWT_ACCESS_SECRET in .env or AUTH_TEST_SECRET");
 const staff = [
   ["ADMIN", "admin@ezhealthcare.com", "Admin@123456"],
   ["DOCTOR", "dr.smith@ezhealthcare.com", "Doctor@123456"],

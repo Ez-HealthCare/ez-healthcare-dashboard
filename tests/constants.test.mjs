@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFile } from "node:fs/promises";
 import {
   AUTH_COOKIE_NAMES,
   OTP_PATTERN,
@@ -23,4 +24,19 @@ test("patient navigation remains the server tab allowlist", () => {
     PATIENT_NAVIGATION.map(([tab]) => tab),
     ["", "visits", "records"]
   );
+});
+
+test("startup keeps local frontend on 3001 and Docker on its mapped internal port", async () => {
+  const rootFile = (path) => readFile(new URL("../" + path, import.meta.url), "utf8");
+  const { scripts } = JSON.parse(await rootFile("package.json"));
+  assert.equal(scripts.dev, "next dev --port 3001");
+  assert.equal(scripts.start, "next start --port 3001");
+  assert.match(scripts["test:auth"], /--env-file=\.env/);
+  const dockerfile = await rootFile("Dockerfile");
+  const command = JSON.parse(dockerfile.match(/^CMD (.+)$/m)[1]);
+  assert.deepEqual(command.slice(-3), ["start", "--port", "3000"]);
+  const compose = await rootFile("compose.auth.yml");
+  assert.ok(compose.includes("127.0.0.1:3001:3000"));
+  assert.ok(compose.includes("POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:?"));
+  assert.ok(compose.includes("JWT_ACCESS_SECRET: ${AUTH_JWT_ACCESS_SECRET:?"));
 });

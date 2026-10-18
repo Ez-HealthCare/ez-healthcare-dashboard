@@ -5,10 +5,10 @@
   "scripts": {
     "test:unit": "node --import ./tests/register-next-aliases.mjs --test tests/http-client.test.mjs tests/auth-services.test.mjs tests/api-boundaries.test.mjs tests/constants.test.mjs tests/workspace-policy.test.mjs",
     "test:workspaces": "node --test tests/workspaces-flow.test.mjs",
-    "test:auth": "node --test tests/auth-flow.test.mjs",
-    "dev": "next dev",
+    "test:auth": "node --env-file=.env --test tests/auth-flow.test.mjs",
+    "dev": "next dev --port 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3001",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
