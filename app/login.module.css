@@ -1,0 +1,726 @@
+.loginPage {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #eaedff;
+  color: #0f172a;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.loginPage * {
+  box-sizing: border-box;
+}
+
+/* Header */
+.header {
+  height: 80px;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  flex-shrink: 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.headerBrand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.headerLogoBox {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: #00685f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 104, 95, 0.25);
+  flex-shrink: 0;
+}
+
+.headerBrandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.headerTitle {
+  font-size: 19px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.headerSubtitle {
+  font-size: 10px;
+  font-weight: 700;
+  color: #00685f;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.langSelector {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background-color: #dbe0ed;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3d4947;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.langActive {
+  color: #00685f;
+  font-weight: 700;
+}
+
+.langDivider {
+  color: #94a3b8;
+  opacity: 0.6;
+}
+
+/* Main Container */
+.mainContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 32px 24px;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.cardWrapper {
+  display: flex;
+  width: 100%;
+  max-width: 1210px;
+  min-height: 750px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow:
+    0 20px 45px -10px rgba(15, 23, 42, 0.07),
+    0 0 1px rgba(15, 23, 42, 0.06);
+  background-color: #f2f3ff;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Left Journey Panel */
+.leftPanel {
+  flex: 1.25;
+  position: relative;
+  background: linear-gradient(155deg, #05483d 0%, #075043 35%, #0b5e50 70%, #156d5e 100%);
+  padding: 44px 44px 36px 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.routeLines {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  opacity: 0.22;
+  z-index: 0;
+}
+
+.leftPanelContent {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.leftBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.routeMarkBox {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brandNameLeft {
+  font-size: 19px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.emrBadge {
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: rgba(137, 245, 231, 0.18);
+  border: 1px solid rgba(137, 245, 231, 0.35);
+  color: #89f5e7;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.leftHeading {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.24;
+  margin-top: 28px;
+  letter-spacing: -0.02em;
+}
+
+.leftSubheading {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+  margin-top: 12px;
+  margin-bottom: 26px;
+  max-width: 490px;
+}
+
+.stepsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.stepCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.stepIconBox {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(0, 104, 95, 0.55);
+  border: 1px solid rgba(137, 245, 231, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stepBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stepTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.stepBadge {
+  font-size: 11px;
+  font-weight: 500;
+  color: #89f5e7;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.stepDesc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+.securityBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  position: relative;
+  z-index: 1;
+  color: #d1fae5;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 0;
+}
+
+/* Right Login Panel */
+.rightPanel {
+  flex: 1;
+  background-color: #f2f3ff;
+  padding: 36px 36px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 416px;
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow:
+    0 8px 30px -4px rgba(0, 0, 0, 0.04),
+    0 0 1px rgba(0, 0, 0, 0.08);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.loginCardTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.modeSwitch {
+  display: flex;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.modeSwitch > label {
+  flex: 1;
+  text-align: center;
+}
+
+.feedback {
+  margin-bottom: 16px;
+}
+
+.otpActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.loginCardSubtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.fieldHint {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.formItem {
+  margin-bottom: 16px !important;
+}
+
+.inputCustom {
+  height: 44px;
+  border-radius: 10px !important;
+  font-size: 14px;
+  width: 100%;
+}
+
+.checkboxRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -4px;
+  margin-bottom: 18px;
+}
+
+.checkboxLabel {
+  font-size: 13px;
+  color: #334155;
+}
+
+.forgotBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #00685f;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
+.forgotBtn:hover {
+  text-decoration: underline;
+  color: #004d44;
+}
+
+.alertBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.alertError {
+  background-color: #ffe6e3;
+  border: 1px solid #ffb4ab;
+  color: #ba1a1a;
+}
+
+.alertInfo {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.alertIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.alertText {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.submitBtn {
+  width: 100%;
+  height: 46px;
+  border-radius: 10px !important;
+  background-color: #016960 !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none !important;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(1, 105, 96, 0.25) !important;
+  transition: background-color 0.2s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background-color: #005048 !important;
+}
+
+.submitBtn:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.registerGuidance {
+  text-align: center;
+  margin-top: 16px;
+  min-width: 0;
+}
+
+.registerGuidanceTitle {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.registerGuidanceDesc {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 3px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.supportBox {
+  margin-top: 18px;
+  background-color: #eaedff;
+  border-radius: 12px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.supportLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e3a5f;
+  min-width: 0;
+}
+
+.supportHotlineBadge {
+  background-color: #dbeafe;
+  color: #0284c7;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease;
+}
+
+.supportHotlineBadge:hover {
+  background-color: #bfdbfe;
+}
+
+.rightDisclaimer {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin-top: 18px;
+  line-height: 1.45;
+  max-width: 380px;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* Footer */
+.footer {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px 40px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #64748b;
+  flex-shrink: 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.footerCopyright {
+  line-height: 1.4;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.footerLinks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  min-width: 0;
+}
+
+.footerLink {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.footerLink:hover {
+  color: #00685f;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1080px) {
+  .cardWrapper {
+    max-width: 100%;
+  }
+
+  .leftPanel {
+    padding: 36px 28px;
+  }
+
+  .rightPanel {
+    padding: 28px 24px;
+  }
+
+  .leftHeading {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    padding: 0 20px;
+    height: 70px;
+  }
+
+  .mainContainer {
+    padding: 12px 16px 20px;
+  }
+
+  .cardWrapper {
+    flex-direction: column;
+    min-height: auto;
+    border-radius: 20px;
+  }
+
+  .leftPanel {
+    padding: 28px 20px;
+  }
+
+  .rightPanel {
+    padding: 24px 16px;
+  }
+
+  .footer {
+    padding: 16px 20px 24px;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .footerLinks {
+    justify-content: center;
+    gap: 12px;
+  }
+}
+
+/* Tablet & Mobile (< 768px): clean stack / hide decorative left panel without overflow */
+@media (max-width: 768px) {
+  .header {
+    height: 60px;
+    padding: 0 16px;
+  }
+
+  .headerTitle {
+    font-size: 16px;
+  }
+
+  .headerLogoBox {
+    width: 34px;
+    height: 34px;
+  }
+
+  .langSelector {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .mainContainer {
+    padding: 8px 12px 16px;
+  }
+
+  /* Hide decorative left panel on mobile to keep auth card front & center */
+  .leftPanel {
+    display: none !important;
+  }
+
+  .cardWrapper {
+    background: transparent;
+    box-shadow: none;
+    min-height: auto;
+    border-radius: 0;
+    width: 100%;
+  }
+
+  .rightPanel {
+    padding: 0;
+    background: transparent;
+    width: 100%;
+  }
+
+  .loginCard {
+    max-width: 100%;
+    padding: 24px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 18px;
+    width: 100%;
+  }
+
+  .loginCardTitle {
+    font-size: 20px;
+  }
+
+  .loginCardSubtitle {
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+
+  .footer {
+    padding: 12px 16px 20px;
+    font-size: 11px;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .footerLinks {
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+  }
+}

@@ -1,0 +1,92 @@
+name: ez-healthcare-auth
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ez_auth
+      POSTGRES_PASSWORD: local-auth-test-only
+      POSTGRES_DB: ez_auth_test
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - auth_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ez_auth -d ez_auth_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  mailpit:
+    image: axllent/mailpit:v1.30
+    ports:
+      - "127.0.0.1:8025:8025"
+  api:
+    build:
+      context: ../api
+      dockerfile: ../dashboard/docker/api.Dockerfile
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ez_auth
+      DB_PASSWORD: local-auth-test-only
+      DB_DATABASE: ez_auth_test
+      DB_SYNC: "false"
+      DB_LOGGING: "false"
+      JWT_ACCESS_SECRET: local-docker-auth-test-secret-at-least-32-characters
+      CORS_ORIGINS: http://localhost:3001
+      OTP_DELIVERY_URL: http://mailpit:8025/api/v1/send
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+  dashboard:
+    build: .
+    environment:
+      API_URL: http://api:3000/api
+      APP_ORIGIN: http://localhost:3001,http://dashboard:3000
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+  browser-tests:
+    image: mcr.microsoft.com/playwright:v1.64.0-noble
+    profiles: ["test"]
+    init: true
+    shm_size: 1gb
+    working_dir: /tmp/auth-browser
+    command:
+      [
+        "sh",
+        "-c",
+        "npm install --no-audit --no-fund --prefix /tmp/auth-browser playwright@1.64.0 && node /work/auth-browser.mjs",
+      ]
+    environment:
+      PLAYWRIGHT_MODULE: /tmp/auth-browser/node_modules/playwright/index.mjs
+      AUTH_TEST_WEB: http://dashboard:3000
+      AUTH_TEST_MAIL: http://mailpit:8025
+      AUTH_TEST_RESULTS: /results
+    volumes:
+      - ./tests:/work:ro
+      - ./test-results:/results
+    depends_on:
+      dashboard:
+        condition: service_started
+volumes:
+  auth_postgres:
