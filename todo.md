@@ -1,6 +1,6 @@
 # Ez-HealthCare Dashboard — Source of Truth
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 
 This file is the canonical implementation plan and status tracker for `dashboard/`.
 Read it before making changes and update it in the same change that completes or
@@ -23,12 +23,11 @@ nhận đến điều dưỡng/lễ tân ghi thông tin bệnh, phân phòng và
 Dashboard bệnh nhân phản ánh đúng số và giai đoạn hiện tại, không dùng dữ liệu mẫu
 để thay thế kết quả API.
 
-Current status: **B1 đã hoàn tất rà contract và chốt quyết định; B2–B9 chưa bắt đầu.**
-Phase A đã hoàn tất shell/menu/server workspace gate. Các trang nghiệp vụ staff
-vẫn là placeholder; dashboard bệnh nhân vẫn có dữ liệu lâm sàng minh họa.
-Quyền API lâm sàng, cấp số an toàn, clinical seed và seeded regression mới nhất
-còn cần xử lý. Lần cập nhật này chỉ thay tài liệu; chưa sửa runtime, migration,
-seed hay database.
+Current status: **B1–B9 đã triển khai và xác minh cho phạm vi Phase B.** Phase A
+shell/menu/server workspace gate được giữ nguyên; patient/nurse/doctor workspace
+đã dùng API và PostgreSQL thật. Stack demo Phase B dùng volume và host port riêng,
+không thay thế hoặc xóa dữ liệu local/auth cũ. Các advisory dependency còn mở nên
+chưa tuyên bố production-ready.
 
 #### Quyết định đã được người dùng xác nhận
 
@@ -111,7 +110,7 @@ Luồng đã chốt:
 
 #### Tasks Phase B — triển khai và xác minh
 
-**B1 đã hoàn tất; B2–B9 chưa bắt đầu.** Mỗi task phải ghi kết quả thực tế và bằng
+**B1–B9 đã hoàn tất trong phạm vi Phase B.** Mỗi task ghi kết quả thực tế và bằng
 chứng trước khi chuyển sang `[x]`; ghi nhận quyết định không đồng nghĩa đã triển
 khai chức năng.
 
@@ -121,50 +120,105 @@ khai chức năng.
       code phần phụ thuộc; tái dùng cấu trúc hiện có, không dựng nghiệp vụ song song.
       Evidence: đã rà source dashboard/API, use case, entity, state machine, guard,
       migration, seed và test; người dùng đã chốt D1–D12 bằng popup. Contract,
-      mismatch và hướng triển khai được ghi ngay phía trên. Đây là thay đổi tài
-      liệu; chưa chạy runtime test hoặc coi B2–B9 là đã triển khai.
-- [ ] **B2 — Đồng bộ quyền API và phạm vi dữ liệu.** Goal: PATIENT chỉ thao tác/xem
+      mismatch và hướng triển khai được ghi ngay phía trên. Tại thời điểm đóng B1
+      đây chỉ là thay đổi tài liệu; bằng chứng runtime B2–B9 nằm ở từng task dưới.
+- [x] **B2 — Đồng bộ quyền API và phạm vi dữ liệu.** Goal: PATIENT chỉ thao tác/xem
       lượt của mình; NURSE và alias RECEPTIONIST tiếp nhận, cập nhật và cấp lại theo
       contract; DOCTOR chỉ truy cập phạm vi phòng đã chốt; ADMIN không có quyền
       lâm sàng ngầm. Verify bằng request trực tiếp, sai role, đổi patient/visit/room
       ID và trạng thái không hợp lệ; giữ auth/refresh/logout hiện có.
-- [ ] **B3 — Cấp số và chuyển trạng thái an toàn ở backend.** Goal: cấp số tiếp
+      Evidence: hall-ticket yêu cầu PATIENT; ownership được kiểm tra; NURSE và
+      RECEPTIONIST có intake/assign/reissue/requeue; ADMIN nhận 403 ở reception
+      queue và clinical mutation; bác sĩ P.102 nhận 200 nhưng P.105 nhận 403 theo
+      `DoctorSchedule`. Department catalog cũng yêu cầu JWT. Rà soát cuối đã đóng
+      hai endpoint triage cũ: anonymous nhận 401, ADMIN 403, NURSE 200; do đó API
+      không còn đường bệnh nhân tự gửi triệu chứng ngoài UI Phase B.
+- [x] **B3 — Cấp số và chuyển trạng thái an toàn ở backend.** Goal: cấp số tiếp
       nhận và số khám theo phòng/ngày, reset dãy theo ngày mà giữ lịch sử; chuyển
       phòng/cấp lại theo B1. Server/database chịu trách nhiệm cấp số nguyên tử,
       không trùng khi đồng thời; retry/double-click không được vô tình trở thành
       yêu cầu bốc lại. Lưu được dấu vết cấp lại/thay đổi liên quan; không tính số ở UI.
-- [ ] **B4 — Bệnh nhân lấy và theo dõi số thật.** Goal: nối API cho lấy số, hiển
+      Evidence: `queue_counters` dùng atomic upsert và unique scope/day; lịch sử
+      nằm ở `queue_tickets`; mutation cấp số yêu cầu idempotency key. Hai request
+      đồng thời nhận A-002/A-003, retry cùng key trả cùng Visit, P.102/P.105 có dãy
+      CL-102-02/CL-105-01 độc lập, staff reissue nhận CL-102-03.
+- [x] **B4 — Bệnh nhân lấy và theo dõi số thật.** Goal: nối API cho lấy số, hiển
       thị trạng thái/số tiếp nhận hoặc số khám đúng phòng và ngày, cùng thông báo
       cấp số/cấp lại/phân phòng. Không có form tự khai triệu chứng; không cho tự
       cấp lại sau phân phòng. Reload khôi phục đúng dữ liệu; có loading/empty/error,
       xác nhận thao tác và chống submit trùng. Không fallback sang số minh họa.
-- [ ] **B5 — Điều dưỡng/lễ tân tiếp nhận và phân phòng.** Goal: hàng đợi tiếp nhận,
+      Evidence: dashboard gọi current-visit/hall-ticket/notification API, phân biệt
+      hai loại số, khóa nút khi submit, polling khi visible, cảnh báo mất vị trí
+      trước reissue và API trả 403 khi tự reissue sau phân phòng.
+- [x] **B5 — Điều dưỡng/lễ tân tiếp nhận và phân phòng.** Goal: hàng đợi tiếp nhận,
       tìm/xác minh bệnh nhân, ghi/cập nhật thông tin bệnh đã chốt, chọn phòng và
       cấp số khám; xử lý cấp lại sau phân phòng. Verify lưu dữ liệu thật, validation,
       quyền sửa, chuyển trạng thái, lỗi xung đột và thông báo cho bệnh nhân; không
       tạo trùng lượt chỉ vì reload hoặc retry.
-- [ ] **B6 — Bác sĩ xem hàng đợi và tiếp nhận khám.** Goal: hiển thị hàng đợi phòng
+      Evidence: workspace live có verify, form intake bắt buộc complaint + sáu sinh
+      hiệu, chọn phòng/cấp số và staff cấp lại số khám có lý do/cảnh báo. Backend
+      khóa intake từ IN_EXAMINATION, lưu NEWS2/red flag, audit và notification.
+- [x] **B6 — Bác sĩ xem hàng đợi và tiếp nhận khám.** Goal: hiển thị hàng đợi phòng
       trong phạm vi được phép, mở lượt khám và thông tin điều dưỡng đã ghi, tiếp
       nhận khám theo state machine đã chốt. Hồ sơ nằm trong ngữ cảnh lượt khám;
       không thêm menu hồ sơ bệnh nhân toàn hệ thống. Chưa kê đơn/chỉ định/thanh toán.
-- [ ] **B7 — Docker và clinical seed phục vụ demo.** Goal: rà/sửa lỗi schema seed
+      Evidence: doctor workspace tải phòng theo lịch, hiển thị complaint/vitals,
+      ưu tiên/FIFO, call/start-exam, 3 lần gọi → tạm vắng và staff requeue cuối hàng.
+- [x] **B7 — Docker và clinical seed phục vụ demo.** Goal: rà/sửa lỗi schema seed
       `triage_rules.targetDepartmentId` / `target_department_id`, chuẩn bị catalog/
       phòng/phân công/tài khoản tối thiểu để chạy luồng thật. Migration/seed phải
       tái lập được trong database test cô lập; không xóa volume hoặc seed đè dữ
       liệu hiện có khi chưa được phép. Không coi auth-only seed là đủ cho Phase B.
-- [ ] **B8 — Regression và demo end-to-end.** Goal: chạy Docker với seed thật;
+      Evidence: forward migration chuẩn hóa các cột Visit/Vital/Schedule/Triage đã
+      chặn seed, thêm queue/notification schema; full seed tạo catalog và lịch bác
+      sĩ hai ca. Docker clean build/migrate/seed pass trên volume mới
+      `ez-healthcare-phase-b_phase_b_postgres`; không xóa volume nào.
+- [x] **B8 — Regression và demo end-to-end.** Goal: chạy Docker với seed thật;
       verify PATIENT lấy số → NURSE nhập thông tin/phân phòng → DOCTOR nhận khám →
       PATIENT thấy trạng thái mới. Kiểm tra cấp đồng thời, retry, bốc lại sau các
       trạng thái, hai phòng có dãy độc lập, ranh giới ngày và giữ lịch sử; kiểm tra
       phân quyền API/UI, refresh/logout, desktop/mobile và bàn phím. Lint, types,
       unit/integration/browser, formatting và production build hai repo phải pass;
       ghi rõ test đã chạy, chưa chạy và lỗi còn lại, không dùng fixture thay DB thật.
-- [ ] **B9 — Rà rủi ro dependency và chốt bàn giao.** Goal: phân loại 9 advisory
+      Evidence: PostgreSQL demo thật pass A-001 → RECEPTION_VERIFIED → TRIAGE_PENDING
+      → CL-102-01 → CLINIC_CALLED → IN_EXAMINATION; patient thấy trạng thái + 3
+      notifications. Concurrent/idempotency/two-room/reissue/permission smoke pass.
+      API build/lint + 250 tests; dashboard build/lint + 24 unit tests, workspace
+      HTTP matrix và Docker browser all-role/OTP/mobile/logout pass. Nghiệm thu UI
+      cuối bằng patient OTP mới pass A-006 → CL-102-06 → IN_EXAMINATION trên
+      PostgreSQL thật; lý do khám/6 sinh hiệu đến đúng hàng đợi bác sĩ, reload bệnh
+      nhân giữ số/trạng thái/3 notification, ADMIN và bác sĩ sai phòng nhận 403.
+      Ngoài giờ chuẩn, lấy số mới nhận đúng 409; Compose override chỉ dành cho test
+      giúp scenario tái chạy được ngoài giờ rồi stack được khôi phục về
+      `07:00-11:30,13:00-16:30`.
+- [x] **B9 — Rà rủi ro dependency và chốt bàn giao.** Goal: phân loại 9 advisory
       đã ghi nhận (8 high, 1 critical), đề xuất bản sửa tương thích và kiểm thử lại
       phần nâng cấp được duyệt; không chạy `audit fix --force` hoặc tự nâng major.
       Cập nhật README, route/API contract, tài khoản seed, scenario demo và bằng
       chứng ở file này. Ghi rõ rủi ro còn lại; không tuyên bố production-ready khi
       chưa đánh giá/xử lý các vấn đề bảo mật và tiêu chí phát hành.
+      Evidence: full audit dashboard vẫn 8 high/1 critical; runtime 2 high/1
+      critical. API full tree 2 low/22 moderate/5 high/2 critical; runtime 2
+      high/1 critical. Không chạy `audit fix --force`. README ghi route, seed,
+      scenario, port/volume và hướng nâng Next đồng bộ 16.4.2 trước, sau đó Nest
+      platform-express compatible patch; phải rerun regression trước phát hành.
+
+#### Xác minh cuối và nợ kỹ thuật được chấp nhận — 2026-10-18
+
+- API: Prettier, ESLint, build và 250/250 Jest tests pass sau khi khóa triage API.
+  Dashboard: ESLint, production Docker build, 24/24 unit tests và các file Phase B
+  vừa sửa đều pass Prettier. `prettier --check .` toàn repo vẫn báo 8 file cấu hình/
+  tài liệu cũ ngoài diff Phase B; không tự format `AGENTS.md`/`CLAUDE.md` chỉ để làm
+  xanh lệnh kiểm tra. Đây là baseline formatting cần chủ repo xử lý riêng.
+- Browser scenario có script tái chạy `tests/phase-b-browser.mjs`, ảnh bằng chứng ở
+  `test-results/phase-b-*.png` (ignored). Lần pass cuối tạo A-006/CL-102-06; lần
+  chạy trước đó A-005/CL-102-05 cũng pass. Một lần ngoài giờ bị API chặn 409 đúng
+  policy trước khi dùng override test.
+- Không tuyên bố production-ready: advisory dependency còn mở; service Visit còn
+  lớn và intake/verify chưa transaction toàn phần; idempotency cùng-key đồng thời,
+  active-ticket uniqueness/expiration và quota khi reissue cần integration test/
+  hardening trước triển khai tải thật. Các điểm này không làm sai demo Phase B đã
+  nghiệm thu nhưng là điều kiện phát hành production.
 
 Thứ tự: B1 → B2/B3 → B4/B5/B6; chuẩn bị B7 trước kiểm thử dữ liệu thật B8;
 B9 theo dõi rủi ro từ đầu và chốt bàn giao sau regression. Đây là thứ tự công
@@ -189,11 +243,52 @@ việc, không phải yêu cầu giao cho nhiều agent.
 Phase B được theo dõi trực tiếp tại đây. `IMPLEMENTATION_PLAN.md` hiện là bằng
 chứng/kế hoạch Phase A và các delivery trước, không ghi đè các quyết định Phase B.
 
+### Phase C — Hardening để đạt release gate 9+
+
+Current status: **C1–C7 và D1 đã hoàn tất, release gate 9+ đã pass**. Không thay
+đổi nghiệp vụ Phase B, không reset volume và không xóa lịch sử.
+
+- [x] C1 — Transaction hóa verify/reject/intake và khóa mutation theo Visit.
+      Patient, Visit, VisitVital, audit và notification dùng cùng transaction;
+      mutation khóa Visit trước khi đổi trạng thái. Integration xác nhận lỗi audit
+      rollback toàn bộ và intake/start-exam đồng thời cho kết quả tuần tự hợp lệ.
+- [x] C2 — Constraint ticket hiện hành, idempotency fingerprint và retry concurrency.
+      Forward migration thêm partial unique index, queue index và operation/
+      fingerprint; retry PostgreSQL tối đa ba lần. Test thật xác nhận 20 request
+      khác key có số liên tục, 20 request cùng key replay cùng kết quả, key xung
+      đột nhận 409 và hai reissue đồng thời chỉ có một ticket hiện hành.
+- [x] C3 — Expiration theo API boundary, expired queue, quota distinct Visit và seed
+      14 ngày. Queue/current-visit chuẩn hóa ticket quá hạn; patient thấy trạng
+      thái hết hiệu lực, staff tìm/cấp lại qua expired queue; quota đếm Visit duy
+      nhất và seed có DoctorSchedule liên tiếp 14 ngày.
+- [x] C4 — Rollback migration trên PostgreSQL disposable. Integration chạy Phase
+      B/C `up → down → up`, bảo toàn số dòng seed và không đụng volume demo.
+- [x] C5 — Tách `QueueTicketService`, `ReceptionService` và `ClinicQueueService`;
+      `VisitService` chỉ còn route legacy. Đã xóa fake `MockVisitService` test và
+      code không còn caller, không thêm interface/factory dự phòng.
+- [x] C6 — Structured clinical error và UX expired/reissue. API trả code ổn định;
+      frontend map thông báo tiếng Việt, patient có hướng dẫn khi hết hạn, nurse
+      có khu vực lượt hết hạn và popup bắt buộc lý do/cảnh báo trước khi cấp lại.
+- [x] C7 — PostgreSQL integration, browser regression và quality gate toàn repo.
+      API validate pass 243/243 unit; dashboard validate pass 25/25 unit; build,
+      lint và Prettier hai repo xanh. Integration PostgreSQL 17 tmpfs pass 11/11;
+      Docker auth browser pass mọi role và Phase C browser pass luồng A-010 →
+      CL-102-03 → IN_EXAMINATION, expired reissue, notification, 403 và mobile;
+      vòng cuối trên production image đã prune pass A-013 → CL-102-04.
+- [x] D1 — Nâng dependency patch sau correctness. Next/eslint-config-next cùng
+      16.4.2; NestJS 12 nâng đồng bộ patch tương thích; clean Linux `npm ci` và
+      Docker build pass. `npm audit --omit=dev` hai repo đều 0 advisory; không dùng
+      `audit fix --force` hay ép major/override. Full-tree còn advisory dev tooling
+      (dashboard 6 high qua ESLint glob chain; API 2 low/22 moderate/3 high/1
+      critical qua Jest/ts-jest/Nest Mau). Production image loại dev packages bằng
+      `npm prune --omit=dev`; npm chỉ đề xuất downgrade/major không tương thích nên
+      không ép sửa.
+
 ### Maintenance — Partner startup handoff (2026-10-18)
 
 Partner instructions are in `README.md` → "Partner quick start (PowerShell)"
 and the API README. They cover sibling repos on `repair`, private env templates,
-all-Docker demo versus local FE/BE, a fresh isolated database's migration/auth-only
+all-Docker demo versus local FE/BE, a fresh isolated database's historical auth-only
 seed, daily startup/shutdown and existing-database safeguards. FE defaults to
 3001, BE to 3000. Migration effects are local to each DB, not transferred by Git.
 
@@ -201,7 +296,7 @@ Verification for this handoff: frontend 21/21 unit tests, backend 205/205 tests,
 and the documented compiled TypeORM `migration:show` command pass. On the current
 local DB it confirms initial/auth migrations applied and NEWS2/audit still pending;
 no additional migration, seed, server restart or credential disclosure in this
-handoff. This does not mark Phase B implementation/B9 complete.
+handoff. This was pre-Phase-B evidence and is superseded by B7–B9 above.
 
 ### Maintenance — Local auth schema migration (2026-10-18)
 
@@ -589,6 +684,24 @@ A checkbox may be changed to `[x]` only when:
 ## Verification log
 
 Add newest entries first. Keep entries short and factual.
+
+2026-10-19 Intake validation repair: aligned all six frontend vital-sign ranges
+with `RecordVitalsDto` so values rejected by the API are blocked in the form;
+normalized validation `message[]` with `; ` separators instead of concatenated
+text. Red-flag rows now explain that they were dispatched to emergency and cannot
+be assigned to a normal clinic room. Dashboard format/lint, 26/26 unit tests,
+TypeScript and production build pass; rebuilt the running Docker dashboard image
+without resetting PostgreSQL.
+
+2026-10-19 Phase C release gate: API `npm run validate` pass 243/243 Jest và build;
+dashboard pass 25/25 unit và Next 16.4.2 production build. PostgreSQL 17 tmpfs
+integration pass 11/11, gồm concurrency/idempotency, rollback, expiry/quota,
+permission và migration up/down/up. Docker clinical browser pass A-010 → CL-102-03
+→ IN_EXAMINATION, expired reissue, notification, wrong-room/admin 403 và mobile;
+auth browser pass mọi role/OTP. Vòng browser cuối trên production image đã prune
+pass A-013 → CL-102-04 → IN_EXAMINATION. Clean Linux `npm ci`/Docker build,
+Compose config, `git diff --check` và runtime audit 0 ở hai repo đều pass. Không
+reset/xóa volume, không commit/push.
 
 2026-10-18 Local auth repair: applied only AddAuthSessions on `tlcn_api_db` with
 user approval; OTP/session hash lengths are 64 and user/visit counts unchanged.

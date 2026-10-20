@@ -1,0 +1,6 @@
+# Deterministic browser-test override. The normal demo keeps its configured
+# 07:00-11:30 and 13:00-16:30 issuance windows in compose.auth.yml.
+services:
+  api:
+    environment:
+      QUEUE_ISSUANCE_WINDOWS: 00:00-12:00,12:00-23:59

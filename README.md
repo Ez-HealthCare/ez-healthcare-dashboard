@@ -1,7 +1,7 @@
 # Ez-HealthCare Dashboard
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16.3.5-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/Next.js-16.4.2-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
   <img src="https://img.shields.io/badge/React-19.2.8-blue?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
@@ -121,6 +121,73 @@ dashboard/
 
 ---
 
+## Phase B clinical demo
+
+The Docker stack now uses an isolated `phase_b_postgres` volume, applies all
+migrations, and runs the full idempotent clinical seed. It does not delete or
+rewrite the earlier auth/local database volumes.
+
+```powershell
+docker compose -f compose.auth.yml up -d --build
+docker compose -f compose.auth.yml ps
+```
+
+- Dashboard: <http://localhost:3003>
+- API / Swagger: <http://localhost:3002/api/docs>
+- OTP inbox: <http://localhost:8026>
+
+Demo scenario: patient David signs in by OTP and requests a hall number; nurse
+Emily verifies identity, records complaint/vitals and assigns a consultation
+room; the scheduled doctor opens that room queue, calls the number, then starts
+the examination. Patient status and PostgreSQL notifications update by polling.
+Reception and clinic numbers are separate daily sequences; clinic sequences are
+per physical `Department` room. Number-issuing mutations require an
+`Idempotency-Key`.
+
+Run the complete patient → nurse → doctor browser scenario against the Docker
+stack with a fresh OTP patient:
+
+```powershell
+docker compose -f compose.auth.yml --profile test run --rm browser-tests sh -c "npm install --no-audit --no-fund --prefix /tmp/auth-browser playwright@1.64.0 && node /work/phase-b-browser.mjs"
+```
+
+The normal API correctly rejects new numbers outside clinic hours. For a
+deterministic test outside those hours, temporarily add the test override, run
+the same scenario, then immediately restore the normal configuration:
+
+```powershell
+docker compose -f compose.auth.yml -f compose.phase-b-test.yml up -d --force-recreate api dashboard
+docker compose -f compose.auth.yml -f compose.phase-b-test.yml --profile test run --rm browser-tests sh -c "npm install --no-audit --no-fund --prefix /tmp/auth-browser playwright@1.64.0 && node /work/phase-b-browser.mjs"
+docker compose -f compose.auth.yml up -d --force-recreate api dashboard
+docker compose -f compose.auth.yml exec -T api printenv QUEUE_ISSUANCE_WINDOWS
+```
+
+The last command must print `07:00-11:30,13:00-16:30`. The override changes only
+the issuance window; it does not reset or replace the PostgreSQL volume.
+
+Clinical API surface used by the dashboard:
+
+- Patient: `POST /visits/hall-ticket`, `GET /visits/me/current`, reissue before
+  assignment, and notification list/read.
+- Nurse/reception: reception and expired queues, verify, intake, assign room,
+  reissue and requeue.
+- Doctor: assigned rooms, room queue, call and start examination.
+- Admin has no implicit clinical permission; doctor room access is checked
+  against `DoctorSchedule` for the current date/shift.
+- The legacy triage API is authenticated and restricted to NURSE/RECEPTIONIST;
+  patient self-declaration remains outside Phase B.
+
+The exact seed accounts remain in the table below. `NURSE` is the combined
+reception/nursing role; legacy `RECEPTIONIST` accounts remain compatible.
+
+Dependency hardening on 2026-10-19 moved `next` and `eslint-config-next` together
+to 16.4.2, updated the NestJS 12 packages to their latest compatible patches and
+resolved the remaining runtime `source-map-js`/`proxy-addr` advisories without a
+forced override or major upgrade. `npm audit --omit=dev` reports zero advisories
+for both runtime trees. Full-tree findings are limited to development tooling.
+The PostgreSQL 17 tmpfs integration suite and Docker auth/clinical browser gates
+also pass; exact cases and evidence are recorded in `todo.md`.
+
 ## 🚀 Getting Started
 
 ### Partner quick start (PowerShell)
@@ -152,23 +219,23 @@ docker compose -f compose.auth.yml up -d --build
 docker compose -f compose.auth.yml ps
 ```
 
-API container tự chạy migration còn thiếu và seed tài khoản `--auth-only` trước
+API container tự chạy migration còn thiếu và full clinical seed trước
 khi phục vụ. Đây là database auth-test riêng (host port 5434), không phải database
 PostgreSQL local trên port 5432. Chỉ dùng stack này với dữ liệu test; nếu volume đã
-tồn tại, giữ credential cũ và rà migration/seed trước khi chạy lại. Clinical seed
-đầy đủ và nghiệp vụ Phase B chưa hoàn tất. Tài khoản demo nằm ở bảng bên dưới.
+tồn tại, giữ credential cũ và rà migration/seed trước khi chạy lại. Tài khoản demo
+nằm ở bảng bên dưới.
 
-- Dashboard: <http://localhost:3001>
-- API/Swagger: <http://localhost:3000/api/docs>
-- Mailpit, lấy OTP đúng email và thư mới nhất: <http://localhost:8025>
+- Dashboard: <http://localhost:3003>
+- API/Swagger: <http://localhost:3002/api/docs>
+- Mailpit, lấy OTP đúng email và thư mới nhất: <http://localhost:8026>
 
 Chạy lại hằng ngày dùng `docker compose -f compose.auth.yml up -d`.
 Dừng bằng `docker compose -f compose.auth.yml stop`, giữ nguyên volume. Không dùng
 `down -v` để xử lý lỗi đăng nhập. Với OTP, chờ đủ 60 giây giữa các lần yêu cầu lại.
 
 **Cách B — FE/BE local để phát triển:** dùng Node.js 24 đã được kiểm thử và Docker
-cho DB/Mailpit. Không chạy cùng lúc container API/dashboard và app local vì trùng
-port 3000/3001. Các lệnh migration/seed sau chỉ dành cho DB auth-test mới/cô lập.
+cho DB/Mailpit. Compose dùng 3002/3003 nên không trùng API/dashboard local
+3000/3001. Các lệnh migration/seed sau chỉ dành cho DB test mới/cô lập.
 
 Trong terminal tại `dashboard`:
 
@@ -189,7 +256,7 @@ Sửa `api/.env`: `PORT=3000`, `DB_HOST=localhost`, `DB_PORT=5434`;
 `DB_USERNAME`/`DB_PASSWORD`/`DB_DATABASE` phải khớp các giá trị `AUTH_DB_*` trong
 `dashboard/.env`. Đặt JWT/signature secret riêng, `DB_SYNC=false`,
 `CORS_ORIGINS=http://localhost:3001`,
-`OTP_DELIVERY_URL=http://localhost:8025/api/v1/send`. Frontend giữ
+`OTP_DELIVERY_URL=http://localhost:8026/api/v1/send`. Frontend giữ
 `API_URL=http://localhost:3000/api` và `APP_ORIGIN=http://localhost:3001`.
 
 Khởi tạo **DB test mới** rồi chạy backend:
@@ -197,7 +264,7 @@ Khởi tạo **DB test mới** rồi chạy backend:
 ```powershell
 npm run build
 node --loader ./esm-loader.mjs dist/database/setup.js
-node --loader ./esm-loader.mjs dist/database/seeds/seed.js --auth-only
+node --loader ./esm-loader.mjs dist/database/seeds/seed.js
 npm run dev
 ```
 
@@ -262,10 +329,9 @@ ezhealthcare_postgres`). Local OTP needs Mailpit; from this repo run
 `docker compose -f compose.auth.yml up -d mailpit` if needed. The auth-test database
 below is separate, on port 5434; do not silently switch the API's local DB settings.
 
-Do not start Docker `api`/`dashboard` alongside local apps on the same ports.
-Stop the existing app with Ctrl+C, or the Compose service with `docker compose
--f compose.auth.yml stop api dashboard`, before switching modes. Never kill all
-Node processes; other tools may be using them.
+Docker and local apps use separate host ports. Stop the existing app with Ctrl+C,
+or the Compose service with `docker compose -f compose.auth.yml stop api dashboard`
+when it is not needed. Never kill all Node processes; other tools may be using them.
 
 ### Authentication with Docker and seed data
 
@@ -285,15 +351,15 @@ docker compose -f compose.auth.yml --profile test run --rm browser-tests
 ```
 
 This builds the API and dashboard, starts an isolated PostgreSQL database,
-applies migrations, and seeds the demo accounts using the API seed's
-`--auth-only` mode. Clinical catalog seeding is outside this auth test stack.
+applies migrations, and seeds the demo accounts, clinical catalog and today's
+doctor schedules using the full idempotent API seed.
 Database data is retained in the
-`ez-healthcare-auth_auth_postgres` volume. The stack uses local test credentials;
+`ez-healthcare-phase-b_phase_b_postgres` volume. The stack uses local test credentials;
 do not deploy this Compose file publicly.
 
-- Dashboard: [localhost:3001](http://localhost:3001)
-- API / Swagger: [localhost:3000/api/docs](http://localhost:3000/api/docs)
-- Test OTP inbox: [localhost:8025](http://localhost:8025)
+- Dashboard: [localhost:3003](http://localhost:3003)
+- API / Swagger: [localhost:3002/api/docs](http://localhost:3002/api/docs)
+- Test OTP inbox: [localhost:8026](http://localhost:8026)
 
 | Role                     | Seed email                         | Local test password / method        |
 | ------------------------ | ---------------------------------- | ----------------------------------- |
@@ -323,12 +389,9 @@ Admin has no clinical workspace access. Each page checks the API identity before
 rendering, including direct/RSC requests; hiding menus is not the access check.
 Old `/doctor`, `/nurse`, `/patient` entries redirect to their protected workspace.
 
-Delivery A is navigation/UI only. Staff shells use the existing teal/lavender,
-white-card style; their functional pages explicitly state they are not connected.
-The patient screenshot-based dashboard remains intact with demo clinical cards.
-No clinical HTTP endpoints or backend business permissions are changed. Before
-real mutations, align API guards with the newly agreed nurse/reception and
-admin-only-management policy; workspace gates do not replace API authorization.
+Phase B replaces staff placeholders and patient demo queue cards with the live
+clinical flow described above. Workspace gates remain a navigation boundary;
+backend role, ownership, schedule and state checks remain authoritative.
 
 After `npm run build`, run `npm run test:workspaces` for production HTTP/RSC
 checks against a local upstream identity fixture (no JWT signing/DB/seed).

@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test:unit": "node --import ./tests/register-next-aliases.mjs --test tests/http-client.test.mjs tests/auth-services.test.mjs tests/api-boundaries.test.mjs tests/constants.test.mjs tests/workspace-policy.test.mjs",
+    "test:unit": "node --import ./tests/register-next-aliases.mjs --test tests/http-client.test.mjs tests/auth-services.test.mjs tests/api-boundaries.test.mjs tests/clinical-contract.test.mjs tests/constants.test.mjs tests/workspace-policy.test.mjs",
     "test:workspaces": "node --test tests/workspaces-flow.test.mjs",
     "test:auth": "node --env-file=.env --test tests/auth-flow.test.mjs",
+    "test:phase-b": "node tests/phase-b-browser.mjs",
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start --port 3001",
@@ -13,13 +14,14 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "validate": "npm run format:check && npm run lint && npm run test:unit && npm run build",
     "prepare": "husky"
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.3.0",
     "antd": "^6.6.6",
     "axios": "1.20.0",
-    "next": "16.3.5",
+    "next": "^16.4.2",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
@@ -29,7 +31,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.5",
+    "eslint-config-next": "^16.4.2",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^17.5.1",

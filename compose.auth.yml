@@ -1,4 +1,4 @@
-name: ez-healthcare-auth
+name: ez-healthcare-phase-b
 services:
   db:
     image: postgres:17-alpine
@@ -9,7 +9,7 @@ services:
     ports:
       - "127.0.0.1:5434:5432"
     volumes:
-      - auth_postgres:/var/lib/postgresql/data
+      - phase_b_postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 2s
@@ -18,7 +18,7 @@ services:
   mailpit:
     image: axllent/mailpit:v1.30
     ports:
-      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:8026:8025"
   api:
     build:
       context: ../api
@@ -35,10 +35,11 @@ services:
       DB_LOGGING: "false"
       JWT_ACCESS_SECRET: ${AUTH_JWT_ACCESS_SECRET:?Set AUTH_JWT_ACCESS_SECRET in .env}
       SIGNATURE_SECRET: ${AUTH_SIGNATURE_SECRET:?Set AUTH_SIGNATURE_SECRET in .env}
-      CORS_ORIGINS: http://localhost:3001
+      CORS_ORIGINS: http://localhost:3003
       OTP_DELIVERY_URL: http://mailpit:8025/api/v1/send
+      QUEUE_ISSUANCE_WINDOWS: 07:00-11:30,13:00-16:30
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3002:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -60,9 +61,9 @@ services:
     build: .
     environment:
       API_URL: http://api:3000/api
-      APP_ORIGIN: http://localhost:3001,http://dashboard:3000
+      APP_ORIGIN: http://localhost:3003,http://dashboard:3000
     ports:
-      - "127.0.0.1:3001:3000"
+      - "127.0.0.1:3003:3000"
     depends_on:
       api:
         condition: service_healthy
@@ -76,12 +77,17 @@ services:
       [
         "sh",
         "-c",
-        "npm install --no-audit --no-fund --prefix /tmp/auth-browser playwright@1.64.0 && node /work/auth-browser.mjs",
+        "npm install --no-audit --no-fund --prefix /tmp/auth-browser playwright@1.64.0 pg@8.23.0 && node /work/auth-browser.mjs",
       ]
     environment:
       PLAYWRIGHT_MODULE: /tmp/auth-browser/node_modules/playwright/index.mjs
+      PG_MODULE: /tmp/auth-browser/node_modules/pg/lib/index.js
       AUTH_TEST_WEB: http://dashboard:3000
       AUTH_TEST_MAIL: http://mailpit:8025
+      AUTH_TEST_DB_HOST: db
+      AUTH_TEST_DB_USER: ${AUTH_DB_USERNAME:?Set AUTH_DB_USERNAME in .env}
+      AUTH_TEST_DB_PASSWORD: ${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD in .env}
+      AUTH_TEST_DB_NAME: ${AUTH_DB_DATABASE:?Set AUTH_DB_DATABASE in .env}
       AUTH_TEST_RESULTS: /results
     volumes:
       - ./tests:/work:ro
@@ -90,4 +96,4 @@ services:
       dashboard:
         condition: service_started
 volumes:
-  auth_postgres:
+  phase_b_postgres:

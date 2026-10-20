@@ -5,5 +5,6 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
+RUN npm prune --omit=dev
 EXPOSE 3000
-CMD ["sh", "-c", "node --loader ./esm-loader.mjs dist/database/setup.js && node --loader ./esm-loader.mjs dist/database/seeds/seed.js --auth-only && node --loader ./esm-loader.mjs dist/main.js"]
+CMD ["sh", "-c", "node --loader ./esm-loader.mjs dist/database/setup.js && node --loader ./esm-loader.mjs dist/database/seeds/seed.js && node --loader ./esm-loader.mjs dist/main.js"]

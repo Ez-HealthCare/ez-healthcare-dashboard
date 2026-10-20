@@ -5,6 +5,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
+RUN npm prune --omit=dev
 EXPOSE 3000
 # Docker keeps internal port 3000; Compose publishes it as localhost:3001.
 CMD ["node", "node_modules/next/dist/bin/next", "start", "--port", "3000"]

@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Alert, Empty, Popover } from "antd";
+import { Empty, Popover } from "antd";
 import { LogoutButton } from "@/components/auth/auth-gate";
 import { WorkspaceAccessDenied } from "@/components/auth/workspace-state";
 import { useIdentity } from "@/hooks/use-auth-session";
 import { WORKSPACES, canAccessWorkspace } from "@/lib/constants/workspaces";
 import type { Workspace } from "@/lib/constants/workspaces";
 import styles from "./role-workspace.module.css";
+import { StaffClinicalPanel } from "@/components/clinical/staff-clinical-panel";
 
 export function RoleWorkspace({
   workspace,
@@ -84,13 +85,11 @@ export function RoleWorkspace({
             Xin chào, {name}. {config.description}
           </p>
         </div>
-        <Alert
-          type="info"
-          showIcon
-          title="Đợt A · Giao diện và điều hướng"
-          description="Các trang chức năng chưa kết nối dữ liệu hay thao tác nghiệp vụ. Không có số liệu lâm sàng giả hoặc thay đổi dữ liệu trong đợt này."
-        />
-        {section === "" ? (
+        {workspace === "nurse" || workspace === "doctor" ? (
+          <section className={styles.placeholder} style={{ display: "block" }}>
+            <StaffClinicalPanel workspace={workspace} />
+          </section>
+        ) : section === "" ? (
           <section className={styles.cards} aria-label="Chức năng theo vai trò">
             {config.navigation
               .filter(([key]) => key !== "")
