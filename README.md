@@ -449,7 +449,18 @@ docker compose -f compose.auth.yml down
 ```
 
 ---
+## Receptionist appointment workspace
 
+Route: `/dashboard/receptionist/appointments`
+
+Capabilities:
+
+- View, search and filter today's appointments.
+- Review patient administrative details.
+- Check in a booked appointment and receive a HALL ticket.
+- Cancel an appointment with a required reason.
+
+Backend dependency: the Appointment migrations must be applied before this page can load demo appointment data.
 ## 📜 Available Scripts
 
 | Command                | Description                                               |
