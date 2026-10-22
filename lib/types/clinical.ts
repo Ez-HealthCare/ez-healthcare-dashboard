@@ -30,6 +30,7 @@ export interface ReceptionVisit {
   hallTicketNumber: string;
   clinicTicketNumber?: string;
   status: VisitStatus;
+  ticketKind?: "HALL" | "CLINIC";
   patient: {
     id: string;
     name: string;
@@ -45,6 +46,8 @@ export interface ReceptionVisit {
   createdAt: string;
   room?: { code: string; name: string } | null;
   ticketStatus?: "ACTIVE" | "PAUSED" | "EXPIRED";
+  callAttempts?: number;
+  lastCalledAt?: string;
   businessDate?: string;
   expiresAt?: string;
 }
@@ -75,6 +78,49 @@ export interface Department {
   code: string;
   name: string;
   roomType: string;
+}
+
+export interface ReceptionPatient {
+  id: string;
+  name: string;
+  role: string;
+  dateOfBirth?: string;
+  nationalId?: string;
+  insuranceCardNumber?: string;
+}
+
+export type AppointmentStatus = "BOOKED" | "CHECKED_IN" | "CANCELLED" | "NO_SHOW";
+
+export interface ReceptionAppointment {
+  id: string;
+  appointmentCode: string;
+  scheduledAt: string;
+  status: AppointmentStatus;
+  chiefComplaint?: string;
+  checkedInAt?: string;
+  visitId?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  patient: {
+    id: string;
+    name: string;
+    nationalId?: string;
+    insuranceCardNumber?: string;
+    dateOfBirth?: string;
+  };
+  department?: { id: string; code: string; name: string } | null;
+}
+
+export interface AppointmentCheckInResult {
+  visitId: string;
+  hallTicketNumber: string;
+  status: VisitStatus;
+  ticket: {
+    id: string;
+    number: string;
+    status: string;
+    businessDate: string;
+  };
 }
 
 export interface NotificationItem {

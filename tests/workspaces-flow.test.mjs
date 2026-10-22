@@ -11,7 +11,7 @@ import { after, before, test } from "node:test";
 const roles = {
   PATIENT: "patient",
   NURSE: "nurse",
-  RECEPTIONIST: "nurse",
+  RECEPTIONIST: "receptionist",
   DOCTOR: "doctor",
   ADMIN: "admin",
   LAB_TECHNICIAN: undefined,
@@ -19,7 +19,8 @@ const roles = {
 };
 const sections = {
   patient: ["", "visits", "records"],
-  nurse: ["", "reception", "screening"],
+  receptionist: ["", "queue", "appointments", "records"],
+  nurse: [""],
   doctor: ["", "queue", "consultation"],
   admin: ["", "users", "departments", "schedules", "settings"],
 };

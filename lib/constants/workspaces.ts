@@ -7,15 +7,22 @@ export const WORKSPACES = {
     description: "Theo dõi lượt khám và hồ sơ của bạn.",
     navigation: PATIENT_NAVIGATION,
   },
-  nurse: {
-    label: "Điều dưỡng / Tiếp nhận",
-    path: ROUTES.NURSE,
-    description: "Tiếp nhận hành chính và sàng lọc trước khám trong cùng một không gian làm việc.",
+  receptionist: {
+    label: "Lễ tân",
+    path: ROUTES.RECEPTIONIST,
+    description: "Tiếp nhận hành chính, xác minh hồ sơ và điều phối hàng đợi tại quầy.",
     navigation: [
-      ["", "Bàn làm việc"],
-      ["reception", "Tiếp nhận"],
-      ["screening", "Sàng lọc"],
+      ["", "Bàn làm việc tiếp nhận"],
+      ["queue", "Hàng đợi"],
+      ["appointments", "Lịch hẹn"],
+      ["records", "Tra cứu hồ sơ"],
     ],
+  },
+  nurse: {
+    label: "Điều dưỡng",
+    path: ROUTES.NURSE,
+    description: "Ghi nhận dấu hiệu sinh tồn, sàng lọc nguy cơ và điều phối lâm sàng trước khám.",
+    navigation: [["", "Bàn sàng lọc"]],
   },
   doctor: {
     label: "Bác sĩ",
@@ -53,8 +60,9 @@ export function workspaceForRole(role: string): Workspace | undefined {
     case "PATIENT":
       return "patient";
     case "NURSE":
+      return "nurse";
     case "RECEPTIONIST":
-      return "nurse"; // Legacy account alias; new accounts use NURSE.
+      return "receptionist";
     case "DOCTOR":
       return "doctor";
     case "ADMIN":

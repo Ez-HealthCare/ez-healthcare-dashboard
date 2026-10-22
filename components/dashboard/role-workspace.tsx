@@ -10,6 +10,8 @@ import { WORKSPACES, canAccessWorkspace } from "@/lib/constants/workspaces";
 import type { Workspace } from "@/lib/constants/workspaces";
 import styles from "./role-workspace.module.css";
 import { StaffClinicalPanel } from "@/components/clinical/staff-clinical-panel";
+import { ReceptionWorkspace } from "@/components/reception/reception-workspace";
+import { ReceptionAppointments } from "@/components/reception/reception-appointments";
 
 export function RoleWorkspace({
   workspace,
@@ -85,7 +87,11 @@ export function RoleWorkspace({
             Xin chào, {name}. {config.description}
           </p>
         </div>
-        {workspace === "nurse" || workspace === "doctor" ? (
+        {workspace === "receptionist" && section === "appointments" ? (
+          <ReceptionAppointments />
+        ) : workspace === "receptionist" ? (
+          <ReceptionWorkspace />
+        ) : workspace === "nurse" || workspace === "doctor" ? (
           <section className={styles.placeholder} style={{ display: "block" }}>
             <StaffClinicalPanel workspace={workspace} />
           </section>

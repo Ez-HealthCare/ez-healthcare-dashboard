@@ -1,0 +1,490 @@
+.workspace {
+  display: grid;
+  gap: 20px;
+}
+.subheader {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px;
+  border: 1px solid #e4e8ee;
+  border-radius: 16px;
+  background: #fff;
+}
+.eyebrow,
+.kicker {
+  color: #64736f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.titleRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 3px;
+}
+.titleRow h2,
+.card h3,
+.patientCard h4 {
+  margin: 0;
+  color: #131b2e;
+  font-family: var(--font-display);
+}
+.titleRow h2 {
+  font-size: 22px;
+  line-height: 1.3;
+}
+.subheader p {
+  margin: 4px 0 0;
+  color: #64736f;
+  font-size: 13px;
+}
+.live,
+.readOnly,
+.priority,
+.status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.live {
+  background: #d9f5ef;
+  color: #00685f;
+}
+.readOnly {
+  background: #f2f3ff;
+  color: #526568;
+}
+.priority {
+  background: #fff2dd;
+  color: #a25700;
+}
+.status {
+  background: #e7f4f1;
+  color: #00685f;
+}
+.shift {
+  align-self: center;
+  border-radius: 8px;
+  background: #f2f3ff;
+  color: #3d4947;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.error {
+  margin: 0;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #b42318;
+  padding: 12px 16px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(250px, 3fr) minmax(340px, 5fr) minmax(240px, 3fr);
+  align-items: start;
+  gap: 20px;
+}
+.rightColumn {
+  display: grid;
+  gap: 20px;
+}
+.card,
+.note {
+  border: 1px solid #e4e8ee;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+  padding: 20px;
+}
+.card h3 {
+  margin-top: 4px;
+  font-size: 18px;
+}
+.cardHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.counter {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 10px;
+  background: #e7f4f1;
+  color: #00685f;
+  font-size: 14px;
+  font-weight: 800;
+}
+.queueHint,
+.phaseNote {
+  margin: 14px 0;
+  color: #64736f;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.queueList {
+  display: grid;
+  gap: 8px;
+  max-height: 530px;
+  overflow: auto;
+}
+.queueItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+  border: 1px solid #edf0f3;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.queueItem:hover,
+.selected {
+  border-color: #84cfc4;
+  background: #f0fbf9;
+}
+.ticket {
+  color: #00685f;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+}
+.queuePatient {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.queuePatient strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.queuePatient small {
+  color: #64736f;
+  font-size: 11px;
+}
+.search {
+  margin: 16px 0;
+  height: 44px;
+  border-radius: 10px;
+}
+.patientCard {
+  display: grid;
+  gap: 18px;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f2f8ff;
+}
+.initial {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #00685f;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.identity div {
+  min-width: 0;
+  flex: 1;
+}
+.identity h4 {
+  font-size: 17px;
+}
+.identity p {
+  margin: 3px 0 0;
+  color: #64736f;
+  font-size: 12px;
+}
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+.details div {
+  min-width: 0;
+}
+.details dt {
+  color: #64736f;
+  font-size: 11px;
+}
+.details dd {
+  margin: 3px 0 0;
+  color: #243834;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.handoff {
+  display: grid;
+  gap: 3px;
+  border-left: 3px solid #00685f;
+  background: #f7fbfa;
+  padding: 12px;
+  color: #3d4947;
+  font-size: 12px;
+}
+.handoff strong {
+  color: #00685f;
+}
+.open {
+  margin: 6px 0 16px;
+  color: #00685f;
+  font-size: 12px;
+  font-weight: 700;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.metrics div {
+  display: grid;
+  gap: 2px;
+  border-radius: 10px;
+  background: #f6f7fb;
+  padding: 12px;
+}
+.metrics strong {
+  color: #131b2e;
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+.metrics span {
+  color: #64736f;
+  font-size: 11px;
+}
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+.actions button {
+  min-height: 42px;
+  border: 1px solid #dfe5e8;
+  border-radius: 10px;
+  background: #fff;
+  color: #81908c;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  padding: 8px;
+}
+.note {
+  border-color: #cce7e2;
+  background: #f0fbf9;
+  color: #3d4947;
+}
+.note strong {
+  color: #00685f;
+  font-size: 13px;
+}
+.note p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.queueControls {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.queueControls :global(.ant-btn) {
+  width: 100%;
+}
+.callMeta {
+  color: #64736f;
+  font-size: 11px;
+  text-align: center;
+}
+.hallActions {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #cce7e2;
+  border-radius: 12px;
+  background: #f7fbfa;
+  padding: 14px;
+}
+.hallActions > div:first-child {
+  display: grid;
+  gap: 3px;
+  color: #3d4947;
+  font-size: 12px;
+}
+.hallActions strong {
+  color: #00685f;
+}
+.pauseForm {
+  display: grid;
+  gap: 10px;
+}
+.actionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.walkInLookup {
+  display: flex;
+  gap: 8px;
+}
+.walkInPatient {
+  margin: 14px 0 0;
+  border-radius: 8px;
+  background: #f0fbf9;
+  color: #3d4947;
+  padding: 10px 12px;
+}
+.walkInPatient strong {
+  color: #00685f;
+}
+.ticketActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.successTicket {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.successTicket p {
+  margin: 0;
+  color: #64736f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.successMark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #d9f5ef;
+  color: #00685f;
+  font-size: 24px;
+  font-weight: 800;
+}
+.successTicket > strong {
+  color: #00685f;
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1;
+}
+.successTicket dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  gap: 8px;
+  margin: 8px 0 0;
+  text-align: left;
+}
+.successTicket dl div {
+  border-radius: 8px;
+  background: #f6f7fb;
+  padding: 10px;
+}
+.successTicket dt {
+  color: #64736f;
+  font-size: 11px;
+}
+.successTicket dd {
+  margin: 3px 0 0;
+  color: #243834;
+  font-size: 12px;
+  font-weight: 700;
+}
+.ticketQr {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid #e4e8ee;
+  border-radius: 10px;
+  background: #fff;
+}
+.ticketQr span {
+  color: #64736f;
+  font-size: 11px;
+}
+.closed {
+  margin: 6px 0 16px;
+  color: #a25700;
+  font-size: 12px;
+  font-weight: 700;
+}
+.counterToggle {
+  width: 100%;
+  margin-top: 12px;
+}
+.shiftNote {
+  margin-top: 12px;
+  border-color: #b8ddd7;
+  background: #fff;
+  font-size: 12px;
+}
+@media (max-width: 1050px) {
+  .grid {
+    grid-template-columns: minmax(230px, 4fr) minmax(360px, 6fr);
+  }
+  .rightColumn {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .details {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .subheader,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .subheader {
+    display: grid;
+    padding: 18px;
+  }
+  .shift {
+    justify-self: start;
+  }
+  .rightColumn {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+  }
+  .card,
+  .note {
+    padding: 16px;
+  }
+  .details {
+    grid-template-columns: 1fr;
+  }
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}
