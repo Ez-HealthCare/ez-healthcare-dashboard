@@ -1,0 +1,72 @@
+.panel {
+  display: grid;
+  gap: 14px;
+}
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.kicker {
+  color: #64736f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.header h4 {
+  margin: 3px 0 0;
+  color: #131b2e;
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+.ticket {
+  border-radius: 8px;
+  background: #e7f4f1;
+  color: #00685f;
+  padding: 5px 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+}
+.patient {
+  display: grid;
+  gap: 3px;
+  border-radius: 12px;
+  background: #f2f8ff;
+  padding: 14px;
+  color: #526568;
+  font-size: 12px;
+}
+.patient strong {
+  color: #131b2e;
+  font-size: 14px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+  color: #3d4947;
+  font-size: 12px;
+  font-weight: 700;
+}
+.field :global(.ant-input) {
+  border-radius: 9px;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.actions :global(.ant-btn-primary) {
+  background: #00685f;
+}
+.done {
+  margin: 0;
+  border-left: 3px solid #00685f;
+  background: #f0fbf9;
+  color: #3d4947;
+  padding: 12px;
+  font-size: 12px;
+}

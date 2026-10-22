@@ -5,6 +5,10 @@ import type {
   Department,
   IntakeInput,
   NotificationItem,
+  AppointmentCheckInResult,
+  AppointmentStatus,
+  ReceptionAppointment,
+  ReceptionPatient,
   ReceptionVisit,
 } from "@/lib/types/clinical";
 
@@ -28,6 +32,20 @@ export const clinicalService = {
       .then((r) => r.data),
   receptionQueue: () =>
     http.get<ReceptionVisit[]>(path("visits/reception/queue")).then((r) => r.data),
+  receptionAppointments: (params?: { search?: string; status?: AppointmentStatus }) =>
+    http
+      .get<ReceptionAppointment[]>(path("appointments/reception/today"), { params })
+      .then((r) => r.data),
+  checkInAppointment: (appointmentId: string) =>
+    http
+      .post<AppointmentCheckInResult>(
+        path(`appointments/${appointmentId}/reception/check-in`),
+        {},
+        { headers: { "Idempotency-Key": key() } }
+      )
+      .then((r) => r.data),
+  cancelAppointment: (appointmentId: string, reason: string) =>
+    http.put(path(`appointments/${appointmentId}/cancel`), { reason }).then((r) => r.data),
   expiredReceptionQueue: (businessDate?: string) =>
     http
       .get<ReceptionVisit[]>(path("visits/reception/expired"), {
@@ -38,8 +56,30 @@ export const clinicalService = {
     http
       .get<Array<{ code: string; name: string; shiftType: string }>>(path("visits/doctor/rooms"))
       .then((r) => r.data),
-  verify: (visitId: string) =>
-    http.put(path(`visits/${visitId}/verify`), { nationalIdVerified: true }).then((r) => r.data),
+  verify: (visitId: string, insuranceCardNumber?: string) =>
+    http
+      .put(path(`visits/${visitId}/verify`), { nationalIdVerified: true, insuranceCardNumber })
+      .then((r) => r.data),
+  rejectVerification: (visitId: string, reason: string) =>
+    http.put(path(`visits/${visitId}/reject-verification`), { reason }).then((r) => r.data),
+  callReceptionTicket: (visitId: string) =>
+    http.put(path(`visits/${visitId}/reception/call`)).then((r) => r.data),
+  pauseReceptionTicket: (visitId: string, reason: string) =>
+    http.put(path(`visits/${visitId}/reception/pause`), { reason }).then((r) => r.data),
+  recallReceptionTicket: (visitId: string) =>
+    http.put(path(`visits/${visitId}/reception/recall`)).then((r) => r.data),
+  findPatientByNationalId: (nationalId: string) =>
+    http
+      .get<ReceptionPatient>(path(`users/audit/national-id/${encodeURIComponent(nationalId)}`))
+      .then((r) => r.data),
+  createWalkInTicket: (patientId: string) =>
+    http
+      .post(
+        path("visits/reception/walk-in"),
+        { patientId },
+        { headers: { "Idempotency-Key": key() } }
+      )
+      .then((r) => r.data),
   intake: (visitId: string, input: IntakeInput) =>
     http.put(path(`visits/${visitId}/intake`), input).then((r) => r.data),
   assign: (visitId: string, departmentCode: string) =>

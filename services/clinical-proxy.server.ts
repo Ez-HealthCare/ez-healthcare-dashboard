@@ -12,6 +12,8 @@ const ALLOWED = [
   /^visits\/(hall-ticket|me\/current|reception\/(queue|expired)|doctor\/rooms)$/,
   /^visits\/queue\/[A-Za-z0-9.-]+$/,
   /^visits\/[0-9a-f-]+(\/.*)?$/i,
+  /^appointments\/reception\/today$/,
+  /^appointments\/[0-9a-f-]+(\/(cancel|reception\/check-in))?$/i,
   /^departments$/,
   /^notifications(\/[0-9a-f-]+\/read|\/read-all)?$/i,
 ];
