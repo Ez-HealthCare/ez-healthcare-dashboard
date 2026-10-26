@@ -1,5 +1,6 @@
 .loginPage {
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   max-width: 100vw;
   display: flex;
@@ -7,7 +8,7 @@
   justify-content: space-between;
   background-color: #eaedff;
   color: #0f172a;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
   overflow-x: hidden;
   box-sizing: border-box;
 }
@@ -20,12 +21,12 @@
 .header {
   height: 80px;
   width: 100%;
-  max-width: 1320px;
+  max-width: 1280px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
+  padding: 0 24px;
   flex-shrink: 0;
   min-width: 0;
   box-sizing: border-box;
@@ -57,11 +58,12 @@
 }
 
 .headerTitle {
-  font-size: 19px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: #131b2e;
+  line-height: 24px;
+  letter-spacing: -0.025em;
   white-space: nowrap;
 }
 
@@ -78,9 +80,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  background-color: #dbe0ed;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: #cacddd;
   font-size: 12px;
   font-weight: 600;
   color: #3d4947;
@@ -101,12 +103,13 @@
 /* Main Container */
 .mainContainer {
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 32px 24px;
+  padding: 16px 48px;
   width: 100%;
-  max-width: 1320px;
+  max-width: 1280px;
   margin: 0 auto;
   min-width: 0;
   box-sizing: border-box;
@@ -115,24 +118,24 @@
 .cardWrapper {
   display: flex;
   width: 100%;
-  max-width: 1210px;
-  min-height: 750px;
-  border-radius: 28px;
+  max-width: 1184px;
+  min-height: 720px;
+  border-radius: 24px;
   overflow: hidden;
   box-shadow:
-    0 20px 45px -10px rgba(15, 23, 42, 0.07),
-    0 0 1px rgba(15, 23, 42, 0.06);
-  background-color: #f2f3ff;
+    0 25px 50px -12px rgba(15, 23, 42, 0.14),
+    0 1px 2px rgba(15, 23, 42, 0.05);
+  background-color: #ffffff;
   min-width: 0;
   box-sizing: border-box;
 }
 
 /* Left Journey Panel */
 .leftPanel {
-  flex: 1.25;
+  flex: 0 0 58.33%;
   position: relative;
   background: linear-gradient(155deg, #05483d 0%, #075043 35%, #0b5e50 70%, #156d5e 100%);
-  padding: 44px 44px 36px 44px;
+  padding: 48px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -150,7 +153,7 @@
   height: 100%;
   object-fit: cover;
   pointer-events: none;
-  opacity: 0.22;
+  opacity: 0.3;
   z-index: 0;
 }
 
@@ -167,10 +170,11 @@
 }
 
 .routeMarkBox {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -178,8 +182,9 @@
 }
 
 .brandNameLeft {
-  font-size: 19px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
   color: #ffffff;
 }
 
@@ -195,18 +200,19 @@
 }
 
 .leftHeading {
+  font-family: var(--font-display);
   font-size: 32px;
   font-weight: 700;
   color: #ffffff;
   line-height: 1.24;
-  margin-top: 28px;
-  letter-spacing: -0.02em;
+  margin-top: 32px;
+  letter-spacing: -0.025em;
 }
 
 .leftSubheading {
-  font-size: 14px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.82);
+  font-size: 16px;
+  line-height: 26px;
+  color: rgba(209, 250, 229, 0.9);
   margin-top: 12px;
   margin-bottom: 26px;
   max-width: 490px;
@@ -215,26 +221,27 @@
 .stepsList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
 }
 
 .stepCard {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 13px 16px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 16px;
+  min-height: 96px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(6px);
   min-width: 0;
   box-sizing: border-box;
 }
 
 .stepIconBox {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   background: rgba(0, 104, 95, 0.55);
   border: 1px solid rgba(137, 245, 231, 0.2);
@@ -256,7 +263,7 @@
 }
 
 .stepTitle {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #ffffff;
 }
@@ -272,7 +279,7 @@
 }
 
 .stepDesc {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.72);
   line-height: 1.45;
   margin-top: 4px;
@@ -293,9 +300,9 @@
 
 /* Right Login Panel */
 .rightPanel {
-  flex: 1;
-  background-color: #f2f3ff;
-  padding: 36px 36px 24px 36px;
+  flex: 1 1 41.67%;
+  background-color: #ffffff;
+  padding: 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -306,18 +313,19 @@
 
 .loginCard {
   width: 100%;
-  max-width: 416px;
+  max-width: 397px;
   background-color: #ffffff;
-  border-radius: 20px;
-  padding: 32px 28px;
+  border-radius: 16px;
+  padding: 37px;
   box-shadow:
-    0 8px 30px -4px rgba(0, 0, 0, 0.04),
-    0 0 1px rgba(0, 0, 0, 0.08);
+    0 8px 30px -4px rgba(15, 23, 42, 0.06),
+    0 0 1px rgba(15, 23, 42, 0.1);
   min-width: 0;
   box-sizing: border-box;
 }
 
 .loginCardTitle {
+  font-family: var(--font-display);
   font-size: 24px;
   font-weight: 700;
   color: #0f172a;
@@ -348,7 +356,7 @@
 }
 
 .loginCardSubtitle {
-  font-size: 13px;
+  font-size: 14px;
   color: #64748b;
   margin-bottom: 20px;
 }
@@ -554,9 +562,9 @@
 /* Footer */
 .footer {
   width: 100%;
-  max-width: 1320px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 16px 40px 24px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -600,11 +608,11 @@
   }
 
   .leftPanel {
-    padding: 36px 28px;
+    padding: 36px 32px;
   }
 
   .rightPanel {
-    padding: 28px 24px;
+    padding: 32px;
   }
 
   .leftHeading {
@@ -630,6 +638,7 @@
 
   .leftPanel {
     padding: 28px 20px;
+    flex-basis: 52%;
   }
 
   .rightPanel {
@@ -695,7 +704,7 @@
 
   .loginCard {
     max-width: 100%;
-    padding: 24px 18px;
+    padding: 24px 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     border-radius: 18px;
     width: 100%;
@@ -722,5 +731,126 @@
     flex-direction: column;
     gap: 6px;
     align-items: center;
+  }
+}
+
+/* A browser zoom can make a wide desktop viewport short in CSS pixels.
+   Keep the authentication card within that viewport instead of preserving a
+   desktop-only minimum height and clipping the lower controls. */
+@media (max-height: 800px) and (min-width: 769px) {
+  .loginPage {
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .header {
+    height: 64px;
+  }
+
+  .mainContainer {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .cardWrapper {
+    height: calc(100dvh - 128px);
+    min-height: 0;
+  }
+
+  .leftPanel {
+    padding: 28px 32px;
+  }
+
+  .leftBadgeRow {
+    gap: 8px;
+  }
+
+  .routeMarkBox {
+    width: 38px;
+    height: 38px;
+  }
+
+  .brandNameLeft {
+    font-size: 20px;
+  }
+
+  .leftHeading {
+    margin-top: 20px;
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .leftSubheading {
+    margin-top: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  .stepsList {
+    gap: 10px;
+  }
+
+  .stepCard {
+    min-height: 76px;
+    padding: 12px;
+  }
+
+  .stepIconBox {
+    width: 34px;
+    height: 34px;
+  }
+
+  .stepTitle {
+    font-size: 14px;
+  }
+
+  .stepDesc {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .securityBadge {
+    display: none;
+  }
+
+  .rightPanel {
+    padding: 28px;
+  }
+
+  .loginCard {
+    padding: 26px 28px;
+  }
+
+  .loginCardSubtitle,
+  .modeSwitch {
+    margin-bottom: 14px;
+  }
+
+  .formItem {
+    margin-bottom: 12px !important;
+  }
+
+  .checkboxRow {
+    margin-bottom: 14px;
+  }
+
+  .registerGuidance {
+    margin-top: 12px;
+  }
+
+  .supportBox {
+    margin-top: 14px;
+  }
+
+  .rightDisclaimer {
+    display: none;
+  }
+
+  .footer {
+    display: flex;
+    min-height: 40px;
+    padding: 8px 24px;
+    font-size: 10px;
   }
 }

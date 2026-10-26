@@ -19,6 +19,7 @@ import { AVAILABLE_ORDERS } from "@/lib/constants/doctor";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
 import type { ClinicQueueItem, IntakeInput, ReceptionVisit } from "@/lib/types/clinical";
+import styles from "./staff-clinical-panel.module.css";
 
 function NursePanel() {
   const queue = useClinicalData(clinicalActions.receptionQueue);
@@ -663,5 +664,25 @@ function DoctorPanel() {
 }
 
 export function StaffClinicalPanel({ workspace }: { workspace: "nurse" | "doctor" }) {
-  return workspace === "nurse" ? <NursePanel /> : <DoctorPanel />;
+  return (
+    <section
+      className={styles.panel}
+      aria-label={workspace === "nurse" ? "Bàn làm việc điều dưỡng" : "Bàn làm việc bác sĩ"}
+    >
+      <div className={styles.intro}>
+        <span className={styles.live}>Đồng bộ trực tiếp</span>
+        <div>
+          <h2>{workspace === "nurse" ? "Bàn làm việc sàng lọc" : "Bàn làm việc khám lâm sàng"}</h2>
+          <p>
+            {workspace === "nurse"
+              ? "Tiếp nhận, ghi nhận dấu hiệu sinh tồn và điều phối bệnh nhân an toàn."
+              : "Theo dõi hàng đợi, tiếp nhận người bệnh và hoàn tất y lệnh trong một không gian làm việc."}
+          </p>
+        </div>
+      </div>
+      <div className={styles.content}>
+        {workspace === "nurse" ? <NursePanel /> : <DoctorPanel />}
+      </div>
+    </section>
+  );
 }

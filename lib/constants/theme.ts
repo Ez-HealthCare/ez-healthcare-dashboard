@@ -7,9 +7,10 @@ export const APP_THEME = {
     colorError: "#dc2626",
     colorText: "#0f172a",
     colorBgLayout: "#f6f8fb",
-    borderRadius: 10,
-    controlHeight: 40,
-    fontFamily: "Arial, Helvetica, sans-serif",
+    borderRadius: 12,
+    controlHeight: 44,
+    fontFamily:
+      '"Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
 };
 

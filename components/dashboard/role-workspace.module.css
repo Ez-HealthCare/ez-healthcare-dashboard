@@ -5,10 +5,7 @@
   flex-direction: column;
   background: #f9f7fd;
   color: #182136;
-  font:
-    14px/1.5 Arial,
-    Helvetica,
-    sans-serif;
+  font: 14px/1.5 var(--font-body);
 }
 .page * {
   box-sizing: border-box;
@@ -51,7 +48,8 @@
   gap: 8px;
   align-items: center;
   color: #142139;
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: 18px;
   line-height: 1.1;
   flex-shrink: 0;
 }
@@ -155,8 +153,9 @@
   font-weight: 700;
 }
 .welcome h1 {
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 30px;
+  font-size: 32px;
   letter-spacing: -1px;
   line-height: 1.25;
   margin: 12px 0 8px;

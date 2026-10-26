@@ -6,10 +6,7 @@
   min-height: 100vh;
   background: #f9f7fd;
   color: #182136;
-  font:
-    14px/1.45 Arial,
-    Helvetica,
-    sans-serif;
+  font: 14px/1.5 var(--font-body);
   display: flex;
   flex-direction: column;
 }
@@ -59,7 +56,8 @@
   gap: 8px;
   align-items: center;
   color: #142139;
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: 18px;
   line-height: 1.1;
   letter-spacing: -0.5px;
   flex-shrink: 0;
@@ -198,7 +196,8 @@
   font-weight: 700;
 }
 .welcome h1 {
-  font-size: 30px;
+  font-family: var(--font-display);
+  font-size: 32px;
   letter-spacing: -1px;
   line-height: 1.25;
   margin-bottom: 5px;
@@ -303,7 +302,8 @@ p.muted {
   padding: 3px 10px;
 }
 .visit h2 {
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.5px;
   margin: 12px 0 16px;
@@ -416,6 +416,7 @@ p.muted {
   margin-bottom: 16px;
 }
 .sectionHeading h2 {
+  font-family: var(--font-display);
   display: flex;
   align-items: center;
   gap: 9px;
