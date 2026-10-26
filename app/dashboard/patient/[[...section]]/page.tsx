@@ -11,7 +11,8 @@ import {
 export default async function PatientPage({ params }: { params: Promise<{ section?: string[] }> }) {
   const { section = [] } = await params;
   const tab = section.join("/");
-  if (!PATIENT_NAVIGATION.some(([key]) => key === tab)) notFound();
+  if (![...PATIENT_NAVIGATION.map(([key]) => key), "profile", "reception-request"].includes(tab))
+    notFound();
   // Check each page, not just the layout, so unauthorized RSC requests are denied.
   const access = await getPatientAccess();
   if (access === "unauthenticated") redirect(ROUTES.LOGIN);

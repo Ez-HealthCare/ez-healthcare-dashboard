@@ -5,6 +5,7 @@ export interface UserProfile {
   email: string;
   name: string | null;
   role: keyof typeof ROLE_LABELS;
+  profileComplete: boolean;
 }
 
 export function isUserProfile(value: unknown): value is UserProfile {
@@ -15,6 +16,7 @@ export function isUserProfile(value: unknown): value is UserProfile {
     typeof user.email === "string" &&
     (user.name === null || typeof user.name === "string") &&
     typeof user.role === "string" &&
+    typeof user.profileComplete === "boolean" &&
     Object.hasOwn(ROLE_LABELS, user.role)
   );
 }

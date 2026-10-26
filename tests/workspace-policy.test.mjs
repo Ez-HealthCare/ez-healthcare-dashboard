@@ -18,7 +18,13 @@ test("five workspaces use an explicit deny-by-default role matrix", () => {
     LAB_TECHNICIAN: undefined,
     EMERGENCY_STAFF: undefined,
   };
-  assert.deepEqual(Object.keys(WORKSPACES), ["patient", "receptionist", "nurse", "doctor", "admin"]);
+  assert.deepEqual(Object.keys(WORKSPACES), [
+    "patient",
+    "receptionist",
+    "nurse",
+    "doctor",
+    "admin",
+  ]);
   for (const [role, expected] of Object.entries(roles)) {
     assert.equal(workspaceForRole(role), expected);
     for (const workspace of Object.keys(WORKSPACES))
@@ -44,8 +50,14 @@ test("the navigation table is also the exact server section allowlist", () => {
   }
   for (const workspace of ["unknown", "__proto__", "constructor", "ADMIN"])
     assert.equal(isWorkspace(workspace), false);
-  assert.deepEqual(WORKSPACES.receptionist.navigation.map(([key]) => key), ["", "queue", "appointments", "records"]);
-  assert.deepEqual(WORKSPACES.nurse.navigation.map(([key]) => key), [""]);
+  assert.deepEqual(
+    WORKSPACES.receptionist.navigation.map(([key]) => key),
+    ["", "queue", "requests", "records"]
+  );
+  assert.deepEqual(
+    WORKSPACES.nurse.navigation.map(([key]) => key),
+    [""]
+  );
   assert.equal(
     WORKSPACES.doctor.navigation.some(([, label]) => label === "Hồ sơ bệnh nhân"),
     false

@@ -136,10 +136,11 @@ docker compose -f compose.auth.yml ps
 - API / Swagger: <http://localhost:3002/api/docs>
 - OTP inbox: <http://localhost:8026>
 
-Demo scenario: patient David signs in by OTP and requests a hall number; nurse
-Emily verifies identity, records complaint/vitals and assigns a consultation
-room; the scheduled doctor opens that room queue, calls the number, then starts
-the examination. Patient status and PostgreSQL notifications update by polling.
+Demo scenario: a patient signs in by OTP, completes their profile and submits a
+symptom-based reception request. Reception issues a HALL number, calls the next
+number and verifies CCCD/BHYT. This completes the HALL ticket and hands the visit
+to nursing triage, where vitals and clinic routing are handled before the doctor
+queue. Patient status and PostgreSQL notifications update by polling.
 Reception and clinic numbers are separate daily sequences; clinic sequences are
 per physical `Department` room. Number-issuing mutations require an
 `Idempotency-Key`.

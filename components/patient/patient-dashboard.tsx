@@ -2,15 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Alert, Button, Empty, List, Modal, Popover, Spin, message } from "antd";
-import { useState } from "react";
+import { Alert, Button, Empty, List, Popover, Spin, message } from "antd";
+import { useRouter } from "next/navigation";
 import { LogoutButton } from "@/components/auth/auth-gate";
 import { WorkspaceAccessDenied } from "@/components/auth/workspace-state";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { useIdentity } from "@/hooks/use-auth-session";
 import { PATIENT_NAVIGATION, ROUTES } from "@/lib/constants/routes";
 import styles from "./patient-dashboard.module.css";
-import { clinicalErrorMessage } from "@/lib/clinical-error";
+import { PatientProfilePage } from "./patient-profile";
+import { ReceptionRequestFormPage } from "./reception-request-form";
 
 const statusText: Record<string, string> = {
   HALL_WAITING: "Đang chờ tiếp nhận",
@@ -24,47 +25,18 @@ const statusText: Record<string, string> = {
 };
 
 export function PatientDashboard({ tab }: { tab: string }) {
+  const router = useRouter();
   const user = useIdentity();
   const visit = useClinicalData(clinicalActions.currentVisit);
+  const receptionRequest = useClinicalData(clinicalActions.currentReceptionRequest, 8_000);
   const notifications = useClinicalData(clinicalActions.notifications, 8_000);
-  const [toast, context] = message.useMessage();
-  const [modal, modalContext] = Modal.useModal();
-  const [taking, setTaking] = useState(false);
+  const [, context] = message.useMessage();
   if (user.role !== "PATIENT") return <WorkspaceAccessDenied />;
   const name = user.name || user.email;
-
-  const takeNumber = async () => {
-    if (taking) return;
-    setTaking(true);
-    try {
-      await clinicalActions.requestHallTicket();
-      await visit.refresh();
-      await notifications.refresh();
-      toast.success("Đã cấp số tiếp nhận.");
-    } catch (error) {
-      toast.error(clinicalErrorMessage(error));
-    } finally {
-      setTaking(false);
-    }
-  };
-  const reissue = () =>
-    modal.confirm({
-      title: "Cấp lại số tiếp nhận?",
-      content: "Số hiện tại sẽ mất hiệu lực và bạn sẽ chuyển xuống cuối hàng đợi.",
-      okText: "Cấp số mới",
-      cancelText: "Giữ số hiện tại",
-      async onOk() {
-        if (!visit.data) return;
-        await clinicalActions.reissueHallTicket(visit.data.visitId);
-        await visit.refresh();
-        await notifications.refresh();
-      },
-    });
 
   return (
     <div className={styles.page}>
       {context}
-      {modalContext}
       <a href="#patient-content" className={styles.skipLink}>
         Bỏ qua điều hướng
       </a>
@@ -123,7 +95,11 @@ export function PatientDashboard({ tab }: { tab: string }) {
             <p>Chủ động lấy số tiếp nhận và theo dõi lượt khám hôm nay.</p>
           </div>
         </div>
-        {tab !== "" ? (
+        {tab === "reception-request" ? (
+          <ReceptionRequestFormPage />
+        ) : tab === "profile" ? (
+          <PatientProfilePage />
+        ) : tab !== "" ? (
           <section className={styles.placeholder}>
             <h2>{tab === "visits" ? "Lượt khám của tôi" : "Hồ sơ khám bệnh"}</h2>
             <Empty description="Chưa có dữ liệu trong phạm vi Phase B." />
@@ -131,6 +107,24 @@ export function PatientDashboard({ tab }: { tab: string }) {
           </section>
         ) : (
           <>
+            {!visit.data && receptionRequest.data?.status === "RECEPTION_PENDING" && (
+              <Alert
+                type="info"
+                showIcon
+                title="Yêu cầu tiếp nhận đang chờ xác minh"
+                description="Vui lòng đến quầy tiếp nhận để đối chiếu CCCD/BHYT. Số tiếp nhận sẽ xuất hiện tại đây sau khi xác minh thành công."
+              />
+            )}
+            {!visit.data && receptionRequest.data?.status === "DRAFT" && (
+              <Alert
+                type="warning"
+                showIcon
+                title="Bạn có yêu cầu tiếp nhận chưa gửi"
+                description={
+                  <Link href={ROUTES.PATIENT_RECEPTION_REQUEST}>Tiếp tục khai triệu chứng</Link>
+                }
+              />
+            )}
             {visit.error && (
               <Alert
                 type="error"
@@ -144,7 +138,11 @@ export function PatientDashboard({ tab }: { tab: string }) {
                 <div className={styles.visitBadges}>
                   <span className={styles.visitBadge}>Lượt khám hôm nay</span>
                   <span className={styles.pendingBadge}>
-                    {visit.data ? statusText[visit.data.status] : "Chưa lấy số"}
+                    {visit.data
+                      ? visit.data.ticketStatus === "CALLED"
+                        ? "Đã được gọi đến quầy tiếp nhận"
+                        : statusText[visit.data.status]
+                      : "Chưa có số tiếp nhận"}
                   </span>
                 </div>
                 {visit.loading ? (
@@ -173,11 +171,6 @@ export function PatientDashboard({ tab }: { tab: string }) {
                         </p>
                       </div>
                     )}
-                    {visit.data.canPatientReissue && (
-                      <Button danger onClick={reissue}>
-                        Cấp lại số tiếp nhận
-                      </Button>
-                    )}
                   </>
                 ) : (
                   <>
@@ -190,11 +183,10 @@ export function PatientDashboard({ tab }: { tab: string }) {
                 <Button
                   type="primary"
                   block
-                  loading={taking}
-                  disabled={!!visit.data || visit.loading || taking}
-                  onClick={takeNumber}
+                  disabled={!!visit.data || visit.loading}
+                  onClick={() => router.push(ROUTES.PATIENT_RECEPTION_REQUEST)}
                 >
-                  Lấy số tiếp nhận
+                  Tạo yêu cầu tiếp nhận
                 </Button>
               </aside>
             </section>

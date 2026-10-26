@@ -9,12 +9,16 @@ const API_URL = (
 ).replace(/\/$/, "");
 
 const ALLOWED = [
-  /^visits\/(hall-ticket|me\/current|reception\/(queue|expired)|doctor\/rooms)$/,
+  /^visits\/(hall-ticket|me\/current|reception\/(queue|expired|call-next)|doctor\/rooms)$/,
   /^visits\/queue\/[A-Za-z0-9.-]+$/,
   /^visits\/[0-9a-f-]+(\/.*)?$/i,
   /^appointments\/reception\/today$/,
   /^appointments\/[0-9a-f-]+(\/(cancel|reception\/check-in))?$/i,
   /^departments$/,
+  /^users\/me\/profile$/,
+  /^reception-requests\/me\/(current|draft|submit|cancel)$/,
+  /^reception-requests\/reception\/pending$/,
+  /^reception-requests\/reception\/[0-9a-f-]+\/(confirm|reject)$/i,
   /^notifications(\/[0-9a-f-]+\/read|\/read-all)?$/i,
 ];
 

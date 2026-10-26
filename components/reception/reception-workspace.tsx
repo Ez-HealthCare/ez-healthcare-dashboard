@@ -45,8 +45,6 @@ export function ReceptionWorkspace() {
   const queue = useClinicalData(clinicalActions.receptionQueue);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState("");
-  const [pausing, setPausing] = useState(false);
-  const [pauseReason, setPauseReason] = useState("");
   const [acting, setActing] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [walkInOpen, setWalkInOpen] = useState(false);
@@ -72,22 +70,16 @@ export function ReceptionWorkspace() {
   const verified = (queue.data || []).filter(
     (visit) => visit.status === "RECEPTION_VERIFIED"
   ).length;
-  const paused = (queue.data || []).filter(
-    (visit) => isHallWaiting(visit) && visit.ticketStatus === "PAUSED"
-  ).length;
-  const called = (queue.data || []).filter((visit) => (visit.callAttempts || 0) > 0).length;
+  const called = (queue.data || []).filter((visit) => visit.ticketStatus === "CALLED").length;
   const nextVisit = (queue.data || []).find(
     (visit) => isHallWaiting(visit) && visit.ticketStatus === "ACTIVE"
   );
-  const canManageSelected = !!selected && isHallWaiting(selected);
 
   const runQueueAction = async (action: () => Promise<unknown>, success: string) => {
     try {
       setActing(true);
       await action();
       toast.success(success);
-      setPausing(false);
-      setPauseReason("");
       await queue.refresh();
     } catch (error) {
       toast.error(clinicalErrorMessage(error));
@@ -172,17 +164,15 @@ export function ReceptionWorkspace() {
             </div>
             <span className={styles.counter}>{queue.data?.length || 0}</span>
           </div>
-          <div className={styles.queueHint}>
-            Các thao tác gọi, tạm bỏ qua và gọi lại sẽ được bổ sung ở Phần 3.
-          </div>
+          <div className={styles.queueHint}>Hệ thống gọi Patient đứng đầu hàng đợi tiếp nhận.</div>
           <div className={styles.queueControls}>
             <Button
               disabled={!nextVisit || acting}
-              loading={acting && selectedId === nextVisit?.visitId}
+              loading={acting}
               onClick={() =>
                 nextVisit &&
                 void runQueueAction(
-                  () => clinicalActions.callReceptionTicket(nextVisit.visitId),
+                  () => clinicalActions.callNextReceptionTicket(),
                   `Đã gọi số ${nextVisit.hallTicketNumber}.`
                 )
               }
@@ -211,7 +201,9 @@ export function ReceptionWorkspace() {
                   <span className={styles.queuePatient}>
                     <strong>{visit.patient.name}</strong>
                     <small>
-                      {visit.ticketStatus === "PAUSED" ? "Tạm bỏ qua" : statusLabel[visit.status]}
+                      {visit.ticketStatus === "CALLED"
+                        ? "Đang gọi tại quầy"
+                        : statusLabel[visit.status]}
                     </small>
                   </span>
                   {visit.isPriority ? <span className={styles.priority}>Ưu tiên</span> : null}
@@ -276,73 +268,10 @@ export function ReceptionWorkspace() {
                     : "Chờ hoàn tất đối soát hành chính"}
                 </span>
               </div>
-              {canManageSelected ? (
+              {selected.ticketStatus === "CALLED" ? (
                 <div className={styles.hallActions}>
-                  <div>
-                    <strong>Điều phối tại sảnh</strong>
-                    <span>
-                      {selected.ticketStatus === "PAUSED"
-                        ? "Lượt đang tạm bỏ qua; gọi lại sẽ đưa bệnh nhân trở về hàng chờ."
-                        : "Gọi lại chỉ phát loa tại sảnh, không thay đổi trạng thái khám."}
-                    </span>
-                  </div>
-                  {pausing ? (
-                    <div className={styles.pauseForm}>
-                      <Input.TextArea
-                        autoFocus
-                        onChange={(event) => setPauseReason(event.target.value)}
-                        placeholder="Lý do tạm bỏ qua, ví dụ: bệnh nhân chưa có mặt tại quầy"
-                        rows={2}
-                        value={pauseReason}
-                      />
-                      <div className={styles.actionButtons}>
-                        <Button
-                          disabled={acting}
-                          onClick={() => {
-                            setPausing(false);
-                            setPauseReason("");
-                          }}
-                        >
-                          Hủy
-                        </Button>
-                        <Button
-                          danger
-                          disabled={!pauseReason.trim() || acting}
-                          loading={acting}
-                          onClick={() =>
-                            void runQueueAction(
-                              () =>
-                                clinicalActions.pauseReceptionTicket(selected.visitId, pauseReason),
-                              `Đã tạm bỏ qua số ${selected.hallTicketNumber}.`
-                            )
-                          }
-                        >
-                          Xác nhận tạm bỏ qua
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={styles.actionButtons}>
-                      {selected.ticketStatus === "ACTIVE" ? (
-                        <Button disabled={acting} onClick={() => setPausing(true)}>
-                          Tạm bỏ qua
-                        </Button>
-                      ) : null}
-                      <Button
-                        disabled={acting}
-                        loading={acting}
-                        onClick={() =>
-                          void runQueueAction(
-                            () => clinicalActions.recallReceptionTicket(selected.visitId),
-                            `Đã gọi lại số ${selected.hallTicketNumber}.`
-                          )
-                        }
-                        type="primary"
-                      >
-                        Gọi lại
-                      </Button>
-                    </div>
-                  )}
+                  <strong>Patient đang được gọi đến quầy</strong>
+                  <span>Hoàn tất xác minh để chuyển Patient sang điều dưỡng sàng lọc.</span>
                 </div>
               ) : null}
               <ReceptionVerification visit={selected} onComplete={queue.refresh} />
@@ -372,10 +301,6 @@ export function ReceptionWorkspace() {
                 <strong>{called}</strong>
                 <span>Đã gọi</span>
               </div>
-              <div>
-                <strong>{paused}</strong>
-                <span>Tạm bỏ qua</span>
-              </div>
             </div>
             <Button
               className={styles.counterToggle}
@@ -392,9 +317,6 @@ export function ReceptionWorkspace() {
               </button>
               <button onClick={() => setWalkInOpen(true)} type="button">
                 Tạo lượt walk-in
-              </button>
-              <button disabled type="button">
-                Check-in lịch hẹn
               </button>
               <button disabled type="button">
                 Gọi loa sảnh

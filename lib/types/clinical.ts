@@ -20,10 +20,53 @@ export interface CurrentVisit {
   room?: { code: string; name: string } | null;
   canPatientReissue: boolean;
   intakeCompleted: boolean;
-  ticketStatus?: "ACTIVE" | "PAUSED" | "EXPIRED";
+  ticketStatus?: "ACTIVE" | "CALLED" | "PAUSED" | "EXPIRED" | "COMPLETED";
   businessDate?: string;
   expiresAt?: string;
 }
+
+export interface PatientProfile {
+  id: string;
+  email: string;
+  name: string;
+  phone?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  nationalId?: string;
+  insuranceCardNumber?: string;
+  allergies?: string[];
+}
+
+export interface UpdatePatientProfileInput {
+  name: string;
+  dateOfBirth: string;
+  gender: string;
+  phone: string;
+  nationalId: string;
+  insuranceCardNumber?: string;
+  allergies: string[];
+}
+
+export type ReceptionRequestStatus =
+  "DRAFT" | "RECEPTION_PENDING" | "CONVERTED_TO_VISIT" | "CANCELLED" | "REJECTED" | "EXPIRED";
+export interface ReceptionRequest {
+  id: string;
+  status: ReceptionRequestStatus;
+  chiefComplaint?: string;
+  symptomCodes?: string[];
+  symptomOnset?: string;
+  symptomDuration?: string;
+  symptomSeverity?: string;
+  patientNote?: string;
+  requestedServiceNote?: string;
+  rejectionReason?: string;
+  submittedAt?: string;
+  patient?: { id: string; name: string; nationalId?: string; phone?: string };
+}
+export type ReceptionRequestDraft = Omit<
+  ReceptionRequest,
+  "id" | "status" | "rejectionReason" | "submittedAt"
+>;
 
 export interface ReceptionVisit {
   visitId: string;
@@ -45,7 +88,7 @@ export interface ReceptionVisit {
   priorityReason?: string;
   createdAt: string;
   room?: { code: string; name: string } | null;
-  ticketStatus?: "ACTIVE" | "PAUSED" | "EXPIRED";
+  ticketStatus?: "ACTIVE" | "CALLED" | "PAUSED" | "EXPIRED" | "COMPLETED";
   callAttempts?: number;
   lastCalledAt?: string;
   businessDate?: string;

@@ -15,5 +15,6 @@ export default async function DashboardPage() {
   if (session.state === "unavailable") return <SessionError />;
   const workspace = workspaceForRole(session.user.role);
   if (!workspace) return <UnsupportedWorkspace />;
+  if (workspace === "patient" && !session.user.profileComplete) redirect(ROUTES.PATIENT_PROFILE);
   redirect(WORKSPACES[workspace].path);
 }

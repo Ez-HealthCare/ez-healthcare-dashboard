@@ -38,7 +38,7 @@ function ReceptionVerificationForm({
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, context] = message.useMessage();
-  const canVerify = visit.status === "HALL_WAITING";
+  const canVerify = visit.status === "HALL_WAITING" && visit.ticketStatus === "CALLED";
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     try {
@@ -140,7 +140,11 @@ function ReceptionVerificationForm({
           </div>
         </>
       ) : (
-        <p className={styles.done}>Hồ sơ đã được xử lý. Trạng thái hiện tại: {visit.status}.</p>
+        <p className={styles.done}>
+          {visit.status === "HALL_WAITING"
+            ? "Gọi số này đến quầy trước khi thực hiện xác minh."
+            : `Hồ sơ đã được xử lý. Trạng thái hiện tại: ${visit.status}.`}
+        </p>
       )}
     </div>
   );

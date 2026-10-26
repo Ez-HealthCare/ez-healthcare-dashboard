@@ -19,7 +19,7 @@ const roles = {
 };
 const sections = {
   patient: ["", "visits", "records"],
-  receptionist: ["", "queue", "appointments", "records"],
+  receptionist: ["", "queue", "requests", "records"],
   nurse: [""],
   doctor: ["", "queue", "consultation"],
   admin: ["", "users", "departments", "schedules", "settings"],

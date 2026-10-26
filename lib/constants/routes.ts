@@ -2,6 +2,8 @@ export const ROUTES = {
   LOGIN: "/",
   DASHBOARD: "/dashboard",
   PATIENT: "/dashboard/patient",
+  PATIENT_PROFILE: "/dashboard/patient/profile",
+  PATIENT_RECEPTION_REQUEST: "/dashboard/patient/reception-request",
   RECEPTIONIST: "/dashboard/receptionist",
   NURSE: "/dashboard/nurse",
   DOCTOR: "/dashboard/doctor",

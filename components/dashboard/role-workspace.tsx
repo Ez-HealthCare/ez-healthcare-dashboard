@@ -11,7 +11,7 @@ import type { Workspace } from "@/lib/constants/workspaces";
 import styles from "./role-workspace.module.css";
 import { StaffClinicalPanel } from "@/components/clinical/staff-clinical-panel";
 import { ReceptionWorkspace } from "@/components/reception/reception-workspace";
-import { ReceptionAppointments } from "@/components/reception/reception-appointments";
+import { ReceptionPendingRequests } from "@/components/reception/reception-pending-requests";
 
 export function RoleWorkspace({
   workspace,
@@ -87,8 +87,8 @@ export function RoleWorkspace({
             Xin chào, {name}. {config.description}
           </p>
         </div>
-        {workspace === "receptionist" && section === "appointments" ? (
-          <ReceptionAppointments />
+        {workspace === "receptionist" && section === "requests" ? (
+          <ReceptionPendingRequests />
         ) : workspace === "receptionist" ? (
           <ReceptionWorkspace />
         ) : workspace === "nurse" || workspace === "doctor" ? (

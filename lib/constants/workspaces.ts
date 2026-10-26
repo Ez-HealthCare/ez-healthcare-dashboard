@@ -14,7 +14,7 @@ export const WORKSPACES = {
     navigation: [
       ["", "Bàn làm việc tiếp nhận"],
       ["queue", "Hàng đợi"],
-      ["appointments", "Lịch hẹn"],
+      ["requests", "Yêu cầu tiếp nhận"],
       ["records", "Tra cứu hồ sơ"],
     ],
   },
