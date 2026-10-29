@@ -5,7 +5,13 @@ import { after, before, beforeEach, test } from "node:test";
 import { http } from "../lib/api/http.ts";
 import { AuthError } from "../lib/auth.ts";
 
-const user = { id: "patient-id", email: "patient@example.com", name: "Patient", role: "PATIENT" };
+const user = {
+  id: "patient-id",
+  email: "patient@example.com",
+  name: "Patient",
+  role: "PATIENT",
+  profileComplete: true,
+};
 const issuedCookies = [
   "ez_access=fresh; HttpOnly; SameSite=Lax; Path=/",
   "ez_refresh=fresh-refresh; HttpOnly; SameSite=Lax; Path=/",

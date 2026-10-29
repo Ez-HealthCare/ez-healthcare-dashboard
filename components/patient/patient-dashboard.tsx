@@ -16,8 +16,8 @@ import { ReceptionRequestFormPage } from "./reception-request-form";
 const statusText: Record<string, string> = {
   HALL_WAITING: "Đang chờ tiếp nhận",
   RECEPTION_VERIFIED: "Đã xác minh thông tin",
-  TRIAGE_PENDING: "Đang chờ phân phòng",
-  CLINIC_WAITING: "Đang chờ khám",
+  TRIAGE_PENDING: "Đã tiếp nhận hồ sơ",
+  CLINIC_WAITING: "Đã phân phòng khám",
   CLINIC_CALLED: "Đã được gọi vào phòng",
   TEMPORARILY_ABSENT: "Tạm vắng — liên hệ lễ tân",
   IN_EXAMINATION: "Bác sĩ đang tiếp nhận",
@@ -139,7 +139,7 @@ export function PatientDashboard({ tab }: { tab: string }) {
                   <span className={styles.visitBadge}>Lượt khám hôm nay</span>
                   <span className={styles.pendingBadge}>
                     {visit.data
-                      ? visit.data.ticketStatus === "CALLED"
+                      ? visit.data.status === "HALL_WAITING" && visit.data.ticketStatus === "CALLED"
                         ? "Đã được gọi đến quầy tiếp nhận"
                         : statusText[visit.data.status]
                       : "Chưa có số tiếp nhận"}
@@ -158,12 +158,21 @@ export function PatientDashboard({ tab }: { tab: string }) {
                         style={{ marginBottom: 16 }}
                       />
                     )}
-                    <h2>Số tiếp nhận {visit.data.hallTicketNumber}</h2>
-                    <p>
+                    <h2>
                       {visit.data.clinicTicketNumber
                         ? `Số khám ${visit.data.clinicTicketNumber}`
-                        : "Điều dưỡng/lễ tân sẽ tiếp nhận và phân phòng sau khi xác minh."}
-                    </p>
+                        : `Số tiếp nhận ${visit.data.hallTicketNumber}`}
+                    </h2>
+                    {visit.data.status === "TRIAGE_PENDING" ? (
+                      <p>
+                        Đã tiếp nhận hồ sơ - Vui lòng chờ điều dưỡng gọi vào phòng sàng lọc đo sinh
+                        hiệu
+                      </p>
+                    ) : visit.data.status === "CLINIC_WAITING" ? (
+                      <p>Vui lòng di chuyển đến trước cửa phòng khám và theo dõi số thứ tự.</p>
+                    ) : visit.data.status === "HALL_WAITING" ? (
+                      <p>Vui lòng chờ lễ tân gọi đến quầy tiếp nhận để xác minh.</p>
+                    ) : null}
                     {visit.data.room && (
                       <div className={styles.notice}>
                         <p>

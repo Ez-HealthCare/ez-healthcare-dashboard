@@ -9,6 +9,7 @@ const API_URL = (
 ).replace(/\/$/, "");
 
 const ALLOWED = [
+  /^visits\/triage\/queue$/,
   /^visits\/(hall-ticket|me\/current|reception\/(queue|expired|call-next)|doctor\/rooms)$/,
   /^visits\/queue\/[A-Za-z0-9.-]+$/,
   /^visits\/[0-9a-f-]+(\/.*)?$/i,

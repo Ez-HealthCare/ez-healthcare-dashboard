@@ -94,7 +94,13 @@ test("timeouts and malformed JSON fail closed", async () => {
 });
 
 test("identity boundary rejects malformed users and unknown/inherited roles", () => {
-  const user = { id: "id", email: "patient@example.com", name: null, role: "PATIENT" };
+  const user = {
+    id: "id",
+    email: "patient@example.com",
+    name: null,
+    role: "PATIENT",
+    profileComplete: true,
+  };
   assert.ok(isUserProfile(user));
   for (const bad of [
     null,
@@ -102,6 +108,7 @@ test("identity boundary rejects malformed users and unknown/inherited roles", ()
     { ...user, role: "__proto__" },
     { ...user, role: "UNKNOWN" },
     { ...user, email: null },
+    { ...user, profileComplete: undefined },
   ]) {
     assert.equal(isUserProfile(bad), false);
   }

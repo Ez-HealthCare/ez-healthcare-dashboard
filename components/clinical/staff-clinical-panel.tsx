@@ -16,21 +16,30 @@ import {
   message,
 } from "antd";
 import { AVAILABLE_ORDERS } from "@/lib/constants/doctor";
+import { FAST_RED_FLAG_REASON, NURSE_CASES } from "@/lib/constants/nurse";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
+import { news2Preview } from "@/lib/news2-preview";
 import type { ClinicQueueItem, IntakeInput, ReceptionVisit } from "@/lib/types/clinical";
 import styles from "./staff-clinical-panel.module.css";
 
 function NursePanel() {
-  const queue = useClinicalData(clinicalActions.receptionQueue);
+  const queue = useClinicalData(clinicalActions.triageQueue);
   const expired = useClinicalData(clinicalActions.expiredReceptionQueue, 30_000);
   const departments = useClinicalData(clinicalActions.departments, 30_000);
   const [selected, setSelected] = useState<ReceptionVisit>();
   const [assigning, setAssigning] = useState<ReceptionVisit>();
+  const [departmentCode, setDepartmentCode] = useState<string>();
+  const [suggestedDepartmentCode, setSuggestedDepartmentCode] = useState<string>();
+  const [suggestedDepartments, setSuggestedDepartments] = useState<
+    Record<string, string | undefined>
+  >({});
   const [reissuing, setReissuing] = useState<ReceptionVisit>();
   const [reissueReason, setReissueReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm<IntakeInput>();
+  const values = Form.useWatch([], form);
+  const preview = news2Preview(values || {});
   const [toast, context] = message.useMessage();
 
   const act = async (action: () => Promise<unknown>, success: string) => {
@@ -39,8 +48,10 @@ function NursePanel() {
       await action();
       toast.success(success);
       await Promise.all([queue.refresh(), expired.refresh()]);
+      return true;
     } catch (error) {
       toast.error(clinicalErrorMessage(error));
+      return false;
     } finally {
       setSubmitting(false);
     }
@@ -59,6 +70,19 @@ function NursePanel() {
         columns={[
           { title: "Số tiếp nhận", dataIndex: "hallTicketNumber" },
           { title: "Bệnh nhân", render: (_, row) => row.patient.name },
+          {
+            title: "Ưu tiên",
+            render: (_, row) =>
+              row.isPriority && <Tag color="orange">{row.priorityReason || "Ưu tiên"}</Tag>,
+          },
+          {
+            title: "Sinh hiệu",
+            render: (_, row) => (
+              <Tag color={row.intakeCompleted ? "green" : "default"}>
+                {row.intakeCompleted ? "Đã đo" : "Chưa đo"}
+              </Tag>
+            ),
+          },
           {
             title: "Trạng thái",
             dataIndex: "status",
@@ -84,29 +108,30 @@ function NursePanel() {
               return (
                 <Space wrap>
                   <Button
-                    loading={submitting}
-                    disabled={row.status !== "HALL_WAITING"}
-                    onClick={() =>
-                      act(() => clinicalActions.verify(row.visitId), "Đã xác minh thông tin.")
-                    }
-                  >
-                    Xác minh
-                  </Button>
-                  <Button
                     type="primary"
                     loading={submitting}
-                    disabled={row.status !== "RECEPTION_VERIFIED"}
                     onClick={() => {
                       setSelected(row);
+                      setSuggestedDepartmentCode(suggestedDepartments[row.visitId]);
                       form.resetFields();
+                      form.setFieldsValue({
+                        chiefComplaint: row.chiefComplaint,
+                        symptomOnset: row.symptomOnset,
+                        symptomDuration: row.symptomDuration,
+                        symptomSeverity: row.symptomSeverity,
+                        allergies: row.patient.allergies,
+                      });
                     }}
                   >
                     Ghi thông tin bệnh
                   </Button>
                   <Button
                     loading={submitting}
-                    disabled={row.status !== "TRIAGE_PENDING"}
-                    onClick={() => setAssigning(row)}
+                    disabled={!row.intakeCompleted}
+                    onClick={() => {
+                      setAssigning(row);
+                      setDepartmentCode(suggestedDepartments[row.visitId]);
+                    }}
                   >
                     Phân phòng
                   </Button>
@@ -159,21 +184,97 @@ function NursePanel() {
         title={`Tiếp nhận ${selected?.patient.name || ""}`}
         open={!!selected}
         okText="Lưu sàng lọc"
+        confirmLoading={submitting}
+        okButtonProps={{ disabled: submitting }}
         cancelText="Hủy"
-        onCancel={() => setSelected(undefined)}
+        onCancel={() => !submitting && setSelected(undefined)}
         onOk={() => form.submit()}
       >
         <Form
           form={form}
           layout="vertical"
-          onFinish={(values) =>
-            selected &&
-            act(
-              () => clinicalActions.intake(selected.visitId, values),
-              "Đã lưu thông tin bệnh."
-            ).then(() => setSelected(undefined))
-          }
+          initialValues={{ isRedFlag: false }}
+          disabled={submitting}
+          onFinish={async (values) => {
+            if (!selected || submitting) return;
+            const saved = await act(async () => {
+              const result = await clinicalActions.intake(selected.visitId, {
+                ...values,
+                isRedFlag: !!values.isRedFlag,
+                redFlagReason: values.isRedFlag ? FAST_RED_FLAG_REASON : undefined,
+              });
+              setSuggestedDepartments((previous) => ({
+                ...previous,
+                [selected.visitId]:
+                  result.status === "EMERGENCY_DISPATCHED" ? undefined : suggestedDepartmentCode,
+              }));
+              if (result.status === "EMERGENCY_DISPATCHED") {
+                toast.warning("Đã chuyển cấp cứu STAT P.001. Không phân phòng khám thường.", 8);
+              }
+            }, "Đã lưu thông tin bệnh.");
+            if (saved) setSelected(undefined);
+          }}
         >
+          <div style={{ marginBottom: 16 }}>
+            <p id="nurse-cases-label">Ca bệnh mẫu chuẩn (Y Hà Nội 2020)</p>
+            <Space wrap role="group" aria-labelledby="nurse-cases-label">
+              {NURSE_CASES.map((sample) => (
+                <Button
+                  key={sample.label}
+                  size="small"
+                  shape="round"
+                  danger={sample.intake.isRedFlag}
+                  onClick={() => {
+                    form.setFieldsValue(sample.intake);
+                    setSuggestedDepartmentCode(sample.departmentCode);
+                  }}
+                >
+                  {sample.label}
+                </Button>
+              ))}
+            </Space>
+            {suggestedDepartmentCode && !values?.isRedFlag && (
+              <p>
+                Gợi ý phòng khám chuyên khoa: <strong>{suggestedDepartmentCode}</strong>
+              </p>
+            )}
+          </div>
+          <div aria-live="polite" style={{ marginBottom: 16 }}>
+            <Tag
+              color={
+                preview.risk === "HIGH"
+                  ? "red"
+                  : preview.risk === "MEDIUM"
+                    ? "orange"
+                    : preview.risk === "LOW"
+                      ? "green"
+                      : "default"
+              }
+            >
+              NEWS2 xem trước: {preview.score ?? "chưa đủ dữ liệu"}
+              {preview.risk &&
+                ` · ${preview.risk === "HIGH" ? "Nguy cơ cao" : preview.risk === "MEDIUM" ? "Trung bình" : "Thấp"}`}
+            </Tag>
+            <p>Ước tính từ 5 sinh hiệu; chưa tính oxy bổ sung và mức độ ý thức.</p>
+            <Form.Item name="isRedFlag" valuePropName="checked">
+              <Checkbox>Dấu hiệu F.A.S.T (Đột quỵ não cấp)</Checkbox>
+            </Form.Item>
+            {values?.isRedFlag && (
+              <Alert
+                type="error"
+                showIcon
+                role="alert"
+                title="Dấu hiệu F.A.S.T tích cực: Hệ thống sẽ chuyển ngay sang Cấp cứu STAT P.001 khi Lưu"
+              />
+            )}
+            {preview.risk === "HIGH" && (
+              <Alert
+                type="error"
+                showIcon
+                title="Nguy cơ cao — điều phối cấp cứu STAT P.001 khi lưu"
+              />
+            )}
+          </div>
           <Form.Item name="chiefComplaint" label="Lý do khám" rules={[{ required: true }]}>
             <Input.TextArea />
           </Form.Item>
@@ -220,7 +321,34 @@ function NursePanel() {
             >
               <InputNumber min={8} max={60} />
             </Form.Item>
+            <Form.Item
+              name="heightCm"
+              label="Chiều cao (cm)"
+              rules={[{ type: "number", min: 20, max: 280 }]}
+            >
+              <InputNumber min={20} max={280} />
+            </Form.Item>
+            <Form.Item
+              name="weightKg"
+              label="Cân nặng (kg)"
+              rules={[{ type: "number", min: 0.5, max: 500 }]}
+            >
+              <InputNumber min={0.5} max={500} step={0.1} />
+            </Form.Item>
           </Space>
+          <Form.Item name="symptomOnset" label="Thời điểm khởi phát">
+            <Input maxLength={100} placeholder="Ví dụ: sáng nay, lúc 7 giờ" />
+          </Form.Item>
+          <Form.Item name="symptomSeverity" label="Mức độ triệu chứng">
+            <Select
+              allowClear
+              options={[
+                { value: "Nhẹ", label: "Nhẹ" },
+                { value: "Vừa", label: "Vừa" },
+                { value: "Nặng", label: "Nặng" },
+              ]}
+            />
+          </Form.Item>
           <Form.Item name="symptomDuration" label="Thời gian triệu chứng">
             <Input />
           </Form.Item>
@@ -235,23 +363,39 @@ function NursePanel() {
       <Modal
         title="Phân phòng và cấp số khám"
         open={!!assigning}
-        footer={null}
+        okText="Xác nhận phân phòng"
+        cancelText="Hủy"
+        confirmLoading={submitting}
+        okButtonProps={{ disabled: !departmentCode || !assigning?.intakeCompleted || submitting }}
+        onOk={async () => {
+          if (!assigning?.intakeCompleted || !departmentCode || submitting) return;
+          const saved = await act(
+            () => clinicalActions.assign(assigning.visitId, departmentCode),
+            "Đã phân phòng và cấp số khám."
+          );
+          if (saved) setAssigning(undefined);
+        }}
         onCancel={() => setAssigning(undefined)}
       >
-        <p>Số tiếp nhận cũ sẽ hoàn tất; bệnh nhân nhận số khám riêng của phòng đã chọn.</p>
+        <p>Bệnh nhân nhận số khám riêng của phòng đã chọn.</p>
+        {departments.error && (
+          <Alert
+            type="error"
+            title="Không tải được danh sách phòng khám"
+            description={departments.error}
+          />
+        )}
         <Select
           style={{ width: "100%" }}
+          aria-label="Phòng khám chuyên khoa"
+          loading={departments.loading}
+          disabled={submitting}
+          value={departmentCode}
           placeholder="Chọn phòng khám"
           options={(departments.data || [])
             .filter((item) => item.roomType === "CONSULTATION")
             .map((item) => ({ value: item.code, label: `${item.code} · ${item.name}` }))}
-          onChange={(code) =>
-            assigning &&
-            act(
-              () => clinicalActions.assign(assigning.visitId, code),
-              "Đã phân phòng và cấp số khám."
-            ).then(() => setAssigning(undefined))
-          }
+          onChange={setDepartmentCode}
         />
       </Modal>
       <Modal
@@ -274,7 +418,7 @@ function NursePanel() {
                   )
                 : clinicalActions.reissueClinicTicket(reissuing.visitId, reissueReason),
             "Đã cấp lại số."
-          ).then(() => setReissuing(undefined))
+          ).then((saved) => saved && setReissuing(undefined))
         }
       >
         <Alert

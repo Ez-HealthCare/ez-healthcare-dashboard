@@ -83,6 +83,9 @@ export interface ReceptionVisit {
     allergies?: string[];
   };
   chiefComplaint?: string;
+  symptomOnset?: string;
+  symptomDuration?: string;
+  symptomSeverity?: string;
   intakeCompleted: boolean;
   isPriority: boolean;
   priorityReason?: string;
@@ -190,6 +193,8 @@ export interface IntakeInput {
   weightKg?: number;
   heightCm?: number;
   notes?: string;
+  isRedFlag?: boolean;
+  redFlagReason?: string;
   isPriority?: boolean;
   priorityReason?: string;
 }

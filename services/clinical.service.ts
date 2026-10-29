@@ -57,6 +57,7 @@ export const clinicalService = {
       .then((r) => r.data),
   receptionQueue: () =>
     http.get<ReceptionVisit[]>(path("visits/reception/queue")).then((r) => r.data),
+  triageQueue: () => http.get<ReceptionVisit[]>(path("visits/triage/queue")).then((r) => r.data),
   receptionAppointments: (params?: { search?: string; status?: AppointmentStatus }) =>
     http
       .get<ReceptionAppointment[]>(path("appointments/reception/today"), { params })
@@ -107,7 +108,12 @@ export const clinicalService = {
       )
       .then((r) => r.data),
   intake: (visitId: string, input: IntakeInput) =>
-    http.put(path(`visits/${visitId}/intake`), input).then((r) => r.data),
+    http
+      .put<{ visitId: string; status: ReceptionVisit["status"]; isRedFlag: boolean }>(
+        path(`visits/${visitId}/intake`),
+        input
+      )
+      .then((r) => r.data),
   assign: (visitId: string, departmentCode: string) =>
     http
       .post(
