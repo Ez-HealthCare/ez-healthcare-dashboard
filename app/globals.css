@@ -1,16 +1,19 @@
 @import "tailwindcss";
+@import "./design-tokens.css";
+@import "./workspace-layout.css";
 
 :root {
-  --background: #faf8ff;
-  --foreground: #131b2e;
-  --surface: #ffffff;
-  --surface-subtle: #f2f3ff;
-  --border: #e6e8f0;
-  --muted: #64736f;
-  --primary: #00685f;
-  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --background: var(--color-background);
+  --foreground: var(--color-text);
+  --surface: var(--color-surface);
+  --surface-subtle: var(--color-surface-subtle);
+  --border: var(--color-border);
+  --muted: var(--color-text-secondary);
+  --primary: var(--color-primary);
   --font-body:
-    "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    var(--font-be-vietnam-pro), "Be Vietnam Pro", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-display: var(--font-body);
 }
 
 @theme inline {
@@ -24,7 +27,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: var(--text-body-staff);
   line-height: 1.5;
 }
 
@@ -32,4 +35,75 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
+}
+
+/* P1 accessibility scope: clinical workspaces only. */
+[data-workspace] :is(button, a, input, textarea, [role="combobox"]):focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+[data-workspace] :is(.ant-input, .ant-input-number, .ant-select-selector) {
+  border-color: var(--color-control-border);
+}
+[data-workspace] :is(.ant-input, textarea)::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+[data-workspace] .ant-tag {
+  font-size: var(--text-meta);
+  line-height: 1.667;
+  white-space: normal;
+}
+[data-workspace] :is(.ant-tag-cyan, .ant-tag-blue, .ant-tag-geekblue) {
+  color: #075985 !important;
+  background: #f0f9ff !important;
+  border-color: var(--color-control-border);
+}
+[data-workspace] :is(.ant-tag-green, .ant-tag-success) {
+  color: #166534 !important;
+  background: #f0fdf4 !important;
+  border-color: var(--color-control-border);
+}
+[data-workspace] :is(.ant-tag-gold, .ant-tag-orange, .ant-tag-warning) {
+  color: #92400e !important;
+  background: var(--color-warning-bg) !important;
+  border-color: var(--color-control-border);
+}
+[data-workspace] :is(.ant-tag-red, .ant-tag-error) {
+  color: #b91c1c !important;
+  background: #fef2f2 !important;
+  border-color: var(--color-control-border);
+}
+@media (max-width: 767px) {
+  [data-workspace] :is(.ant-btn, .ant-input, .ant-input-number, .ant-select-single) {
+    min-height: 44px;
+  }
+  [data-workspace] :is(.ant-input, .ant-input-number-input, .ant-select, textarea) {
+    font-size: var(--text-body-patient);
+  }
+  [data-workspace] .ant-input-number-input {
+    height: 42px;
+  }
+  [data-workspace] .ant-btn {
+    height: auto;
+    white-space: normal;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-workspace] :is(a, button) {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  [data-workspace] .anticon-loading svg {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  [data-workspace] .ant-input-affix-wrapper {
+    min-height: 44px;
+  }
+  [data-workspace] .ant-input-affix-wrapper > .ant-input {
+    min-height: 0;
+  }
 }

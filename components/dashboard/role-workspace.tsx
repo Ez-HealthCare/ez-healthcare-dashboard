@@ -9,9 +9,9 @@ import { useIdentity } from "@/hooks/use-auth-session";
 import { WORKSPACES, canAccessWorkspace } from "@/lib/constants/workspaces";
 import type { Workspace } from "@/lib/constants/workspaces";
 import styles from "./role-workspace.module.css";
-import { StaffClinicalPanel } from "@/components/clinical/staff-clinical-panel";
-import { ReceptionWorkspace } from "@/components/reception/reception-workspace";
-import { ReceptionPendingRequests } from "@/components/reception/reception-pending-requests";
+import { NurseWorkspace } from "@/components/clinical/nurse-workspace";
+import { DoctorWorkspace } from "@/components/doctor/doctor-workspace";
+import { ReceptionShell } from "@/components/reception/reception-shell";
 
 export function RoleWorkspace({
   workspace,
@@ -23,6 +23,9 @@ export function RoleWorkspace({
   const user = useIdentity();
   const config = WORKSPACES[workspace];
   if (!canAccessWorkspace(user.role, workspace)) return <WorkspaceAccessDenied />;
+  if (workspace === "nurse") return <NurseWorkspace section={section} />;
+  if (workspace === "receptionist") return <ReceptionShell section={section} />;
+  if (workspace === "doctor") return <DoctorWorkspace section={section} />;
   const title = config.navigation.find(([key]) => key === section)?.[1] || config.label;
   const name = user.name || user.email;
   return (
@@ -87,15 +90,7 @@ export function RoleWorkspace({
             Xin chào, {name}. {config.description}
           </p>
         </div>
-        {workspace === "receptionist" && section === "requests" ? (
-          <ReceptionPendingRequests />
-        ) : workspace === "receptionist" ? (
-          <ReceptionWorkspace />
-        ) : workspace === "nurse" || workspace === "doctor" ? (
-          <section className={styles.placeholder} style={{ display: "block" }}>
-            <StaffClinicalPanel workspace={workspace} />
-          </section>
-        ) : section === "" ? (
+        {section === "" ? (
           <section className={styles.cards} aria-label="Chức năng theo vai trò">
             {config.navigation
               .filter(([key]) => key !== "")

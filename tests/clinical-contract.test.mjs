@@ -1,3 +1,5 @@
+import { canWriteDoctorVisit } from "../lib/doctor-access.ts";
+import { VISIT_STATUS_LABELS, visitStatusLabel, patientRecordLink } from "../lib/visit-status.ts";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
@@ -10,6 +12,87 @@ import { clinicalService } from "../services/clinical.service.ts";
 import { isClinicalProxyPath } from "../services/clinical-proxy.server.ts";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+const readStaffUI = async () =>
+  (
+    await Promise.all([
+      read("components/clinical/staff-clinical-panel.tsx"),
+      read("components/clinical/nurse-overview.tsx"),
+      read("components/doctor/doctor-workspace.tsx"),
+    ])
+  ).join("\n");
+
+test("doctor history uses scoped read endpoints and forwards explicit filters", async () => {
+  const id = "11111111-1111-4111-8111-111111111111";
+  assert.equal(isClinicalProxyPath("visits/doctor/history"), true);
+  assert.equal(isClinicalProxyPath(`visits/doctor/history/${id}`), true);
+  assert.equal(isClinicalProxyPath("visits/doctor/history/arbitrary"), false);
+  const previous = http.defaults.adapter;
+  const requests = [];
+  http.defaults.adapter = async (config) => {
+    requests.push({ url: config.url, params: config.params, method: config.method });
+    return { data: {}, status: 200, statusText: "OK", headers: {}, config };
+  };
+  try {
+    await clinicalService.doctorHistory({ page: 2, completedDate: "2026-11-03", search: "CL-102" });
+    await clinicalService.doctorHistoryDetail(id);
+    assert.deepEqual(requests, [
+      {
+        url: "/clinical/visits/doctor/history",
+        params: { page: 2, completedDate: "2026-11-03", search: "CL-102", pageSize: 10 },
+        method: "get",
+      },
+      { url: `/clinical/visits/doctor/history/${id}`, params: undefined, method: "get" },
+    ]);
+  } finally {
+    http.defaults.adapter = previous;
+  }
+});
+
+test("patient history uses the scoped BFF endpoint and completed-only filter", async () => {
+  assert.equal(isClinicalProxyPath("visits/me/history"), true);
+  assert.equal(isClinicalProxyPath("visits/me/history/other-user"), false);
+  const previous = http.defaults.adapter;
+  const requests = [];
+  http.defaults.adapter = async (config) => {
+    requests.push({ url: config.url, params: config.params });
+    return { data: { items: [], total: 0 }, status: 200, statusText: "OK", headers: {}, config };
+  };
+  try {
+    await clinicalService.patientHistory(2, true);
+    await clinicalService.patientHistory(1, false);
+    assert.deepEqual(requests, [
+      {
+        url: "/clinical/visits/me/history",
+        params: { page: 2, pageSize: 10, status: "COMPLETED" },
+      },
+      { url: "/clinical/visits/me/history", params: { page: 1, pageSize: 10 } },
+    ]);
+  } finally {
+    http.defaults.adapter = previous;
+  }
+});
+
+test("all visit states have shared labels and exact patient record links", () => {
+  for (const status of [
+    "HALL_WAITING",
+    "RECEPTION_VERIFIED",
+    "TRIAGE_PENDING",
+    "CLINIC_WAITING",
+    "CLINIC_CALLED",
+    "TEMPORARILY_ABSENT",
+    "IN_EXAMINATION",
+    "PARACLINICAL_PENDING",
+    "RE_EXAM_CALLING",
+    "COMPLETED",
+    "EMERGENCY_DISPATCHED",
+    "CANCELLED",
+  ]) {
+    assert.ok(VISIT_STATUS_LABELS[status]?.length);
+    assert.equal(visitStatusLabel(status), VISIT_STATUS_LABELS[status]);
+  }
+  assert.ok(visitStatusLabel("unknown").length);
+  assert.equal(patientRecordLink("visit-id"), "/dashboard/patient/records?visitId=visit-id");
+});
 
 test("patient UI uses the live queue contract without symptom self-declaration", async () => {
   const [patient, service] = await Promise.all([
@@ -26,7 +109,7 @@ test("nurse triage endpoint passes the BFF and requires intake before assignment
   assert.equal(isClinicalProxyPath("visits/triage/queue"), true);
   assert.equal(isClinicalProxyPath("visits/triage/queue/extra"), false);
   const [panel, service, patient] = await Promise.all([
-    read("components/clinical/staff-clinical-panel.tsx"),
+    readStaffUI(),
     read("services/clinical.service.ts"),
     read("components/patient/patient-dashboard.tsx"),
   ]);
@@ -154,7 +237,7 @@ test("N07: intake transport preserves the F.A.S.T flag and reason without a cont
 });
 
 test("nurse UI wires quick chips, F.A.S.T alert and suggestions scoped to the saved visit", async () => {
-  const panel = await read("components/clinical/staff-clinical-panel.tsx");
+  const panel = await readStaffUI();
   assert.match(panel, /NURSE_CASES.map/);
   assert.match(panel, /form.setFieldsValue\(sample.intake\)/);
   assert.match(panel, /setSuggestedDepartmentCode\(sample.departmentCode\)/);
@@ -168,15 +251,12 @@ test("nurse UI wires quick chips, F.A.S.T alert and suggestions scoped to the sa
   assert.match(panel, /setDepartmentCode\(suggestedDepartments\[row.visitId\]\)/);
   assert.match(
     panel,
-    /\[selected.visitId\]:[\s\S]*?result.status === "EMERGENCY_DISPATCHED" \? undefined : suggestedDepartmentCode/
+    /\[selected.visitId\]:[\s\S]*?result.status === "EMERGENCY_DISPATCHED"\s+\? undefined\s+: suggestedDepartmentCode/
   );
 });
 
 test("staff UI exposes intake, assignment, scheduled-room queue and examination start", async () => {
-  const [panel, service] = await Promise.all([
-    read("components/clinical/staff-clinical-panel.tsx"),
-    read("services/clinical.service.ts"),
-  ]);
+  const [panel, service] = await Promise.all([readStaffUI(), read("services/clinical.service.ts")]);
   for (const label of ["Ghi thông tin bệnh", "Phân phòng", "Tiếp nhận khám"]) {
     assert.match(panel, new RegExp(label));
   }
@@ -194,14 +274,64 @@ test("clinical BFF is allowlisted and preserves idempotency keys", async () => {
   assert.equal(isClinicalProxyPath("admin"), false);
   assert.equal(isClinicalProxyPath("visits/reception/queue"), true);
   assert.equal(isClinicalProxyPath("visits/reception/expired"), true);
+  assert.equal(isClinicalProxyPath("visits/reception/walk-in"), true);
+  assert.equal(isClinicalProxyPath("users/audit/national-id/012345678901"), true);
+  assert.equal(isClinicalProxyPath("users/audit/national-id/012345678901/extra"), false);
+  assert.equal(isClinicalProxyPath("users/audit"), false);
+  assert.equal(
+    isClinicalProxyPath("paraclinical/11111111-1111-4111-8111-111111111111/result"),
+    true
+  );
+  assert.equal(isClinicalProxyPath("paraclinical/worklist"), false);
+  assert.equal(
+    isClinicalProxyPath("paraclinical/11111111-1111-4111-8111-111111111111/result/extra"),
+    false
+  );
   assert.match(proxy, /path \+ query/);
+});
+
+test("doctor dossier, diagnostic results and specialty transfer preserve the backend contract", async () => {
+  const previousAdapter = http.defaults.adapter;
+  const requests = [];
+  http.defaults.adapter = async (config) => {
+    requests.push({
+      url: config.url,
+      method: config.method,
+      body: config.data ? JSON.parse(config.data) : undefined,
+      idempotencyKey: config.headers.get("Idempotency-Key"),
+    });
+    return { data: {}, status: 200, statusText: "OK", headers: {}, config };
+  };
+  try {
+    await clinicalService.visitDossier("doctor-visit");
+    await clinicalService.diagnosticResult("lab-step");
+    const input = {
+      targetDepartmentCode: "P.108",
+      transferReason: "Cần khám chuyên khoa",
+      clinicalSummary: "Nội dung bàn giao do bác sĩ nhập",
+    };
+    await clinicalService.transferClinic("doctor-visit", input);
+    assert.deepEqual(
+      requests.slice(0, 2).map(({ url, method }) => ({ url, method })),
+      [
+        { url: "/clinical/visits/doctor-visit", method: "get" },
+        { url: "/clinical/paraclinical/lab-step/result", method: "get" },
+      ]
+    );
+    assert.equal(requests[2].url, "/clinical/visits/doctor-visit/transfer");
+    assert.equal(requests[2].method, "post");
+    assert.deepEqual(requests[2].body, input);
+    assert.ok(requests[2].idempotencyKey);
+  } finally {
+    http.defaults.adapter = previousAdapter;
+  }
 });
 
 test("Phase C presents structured clinical failures and expired-ticket recovery", async () => {
   const [messages, patient, staff, service] = await Promise.all([
     read("lib/clinical-error.ts"),
     read("components/patient/patient-dashboard.tsx"),
-    read("components/clinical/staff-clinical-panel.tsx"),
+    readStaffUI(),
     read("services/clinical.service.ts"),
   ]);
   for (const code of [
@@ -226,7 +356,7 @@ test("clinical validation errors stay readable and intake ranges match the API",
     "first failure; second failure"
   );
 
-  const staff = await read("components/clinical/staff-clinical-panel.tsx");
+  const staff = await readStaffUI();
   for (const range of [
     /bloodPressureDiastolic[\s\S]*?min: 30, max: 160/,
     /heartRate[\s\S]*?min: 30, max: 240/,
@@ -237,4 +367,19 @@ test("clinical validation errors stay readable and intake ranges match the API",
   }
   assert.match(staff, /Đã chuyển cấp cứu/);
   assert.match(staff, /Không phân phòng khám thường/);
+});
+
+test("doctor writes require the current doctor's identity and matching examination state", () => {
+  const queue = { status: "IN_EXAMINATION" };
+  const own = { status: "IN_EXAMINATION", currentDoctor: { id: "doctor-a", name: "Doctor A" } };
+  assert.equal(canWriteDoctorVisit("doctor-a", queue, own), true);
+  assert.equal(canWriteDoctorVisit("doctor-b", queue, own), false);
+  assert.equal(canWriteDoctorVisit("", queue, own), false);
+  assert.equal(canWriteDoctorVisit("doctor-a", queue, undefined), false);
+  assert.equal(canWriteDoctorVisit("doctor-a", queue, { status: "IN_EXAMINATION" }), false);
+  assert.equal(canWriteDoctorVisit("doctor-a", { status: "CLINIC_CALLED" }, own), false);
+  assert.equal(
+    canWriteDoctorVisit("doctor-a", queue, { ...own, status: "PARACLINICAL_PENDING" }),
+    false
+  );
 });

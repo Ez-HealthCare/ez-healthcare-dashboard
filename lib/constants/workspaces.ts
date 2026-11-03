@@ -1,4 +1,5 @@
 import { PATIENT_NAVIGATION, ROUTES } from "@/lib/constants/routes";
+import { DOCTOR_LEGACY_SECTIONS } from "@/lib/doctor-navigation";
 
 export const WORKSPACES = {
   patient: {
@@ -14,6 +15,7 @@ export const WORKSPACES = {
     navigation: [
       ["", "Bàn làm việc tiếp nhận"],
       ["queue", "Hàng đợi"],
+      ["appointments", "Lịch hẹn"],
       ["requests", "Yêu cầu tiếp nhận"],
       ["records", "Tra cứu hồ sơ"],
     ],
@@ -22,16 +24,21 @@ export const WORKSPACES = {
     label: "Điều dưỡng",
     path: ROUTES.NURSE,
     description: "Ghi nhận dấu hiệu sinh tồn, sàng lọc nguy cơ và điều phối lâm sàng trước khám.",
-    navigation: [["", "Bàn sàng lọc"]],
+    navigation: [
+      ["", "Bàn làm việc"],
+      ["queue", "Hàng đợi sàng lọc"],
+      ["history", "Lịch sử bàn giao"],
+      ["records", "Tra cứu hồ sơ"],
+    ],
   },
   doctor: {
     label: "Bác sĩ",
     path: ROUTES.DOCTOR,
     description: "Hàng đợi và bàn khám. Hồ sơ bệnh nhân sẽ nằm trong ngữ cảnh lượt khám được chọn.",
     navigation: [
-      ["", "Bàn làm việc"],
-      ["queue", "Hàng đợi khám"],
-      ["consultation", "Bàn khám"],
+      ["", "Bàn khám"],
+      ["results", "Kết quả CLS"],
+      ["history", "Lịch sử khám bệnh"],
     ],
   },
   admin: {
@@ -77,5 +84,8 @@ export function canAccessWorkspace(role: string, workspace: Workspace): boolean 
 }
 
 export function isWorkspaceSection(workspace: Workspace, section: string): boolean {
-  return WORKSPACES[workspace].navigation.some(([key]) => key === section);
+  return (
+    WORKSPACES[workspace].navigation.some(([key]) => key === section) ||
+    (workspace === "doctor" && DOCTOR_LEGACY_SECTIONS.includes(section))
+  );
 }

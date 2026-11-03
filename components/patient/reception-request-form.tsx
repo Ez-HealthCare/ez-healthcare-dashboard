@@ -1,5 +1,8 @@
 "use client";
 
+import { useRef, useState } from "react";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { clinicalErrorMessage } from "@/lib/clinical-error";
 import { Alert, Button, Form, Input, Select, message } from "antd";
 import { useRouter } from "next/navigation";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
@@ -25,30 +28,55 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
   const router = useRouter();
   const [toast, context] = message.useMessage();
   const [form] = Form.useForm<ReceptionRequestDraft>();
+  const changes = useUnsavedChanges();
+  const lock = useRef(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const save = async (submit: boolean) => {
+    if (lock.current) return;
+    lock.current = true;
+    setSaving(true);
+    setError("");
     try {
       await form.validateFields(
         submit ? ["chiefComplaint", "symptomCodes", "symptomOnset", "symptomSeverity"] : []
       );
       await clinicalActions.saveReceptionRequestDraft(form.getFieldsValue());
       if (submit) await clinicalActions.submitReceptionRequest();
+      changes.markSaved();
       toast.success(submit ? "Yêu cầu đã gửi đến quầy tiếp nhận." : "Đã lưu nháp.");
       router.replace(ROUTES.PATIENT);
       router.refresh();
     } catch (error) {
-      if (error && typeof error === "object" && "errorFields" in error) return;
-      toast.error(error instanceof Error ? error.message : "Không thể lưu yêu cầu.");
+      if (error && typeof error === "object" && "errorFields" in error) {
+        const fields = (error as { errorFields: { name: string[] }[] }).errorFields;
+        if (fields[0]) form.scrollToField(fields[0].name, { focus: true });
+        return;
+      }
+      setError(clinicalErrorMessage(error));
+    } finally {
+      lock.current = false;
+      setSaving(false);
     }
   };
   return (
     <section className={styles.profileCard}>
       {context}
       <span className={styles.visitBadge}>Yêu cầu tiếp nhận</span>
-      <h2>Khai triệu chứng</h2>
+      <h1>Khai triệu chứng</h1>
       <p className={styles.profileIntro}>
         Thông tin này giúp lễ tân chuẩn bị tiếp nhận; không thay thế đánh giá của điều dưỡng.
       </p>
-      <Form form={form} layout="vertical" initialValues={initial} className={styles.profileForm}>
+      {changes.dirty && <p role="status">Có nội dung chưa lưu.</p>}
+      {error && <Alert type="error" showIcon title="Chưa hoàn tất yêu cầu" description={error} />}
+      <Form
+        form={form}
+        disabled={saving}
+        onValuesChange={changes.markDirty}
+        layout="vertical"
+        initialValues={initial}
+        className={styles.profileForm}
+      >
         <Form.Item
           label="Lý do đến khám"
           name="chiefComplaint"
@@ -88,8 +116,10 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
           <Input maxLength={500} placeholder="Ví dụ: muốn khám nội tổng quát" />
         </Form.Item>
         <div className={styles.profileActions}>
-          <Button onClick={() => void save(false)}>Lưu nháp</Button>
-          <Button type="primary" onClick={() => void save(true)}>
+          <Button loading={saving} onClick={() => void save(false)}>
+            Lưu nháp
+          </Button>
+          <Button type="primary" loading={saving} onClick={() => void save(true)}>
             Gửi yêu cầu tiếp nhận
           </Button>
         </div>
@@ -100,6 +130,16 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
 
 export function ReceptionRequestFormPage() {
   const request = useClinicalData(clinicalActions.currentReceptionRequest, 30_000);
+  if (request.loading) return <p role="status">Đang tải yêu cầu…</p>;
+  if (request.error && !request.data)
+    return (
+      <Alert
+        type="error"
+        title="Không tải được yêu cầu"
+        description={request.error}
+        action={<Button onClick={() => void request.refresh()}>Thử lại</Button>}
+      />
+    );
   if (request.data?.status === "RECEPTION_PENDING")
     return (
       <Alert
@@ -109,5 +149,5 @@ export function ReceptionRequestFormPage() {
         description="Vui lòng đến quầy tiếp nhận để đối chiếu CCCD/BHYT."
       />
     );
-  return <RequestForm key={request.data?.id || "new"} initial={request.data || undefined} />;
+  return <RequestForm key="request-form" initial={request.data || undefined} />;
 }

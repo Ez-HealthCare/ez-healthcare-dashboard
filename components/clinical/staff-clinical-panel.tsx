@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -15,19 +17,36 @@ import {
   Tag,
   message,
 } from "antd";
-import { AVAILABLE_ORDERS } from "@/lib/constants/doctor";
+import { DoctorWorkspace } from "@/components/doctor/doctor-workspace";
 import { FAST_RED_FLAG_REASON, NURSE_CASES } from "@/lib/constants/nurse";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
 import { news2Preview } from "@/lib/news2-preview";
-import type { ClinicQueueItem, IntakeInput, ReceptionVisit } from "@/lib/types/clinical";
+import type { IntakeInput, ReceptionVisit } from "@/lib/types/clinical";
 import styles from "./staff-clinical-panel.module.css";
+import nurseStyles from "./nurse-workspace.module.css";
+import { NurseOverview, PatientIdentity, VitalSummary } from "./nurse-overview";
 
-function NursePanel() {
+export function NursePanel({ section = "" }: { section?: string }) {
+  const visitId = useSearchParams().get("visitId") || "";
+  return <NursePanelContent key={section + visitId} section={section} requestedVisit={visitId} />;
+}
+
+function NursePanelContent({
+  section,
+  requestedVisit,
+}: {
+  section: string;
+  requestedVisit: string;
+}) {
   const queue = useClinicalData(clinicalActions.triageQueue);
   const expired = useClinicalData(clinicalActions.expiredReceptionQueue, 30_000);
   const departments = useClinicalData(clinicalActions.departments, 30_000);
   const [selected, setSelected] = useState<ReceptionVisit>();
+  const [intakes, setIntakes] = useState<Record<string, IntakeInput>>({});
+  const [completed, setCompleted] = useState<ReceptionVisit>();
+  const [completedRoom, setCompletedRoom] = useState("");
+  const [handoffs, setHandoffs] = useState<ReceptionVisit[]>([]);
   const [assigning, setAssigning] = useState<ReceptionVisit>();
   const [departmentCode, setDepartmentCode] = useState<string>();
   const [suggestedDepartmentCode, setSuggestedDepartmentCode] = useState<string>();
@@ -36,6 +55,9 @@ function NursePanel() {
   >({});
   const [reissuing, setReissuing] = useState<ReceptionVisit>();
   const [reissueReason, setReissueReason] = useState("");
+  const changes = useUnsavedChanges();
+  const lock = useRef(false);
+  const [actionError, setActionError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm<IntakeInput>();
   const values = Form.useWatch([], form);
@@ -43,6 +65,9 @@ function NursePanel() {
   const [toast, context] = message.useMessage();
 
   const act = async (action: () => Promise<unknown>, success: string) => {
+    if (lock.current) return false;
+    lock.current = true;
+    setActionError("");
     try {
       setSubmitting(true);
       await action();
@@ -50,318 +75,441 @@ function NursePanel() {
       await Promise.all([queue.refresh(), expired.refresh()]);
       return true;
     } catch (error) {
-      toast.error(clinicalErrorMessage(error));
+      setActionError(clinicalErrorMessage(error));
       return false;
     } finally {
+      lock.current = false;
       setSubmitting(false);
     }
+  };
+  const linkedVisit = (queue.data || []).find((row) => row.visitId === requestedVisit);
+  const openVisit = (row: ReceptionVisit) => {
+    setSelected(row);
+    setSuggestedDepartmentCode(suggestedDepartments[row.visitId]);
+    form.resetFields();
+    form.setFieldsValue(
+      intakes[row.visitId] || {
+        chiefComplaint: row.chiefComplaint,
+        symptomOnset: row.symptomOnset,
+        symptomDuration: row.symptomDuration,
+        symptomSeverity: row.symptomSeverity,
+        allergies: row.patient.allergies,
+      }
+    );
   };
   return (
     <>
       {context}
+      {requestedVisit && !queue.loading && !selected && (
+        <Alert
+          type="info"
+          showIcon
+          title={
+            linkedVisit
+              ? `Lượt từ thông báo: ${linkedVisit.patient.name} · ${linkedVisit.hallTicketNumber}`
+              : "Lượt từ thông báo không còn trong hàng đợi sàng lọc"
+          }
+          description={
+            linkedVisit
+              ? "Kiểm tra định danh trước khi mở phiếu sàng lọc."
+              : "Lượt có thể đã được bàn giao hoặc hoàn tất; hệ thống không tự mở người bệnh khác."
+          }
+          action={
+            linkedVisit ? (
+              <Button onClick={() => openVisit(linkedVisit)}>Mở phiếu sàng lọc liên quan</Button>
+            ) : undefined
+          }
+        />
+      )}
+      {actionError && (
+        <Alert type="error" showIcon title="Chưa lưu được thao tác" description={actionError} />
+      )}
+      {changes.dirty && <p role="status">Phiếu sàng lọc có nội dung chưa lưu.</p>}
       {queue.error && (
         <Alert type="error" showIcon title="Không tải được hàng đợi" description={queue.error} />
       )}
-      <Table
-        rowKey="visitId"
-        loading={queue.loading}
-        dataSource={queue.data || []}
-        pagination={false}
-        columns={[
-          { title: "Số tiếp nhận", dataIndex: "hallTicketNumber" },
-          { title: "Bệnh nhân", render: (_, row) => row.patient.name },
-          {
-            title: "Ưu tiên",
-            render: (_, row) =>
-              row.isPriority && <Tag color="orange">{row.priorityReason || "Ưu tiên"}</Tag>,
-          },
-          {
-            title: "Sinh hiệu",
-            render: (_, row) => (
-              <Tag color={row.intakeCompleted ? "green" : "default"}>
-                {row.intakeCompleted ? "Đã đo" : "Chưa đo"}
-              </Tag>
-            ),
-          },
-          {
-            title: "Trạng thái",
-            dataIndex: "status",
-            render: (value) => (
-              <Tag color={value === "EMERGENCY_DISPATCHED" ? "red" : undefined}>
-                {value === "EMERGENCY_DISPATCHED" ? "Đã chuyển cấp cứu" : value}
-              </Tag>
-            ),
-          },
-          {
-            title: "Thao tác",
-            render: (_, row) => {
-              if (row.status === "EMERGENCY_DISPATCHED") {
-                return (
-                  <Alert
-                    type="error"
-                    showIcon
-                    title="Không phân phòng khám thường"
-                    description="Sinh hiệu nguy cơ cao; tiếp tục xử lý theo luồng cấp cứu."
-                  />
-                );
-              }
-              return (
-                <Space wrap>
-                  <Button
-                    type="primary"
-                    loading={submitting}
-                    onClick={() => {
-                      setSelected(row);
-                      setSuggestedDepartmentCode(suggestedDepartments[row.visitId]);
-                      form.resetFields();
-                      form.setFieldsValue({
-                        chiefComplaint: row.chiefComplaint,
-                        symptomOnset: row.symptomOnset,
-                        symptomDuration: row.symptomDuration,
-                        symptomSeverity: row.symptomSeverity,
-                        allergies: row.patient.allergies,
-                      });
-                    }}
-                  >
-                    Ghi thông tin bệnh
-                  </Button>
-                  <Button
-                    loading={submitting}
-                    disabled={!row.intakeCompleted}
-                    onClick={() => {
-                      setAssigning(row);
-                      setDepartmentCode(suggestedDepartments[row.visitId]);
-                    }}
-                  >
-                    Phân phòng
-                  </Button>
+      {!selected && !completed && (
+        <NurseOverview
+          section={section}
+          rows={section === "history" ? handoffs : queue.data || []}
+          loading={queue.loading}
+          busy={submitting}
+          intakes={intakes}
+          onRefresh={() => {
+            void queue.refresh();
+            void expired.refresh();
+          }}
+          onOpen={openVisit}
+          onAssign={(row) => {
+            setAssigning(row);
+            setDepartmentCode(suggestedDepartments[row.visitId]);
+          }}
+          onReissue={(row) => {
+            setReissuing(row);
+            setReissueReason("");
+          }}
+        />
+      )}
+      {!selected && completed && (
+        <section className={nurseStyles.completion}>
+          <div className={nurseStyles.breadcrumb}>
+            Bàn làm việc sàng lọc › Phiếu sàng lọc › Đã hoàn tất
+          </div>
+          <div className={nurseStyles.pageHeading}>
+            <div>
+              <h1>Đã hoàn tất sàng lọc</h1>
+              <p>Lượt khám đã được chuyển thành công đến phòng khám chuyên khoa.</p>
+            </div>
+          </div>
+          <div className={nurseStyles.successBanner}>
+            <span>✓</span>
+            <div>
+              <h2>Hoàn tất sàng lọc & Điều chuyển thành công</h2>
+              <p>Dữ liệu đã được xác nhận bởi hệ thống.</p>
+            </div>
+          </div>
+          <div className={nurseStyles.card}>
+            <h2>Chỉ định điều chuyển tiếp theo</h2>
+            <div className={nurseStyles.soft}>
+              <h3>{completedRoom}</h3>
+              <p>Số khám mới sẽ được hệ thống cập nhật trong hàng đợi và tài khoản bệnh nhân.</p>
+            </div>
+          </div>
+          <div className={nurseStyles.card}>
+            <PatientIdentity visit={completed} />
+            <h2>Thông số sinh hiệu tiếp nhận</h2>
+            <VitalSummary values={intakes[completed.visitId]} />
+          </div>
+          <div className={nurseStyles.actions}>
+            <Button type="primary" onClick={() => setCompleted(undefined)}>
+              Tiếp tục sàng lọc
+            </Button>
+            <Button onClick={() => setCompleted(undefined)}>Xem hàng đợi sàng lọc</Button>
+          </div>
+        </section>
+      )}
+      {!selected && !completed && (
+        <section className={nurseStyles.expired}>
+          <h3 style={{ marginTop: 24 }}>Lượt hết hạn</h3>
+          <p>Danh sách lượt hết hiệu lực gần nhất; chỉ nhân viên được cấp lại.</p>
+          <Table
+            rowKey={(row) => `expired-${row.visitId}`}
+            loading={expired.loading}
+            dataSource={expired.data || []}
+            pagination={false}
+            columns={[
+              {
+                title: "Số cũ",
+                render: (_, row) => row.clinicTicketNumber || row.hallTicketNumber,
+              },
+              { title: "Bệnh nhân", render: (_, row) => row.patient.name },
+              { title: "Trạng thái", render: () => <Tag color="red">Hết hiệu lực</Tag> },
+              {
+                title: "Thao tác",
+                render: (_, row) => (
                   <Button
                     danger
                     loading={submitting}
-                    disabled={!row.clinicTicketNumber || row.status === "CLINIC_CALLED"}
                     onClick={() => {
                       setReissuing(row);
                       setReissueReason("");
                     }}
                   >
-                    Cấp lại số khám
+                    Cấp lại
                   </Button>
-                </Space>
-              );
-            },
-          },
-        ]}
-      />
-      <h3 style={{ marginTop: 24 }}>Lượt hết hạn</h3>
-      <p>Danh sách lượt hết hiệu lực gần nhất; chỉ nhân viên được cấp lại.</p>
-      <Table
-        rowKey={(row) => `expired-${row.visitId}`}
-        loading={expired.loading}
-        dataSource={expired.data || []}
-        pagination={false}
-        columns={[
-          { title: "Số cũ", render: (_, row) => row.clinicTicketNumber || row.hallTicketNumber },
-          { title: "Bệnh nhân", render: (_, row) => row.patient.name },
-          { title: "Trạng thái", render: () => <Tag color="red">Hết hiệu lực</Tag> },
-          {
-            title: "Thao tác",
-            render: (_, row) => (
-              <Button
-                danger
-                loading={submitting}
-                onClick={() => {
-                  setReissuing(row);
-                  setReissueReason("");
+                ),
+              },
+            ]}
+          />
+        </section>
+      )}
+      {selected && (
+        <section className={nurseStyles.formPage}>
+          <div className={nurseStyles.breadcrumb}>
+            Bàn làm việc sàng lọc › Phiếu sàng lọc › Triệu chứng & sinh hiệu
+          </div>
+          <div className={nurseStyles.pageHeading}>
+            <div>
+              <h1>Phiếu sàng lọc</h1>
+              <p>
+                Đối chiếu thông tin và ghi nhận số đo trước khi chuyển bệnh nhân đến phòng khám.
+              </p>
+            </div>
+            <Button
+              disabled={submitting}
+              onClick={() => {
+                if (changes.confirmDiscard()) setSelected(undefined);
+              }}
+            >
+              Quay lại hàng đợi
+            </Button>
+          </div>
+          <div className={nurseStyles.card}>
+            <PatientIdentity visit={selected} />
+          </div>
+          <div className={nurseStyles.stepTabs}>
+            <span data-active="true" aria-current="step">
+              1. Triệu chứng & sinh hiệu
+            </span>
+            <span>2. Xác nhận phân phòng</span>
+          </div>
+          <div className={nurseStyles.formColumns}>
+            <div className={nurseStyles.card}>
+              <Form
+                form={form}
+                className={nurseStyles.intakeForm}
+                layout="vertical"
+                onValuesChange={changes.markDirty}
+                scrollToFirstError={{ focus: true }}
+                initialValues={{ isRedFlag: false }}
+                disabled={submitting}
+                onFinish={async (values) => {
+                  if (!selected || submitting) return;
+                  let emergency = false;
+                  const saved = await act(async () => {
+                    const result = await clinicalActions.intake(selected.visitId, {
+                      ...values,
+                      isRedFlag: !!values.isRedFlag,
+                      redFlagReason: values.isRedFlag ? FAST_RED_FLAG_REASON : undefined,
+                    });
+                    emergency = result.status === "EMERGENCY_DISPATCHED";
+                    setIntakes((previous) => ({ ...previous, [selected.visitId]: values }));
+                    setSuggestedDepartments((previous) => ({
+                      ...previous,
+                      [selected.visitId]:
+                        result.status === "EMERGENCY_DISPATCHED"
+                          ? undefined
+                          : suggestedDepartmentCode,
+                    }));
+                    if (result.status === "EMERGENCY_DISPATCHED") {
+                      toast.warning(
+                        "Đã chuyển cấp cứu STAT P.001. Không phân phòng khám thường.",
+                        8
+                      );
+                    }
+                  }, "Đã lưu thông tin bệnh.");
+                  if (saved) {
+                    changes.markSaved();
+                    setSelected(undefined);
+                    if (!emergency) {
+                      setAssigning({ ...selected, intakeCompleted: true });
+                      setDepartmentCode(suggestedDepartmentCode);
+                    }
+                  }
                 }}
               >
-                Cấp lại
-              </Button>
-            ),
-          },
-        ]}
-      />
-      <Modal
-        title={`Tiếp nhận ${selected?.patient.name || ""}`}
-        open={!!selected}
-        okText="Lưu sàng lọc"
-        confirmLoading={submitting}
-        okButtonProps={{ disabled: submitting }}
-        cancelText="Hủy"
-        onCancel={() => !submitting && setSelected(undefined)}
-        onOk={() => form.submit()}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{ isRedFlag: false }}
-          disabled={submitting}
-          onFinish={async (values) => {
-            if (!selected || submitting) return;
-            const saved = await act(async () => {
-              const result = await clinicalActions.intake(selected.visitId, {
-                ...values,
-                isRedFlag: !!values.isRedFlag,
-                redFlagReason: values.isRedFlag ? FAST_RED_FLAG_REASON : undefined,
-              });
-              setSuggestedDepartments((previous) => ({
-                ...previous,
-                [selected.visitId]:
-                  result.status === "EMERGENCY_DISPATCHED" ? undefined : suggestedDepartmentCode,
-              }));
-              if (result.status === "EMERGENCY_DISPATCHED") {
-                toast.warning("Đã chuyển cấp cứu STAT P.001. Không phân phòng khám thường.", 8);
-              }
-            }, "Đã lưu thông tin bệnh.");
-            if (saved) setSelected(undefined);
-          }}
-        >
-          <div style={{ marginBottom: 16 }}>
-            <p id="nurse-cases-label">Ca bệnh mẫu chuẩn (Y Hà Nội 2020)</p>
-            <Space wrap role="group" aria-labelledby="nurse-cases-label">
-              {NURSE_CASES.map((sample) => (
-                <Button
-                  key={sample.label}
-                  size="small"
-                  shape="round"
-                  danger={sample.intake.isRedFlag}
-                  onClick={() => {
-                    form.setFieldsValue(sample.intake);
-                    setSuggestedDepartmentCode(sample.departmentCode);
-                  }}
-                >
-                  {sample.label}
-                </Button>
-              ))}
-            </Space>
-            {suggestedDepartmentCode && !values?.isRedFlag && (
-              <p>
-                Gợi ý phòng khám chuyên khoa: <strong>{suggestedDepartmentCode}</strong>
-              </p>
-            )}
+                <div className={nurseStyles.samples}>
+                  <p id="nurse-cases-label">Ca bệnh mẫu chuẩn (Y Hà Nội 2020)</p>
+                  <Space wrap role="group" aria-labelledby="nurse-cases-label">
+                    {NURSE_CASES.map((sample) => (
+                      <Button
+                        key={sample.label}
+                        size="small"
+                        shape="round"
+                        danger={sample.intake.isRedFlag}
+                        onClick={() => {
+                          changes.markDirty();
+                          form.setFieldsValue(sample.intake);
+                          setSuggestedDepartmentCode(sample.departmentCode);
+                        }}
+                      >
+                        {sample.label}
+                      </Button>
+                    ))}
+                  </Space>
+                  {suggestedDepartmentCode && !values?.isRedFlag && (
+                    <p>
+                      Gợi ý phòng khám chuyên khoa: <strong>{suggestedDepartmentCode}</strong>
+                    </p>
+                  )}
+                </div>
+                <div aria-live="polite" className={nurseStyles.clinicalPreview}>
+                  <Tag
+                    color={
+                      preview.risk === "HIGH"
+                        ? "red"
+                        : preview.risk === "MEDIUM"
+                          ? "orange"
+                          : preview.risk === "LOW"
+                            ? "green"
+                            : "default"
+                    }
+                  >
+                    NEWS2 xem trước: {preview.score ?? "chưa đủ dữ liệu"}
+                    {preview.risk &&
+                      ` · ${preview.risk === "HIGH" ? "Nguy cơ cao" : preview.risk === "MEDIUM" ? "Trung bình" : "Thấp"}`}
+                  </Tag>
+                  <p>Ước tính từ 5 sinh hiệu; chưa tính oxy bổ sung và mức độ ý thức.</p>
+                  <Form.Item name="isRedFlag" valuePropName="checked">
+                    <Checkbox>Dấu hiệu F.A.S.T (Đột quỵ não cấp)</Checkbox>
+                  </Form.Item>
+                  {values?.isRedFlag && (
+                    <Alert
+                      type="error"
+                      showIcon
+                      role="alert"
+                      title="Dấu hiệu F.A.S.T tích cực: Hệ thống sẽ chuyển ngay sang Cấp cứu STAT P.001 khi Lưu"
+                    />
+                  )}
+                  {preview.risk === "HIGH" && (
+                    <Alert
+                      type="error"
+                      showIcon
+                      title="Nguy cơ cao — điều phối cấp cứu STAT P.001 khi lưu"
+                    />
+                  )}
+                </div>
+                <Form.Item name="chiefComplaint" label="Lý do khám" rules={[{ required: true }]}>
+                  <Input.TextArea />
+                </Form.Item>
+                <div className={nurseStyles.vitalFields}>
+                  <div className={nurseStyles.measurementCard}>
+                    <h3>Huyết áp</h3>
+                    <div className={nurseStyles.inputPair}>
+                      <Form.Item
+                        name="bloodPressureSystolic"
+                        label="HA tâm thu"
+                        rules={[{ required: true }, { type: "number", min: 40, max: 260 }]}
+                      >
+                        <InputNumber min={40} max={260} />
+                      </Form.Item>
+                      <Form.Item
+                        name="bloodPressureDiastolic"
+                        label="HA tâm trương"
+                        rules={[{ required: true }, { type: "number", min: 30, max: 160 }]}
+                      >
+                        <InputNumber min={30} max={160} />
+                      </Form.Item>
+                    </div>
+                    <small>mmHg</small>
+                  </div>
+                  <div className={nurseStyles.measurementCard}>
+                    <Form.Item
+                      name="heartRate"
+                      label="Mạch"
+                      rules={[{ required: true }, { type: "number", min: 30, max: 240 }]}
+                    >
+                      <InputNumber min={30} max={240} />
+                    </Form.Item>
+                  </div>
+                  <div className={nurseStyles.measurementCard}>
+                    <Form.Item
+                      name="spo2"
+                      label="SpO₂"
+                      rules={[{ required: true }, { type: "number", min: 50, max: 100 }]}
+                    >
+                      <InputNumber min={50} max={100} />
+                    </Form.Item>
+                  </div>
+                  <div className={nurseStyles.measurementCard}>
+                    <Form.Item
+                      name="temperature"
+                      label="Nhiệt độ"
+                      rules={[{ required: true }, { type: "number", min: 34, max: 43 }]}
+                    >
+                      <InputNumber min={34} max={43} step={0.1} />
+                    </Form.Item>
+                  </div>
+                  <div className={nurseStyles.measurementCard}>
+                    <Form.Item
+                      name="respiratoryRate"
+                      label="Nhịp thở"
+                      rules={[{ required: true }, { type: "number", min: 8, max: 60 }]}
+                    >
+                      <InputNumber min={8} max={60} />
+                    </Form.Item>
+                  </div>
+                  <div className={nurseStyles.measurementCard}>
+                    <h3>Thể trạng & BMI</h3>
+                    <div className={nurseStyles.inputPair}>
+                      <Form.Item
+                        name="weightKg"
+                        label="Cân nặng (kg)"
+                        rules={[{ type: "number", min: 0.5, max: 500 }]}
+                      >
+                        <InputNumber min={0.5} max={500} step={0.1} />
+                      </Form.Item>
+                      <Form.Item
+                        name="heightCm"
+                        label="Chiều cao (cm)"
+                        rules={[{ type: "number", min: 20, max: 280 }]}
+                      >
+                        <InputNumber min={20} max={280} />
+                      </Form.Item>
+                    </div>
+                    <small>
+                      {values?.heightCm && values?.weightKg
+                        ? "BMI: " + (values.weightKg / (values.heightCm / 100) ** 2).toFixed(1)
+                        : "Nhập chiều cao và cân nặng"}
+                    </small>
+                  </div>
+                </div>
+                <Form.Item name="symptomOnset" label="Thời điểm khởi phát">
+                  <Input maxLength={100} placeholder="Ví dụ: sáng nay, lúc 7 giờ" />
+                </Form.Item>
+                <Form.Item name="symptomSeverity" label="Mức độ triệu chứng">
+                  <Select
+                    allowClear
+                    options={[
+                      { value: "Nhẹ", label: "Nhẹ" },
+                      { value: "Vừa", label: "Vừa" },
+                      { value: "Nặng", label: "Nặng" },
+                    ]}
+                  />
+                </Form.Item>
+                <Form.Item name="symptomDuration" label="Thời gian triệu chứng">
+                  <Input />
+                </Form.Item>
+                <Form.Item name="allergies" label="Dị ứng">
+                  <Select mode="tags" />
+                </Form.Item>
+                <Form.Item name="notes" label="Ghi chú">
+                  <Input.TextArea />
+                </Form.Item>
+                <div className={nurseStyles.formActions}>
+                  <Button
+                    disabled={submitting}
+                    onClick={() => {
+                      if (changes.confirmDiscard()) setSelected(undefined);
+                    }}
+                  >
+                    Quay lại hàng đợi
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={submitting}>
+                    Lưu sàng lọc
+                  </Button>
+                </div>
+              </Form>
+            </div>
+            <aside className={nurseStyles.stack}>
+              <div className={nurseStyles.card}>
+                <h2>Thông tin tiếp đón tại quầy</h2>
+                <div className={nurseStyles.soft}>
+                  <strong>{selected.hallTicketNumber}</strong>
+                  <p>
+                    {selected.patient.insuranceCardNumber
+                      ? "BHYT: " + selected.patient.insuranceCardNumber
+                      : "Chưa có thông tin BHYT"}
+                  </p>
+                  <p>{selected.chiefComplaint || "Chưa ghi nhận lý do khám"}</p>
+                </div>
+              </div>
+              <div className={nurseStyles.safety}>
+                <h2>An toàn phân luồng</h2>
+                <p>
+                  Đối chiếu trực tiếp với người bệnh. Xem cảnh báo NEWS2 và dấu hiệu F.A.S.T trước
+                  khi lưu. Hệ thống quyết định luồng cấp cứu từ dữ liệu đã xác nhận.
+                </p>
+              </div>
+            </aside>
           </div>
-          <div aria-live="polite" style={{ marginBottom: 16 }}>
-            <Tag
-              color={
-                preview.risk === "HIGH"
-                  ? "red"
-                  : preview.risk === "MEDIUM"
-                    ? "orange"
-                    : preview.risk === "LOW"
-                      ? "green"
-                      : "default"
-              }
-            >
-              NEWS2 xem trước: {preview.score ?? "chưa đủ dữ liệu"}
-              {preview.risk &&
-                ` · ${preview.risk === "HIGH" ? "Nguy cơ cao" : preview.risk === "MEDIUM" ? "Trung bình" : "Thấp"}`}
-            </Tag>
-            <p>Ước tính từ 5 sinh hiệu; chưa tính oxy bổ sung và mức độ ý thức.</p>
-            <Form.Item name="isRedFlag" valuePropName="checked">
-              <Checkbox>Dấu hiệu F.A.S.T (Đột quỵ não cấp)</Checkbox>
-            </Form.Item>
-            {values?.isRedFlag && (
-              <Alert
-                type="error"
-                showIcon
-                role="alert"
-                title="Dấu hiệu F.A.S.T tích cực: Hệ thống sẽ chuyển ngay sang Cấp cứu STAT P.001 khi Lưu"
-              />
-            )}
-            {preview.risk === "HIGH" && (
-              <Alert
-                type="error"
-                showIcon
-                title="Nguy cơ cao — điều phối cấp cứu STAT P.001 khi lưu"
-              />
-            )}
-          </div>
-          <Form.Item name="chiefComplaint" label="Lý do khám" rules={[{ required: true }]}>
-            <Input.TextArea />
-          </Form.Item>
-          <Space wrap>
-            <Form.Item
-              name="bloodPressureSystolic"
-              label="HA tâm thu"
-              rules={[{ required: true }, { type: "number", min: 40, max: 260 }]}
-            >
-              <InputNumber min={40} max={260} />
-            </Form.Item>
-            <Form.Item
-              name="bloodPressureDiastolic"
-              label="HA tâm trương"
-              rules={[{ required: true }, { type: "number", min: 30, max: 160 }]}
-            >
-              <InputNumber min={30} max={160} />
-            </Form.Item>
-            <Form.Item
-              name="heartRate"
-              label="Mạch"
-              rules={[{ required: true }, { type: "number", min: 30, max: 240 }]}
-            >
-              <InputNumber min={30} max={240} />
-            </Form.Item>
-            <Form.Item
-              name="temperature"
-              label="Nhiệt độ"
-              rules={[{ required: true }, { type: "number", min: 34, max: 43 }]}
-            >
-              <InputNumber min={34} max={43} step={0.1} />
-            </Form.Item>
-            <Form.Item
-              name="spo2"
-              label="SpO₂"
-              rules={[{ required: true }, { type: "number", min: 50, max: 100 }]}
-            >
-              <InputNumber min={50} max={100} />
-            </Form.Item>
-            <Form.Item
-              name="respiratoryRate"
-              label="Nhịp thở"
-              rules={[{ required: true }, { type: "number", min: 8, max: 60 }]}
-            >
-              <InputNumber min={8} max={60} />
-            </Form.Item>
-            <Form.Item
-              name="heightCm"
-              label="Chiều cao (cm)"
-              rules={[{ type: "number", min: 20, max: 280 }]}
-            >
-              <InputNumber min={20} max={280} />
-            </Form.Item>
-            <Form.Item
-              name="weightKg"
-              label="Cân nặng (kg)"
-              rules={[{ type: "number", min: 0.5, max: 500 }]}
-            >
-              <InputNumber min={0.5} max={500} step={0.1} />
-            </Form.Item>
-          </Space>
-          <Form.Item name="symptomOnset" label="Thời điểm khởi phát">
-            <Input maxLength={100} placeholder="Ví dụ: sáng nay, lúc 7 giờ" />
-          </Form.Item>
-          <Form.Item name="symptomSeverity" label="Mức độ triệu chứng">
-            <Select
-              allowClear
-              options={[
-                { value: "Nhẹ", label: "Nhẹ" },
-                { value: "Vừa", label: "Vừa" },
-                { value: "Nặng", label: "Nặng" },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="symptomDuration" label="Thời gian triệu chứng">
-            <Input />
-          </Form.Item>
-          <Form.Item name="allergies" label="Dị ứng">
-            <Select mode="tags" />
-          </Form.Item>
-          <Form.Item name="notes" label="Ghi chú">
-            <Input.TextArea />
-          </Form.Item>
-        </Form>
-      </Modal>
+        </section>
+      )}
       <Modal
-        title="Phân phòng và cấp số khám"
+        className={nurseStyles.confirmModal}
+        width={672}
+        title="Xác nhận hoàn tất sàng lọc"
+
         open={!!assigning}
         okText="Xác nhận phân phòng"
         cancelText="Hủy"
@@ -373,11 +521,29 @@ function NursePanel() {
             () => clinicalActions.assign(assigning.visitId, departmentCode),
             "Đã phân phòng và cấp số khám."
           );
-          if (saved) setAssigning(undefined);
+          if (saved) {
+            setCompleted(assigning);
+            setHandoffs((previous) => [
+              assigning,
+              ...previous.filter((row) => row.visitId !== assigning.visitId),
+            ]);
+            const room = departments.data?.find((item) => item.code === departmentCode);
+            setCompletedRoom(room ? room.code + " · " + room.name : departmentCode);
+            setAssigning(undefined);
+          }
         }}
-        onCancel={() => setAssigning(undefined)}
+        onCancel={() => !submitting && setAssigning(undefined)}
       >
-        <p>Bệnh nhân nhận số khám riêng của phòng đã chọn.</p>
+        {assigning && (
+          <div className={nurseStyles.confirmSummary}>
+            <PatientIdentity visit={assigning} />
+            <VitalSummary values={intakes[assigning.visitId]} />
+          </div>
+        )}
+        <p>
+          Bệnh nhân nhận số khám riêng của phòng đã chọn. Chỉ chuyển hàng đợi sau khi xác nhận thành
+          công.
+        </p>
         {departments.error && (
           <Alert
             type="error"
@@ -405,7 +571,7 @@ function NursePanel() {
         confirmLoading={submitting}
         okButtonProps={{ danger: true, disabled: !reissueReason.trim() || submitting }}
         cancelText="Giữ số hiện tại"
-        onCancel={() => setReissuing(undefined)}
+        onCancel={() => !submitting && setReissuing(undefined)}
         onOk={() =>
           reissuing &&
           act(
@@ -437,376 +603,6 @@ function NursePanel() {
   );
 }
 
-function DoctorPanel() {
-  const rooms = useClinicalData(clinicalActions.doctorRooms, 30_000);
-  const [room, setRoom] = useState("");
-  const selectedRoom = room || rooms.data?.[0]?.code || "";
-  const queue = useClinicalData(() =>
-    selectedRoom
-      ? clinicalActions.roomQueue(selectedRoom)
-      : Promise.resolve({ departmentCode: "", departmentName: "", queueLength: 0, queue: [] })
-  );
-  const [toast, context] = message.useMessage();
-
-  // State for Bước 4: Chỉ định Cận lâm sàng (Kahn DAG)
-  const [orderingPatient, setOrderingPatient] = useState<ClinicQueueItem | null>(null);
-  const [selectedOrders, setSelectedOrders] = useState<string[]>(["P.201", "P.104", "P.203"]);
-  const [workingDiagnosis, setWorkingDiagnosis] = useState("Đau bụng thượng vị");
-  const [pregnancySuspected, setPregnancySuspected] = useState(false);
-  const [doctorNotes, setDoctorNotes] = useState("");
-  const [dagResult, setDagResult] = useState<{ sortedOrder: string[] } | null>(null);
-  const [submittingOrder, setSubmittingOrder] = useState(false);
-
-  // State for Bước 6: Kết luận chẩn đoán ICD-10 & Kê đơn
-  const [concludingPatient, setConcludingPatient] = useState<ClinicQueueItem | null>(null);
-  const [icd10Code, setIcd10Code] = useState("K29.7");
-  const [icd10Name, setIcd10Name] = useState("Viêm dạ dày, không đặc hiệu");
-  const [conclusionNotes, setConclusionNotes] = useState(
-    "Uống thuốc đúng giờ, hạn chế đồ cay nóng và rượu bia."
-  );
-  const [revisitDate, setRevisitDate] = useState("2026-10-27");
-  const [submittingConclusion, setSubmittingConclusion] = useState(false);
-
-  const act = async (action: () => Promise<unknown>) => {
-    try {
-      await action();
-      await queue.refresh();
-    } catch (error) {
-      toast.error(clinicalErrorMessage(error));
-    }
-  };
-
-  return (
-    <>
-      {context}
-      <Select
-        value={selectedRoom || undefined}
-        placeholder="Phòng được phân công"
-        style={{ minWidth: 320, marginBottom: 16 }}
-        onChange={setRoom}
-        options={(rooms.data || []).map((item) => ({
-          value: item.code,
-          label: `${item.code} · ${item.name} · ${item.shiftType}`,
-        }))}
-      />
-      {(rooms.error || queue.error) && (
-        <Alert type="error" showIcon title="Không tải được hàng đợi" />
-      )}
-      <Table
-        rowKey="visitId"
-        loading={rooms.loading || queue.loading}
-        dataSource={queue.data?.queue || []}
-        pagination={false}
-        columns={[
-          { title: "Số khám", dataIndex: "clinicTicketNumber" },
-          { title: "Bệnh nhân", dataIndex: "patientName" },
-          { title: "Lý do khám", dataIndex: "chiefComplaint", render: (value) => value || "—" },
-          {
-            title: "Trạng thái",
-            dataIndex: "status",
-            render: (value) => {
-              let color: string | undefined;
-              let label = value;
-              if (value === "CLINIC_CALLED") {
-                color = "blue";
-                label = "Đã gọi vào phòng";
-              } else if (value === "IN_EXAMINATION") {
-                color = "green";
-                label = "Đang khám lâm sàng";
-              } else if (value === "PARACLINICAL_PENDING") {
-                color = "purple";
-                label = "Đang làm cận lâm sàng";
-              } else if (value === "RE_EXAM_CALLING") {
-                color = "gold";
-                label = "Đã có KQ - Gọi tái khám";
-              } else if (value === "TEMPORARILY_ABSENT") {
-                color = "orange";
-                label = "Tạm vắng";
-              }
-              return <Tag color={color}>{label}</Tag>;
-            },
-          },
-          {
-            title: "Dấu hiệu sinh tồn",
-            render: (_, row) =>
-              row.vitals
-                ? `${row.vitals.bp} · ${row.vitals.hr} bpm · SpO₂ ${row.vitals.spo2}%`
-                : "—",
-          },
-          {
-            title: "Thao tác",
-            render: (_, row) => (
-              <Space wrap>
-                <Button
-                  disabled={!["CLINIC_WAITING", "CLINIC_CALLED"].includes(row.status)}
-                  onClick={() => act(() => clinicalActions.call(row.visitId))}
-                >
-                  Gọi ({row.callAttempts}/3)
-                </Button>
-                <Button
-                  type="primary"
-                  disabled={!["CLINIC_CALLED", "RE_EXAM_CALLING"].includes(row.status)}
-                  onClick={() => act(() => clinicalActions.startExam(row.visitId))}
-                >
-                  {row.status === "RE_EXAM_CALLING" ? "Tiếp nhận tái khám" : "Tiếp nhận khám"}
-                </Button>
-                <Button
-                  type="primary"
-                  style={{ background: "#006c63", borderColor: "#006c63" }}
-                  disabled={!["IN_EXAMINATION", "RE_EXAM_CALLING"].includes(row.status)}
-                  onClick={() => {
-                    setOrderingPatient(row);
-                    setSelectedOrders(["P.201", "P.104", "P.203"]);
-                    setWorkingDiagnosis(row.chiefComplaint || "Đau bụng");
-                    setPregnancySuspected(false);
-                    setDagResult(null);
-                  }}
-                >
-                  Chỉ định CLS (Bước 4)
-                </Button>
-                <Button
-                  disabled={!["IN_EXAMINATION", "RE_EXAM_CALLING"].includes(row.status)}
-                  onClick={() => {
-                    setConcludingPatient(row);
-                    setIcd10Code("K29.7");
-                    setIcd10Name("Viêm dạ dày, không đặc hiệu");
-                  }}
-                >
-                  Kết luận & Kê đơn
-                </Button>
-                <Button
-                  disabled={row.status !== "TEMPORARILY_ABSENT"}
-                  onClick={() =>
-                    act(() => clinicalActions.requeue(row.visitId, "Bệnh nhân đã quay lại"))
-                  }
-                >
-                  Đưa về cuối hàng
-                </Button>
-              </Space>
-            ),
-          },
-        ]}
-      />
-
-      {/* Modal Bước 4: Chỉ định Cận lâm sàng (Kahn DAG) */}
-      <Modal
-        title={`Chỉ định Cận Lâm Sàng & Điều phối Kahn DAG — ${orderingPatient?.patientName || ""}`}
-        open={!!orderingPatient}
-        okText="Gửi y lệnh điều phối Kahn DAG"
-        cancelText="Đóng"
-        confirmLoading={submittingOrder}
-        width={680}
-        onCancel={() => setOrderingPatient(null)}
-        onOk={async () => {
-          if (!orderingPatient || selectedOrders.length === 0) {
-            toast.error("Vui lòng chọn ít nhất 1 trạm cận lâm sàng.");
-            return;
-          }
-          setSubmittingOrder(true);
-          try {
-            const res = await clinicalActions.createOrders(orderingPatient.visitId, {
-              orders: selectedOrders,
-              workingDiagnosis,
-              pregnancySuspected,
-              doctorNotes,
-            });
-            setDagResult(res);
-            toast.success("Đã kích hoạt điều phối Kahn DAG thành công!");
-            await queue.refresh();
-          } catch (err) {
-            toast.error(clinicalErrorMessage(err));
-          } finally {
-            setSubmittingOrder(false);
-          }
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {dagResult && (
-            <Alert
-              type="success"
-              showIcon
-              title="Khởi tạo đồ thị Kahn DAG thành công!"
-              description={
-                <div>
-                  <p style={{ margin: "4px 0" }}>
-                    <strong>Thứ tự lộ trình tối ưu (Topological Order):</strong>
-                  </p>
-                  <Space wrap>
-                    {dagResult.sortedOrder.map((code: string, idx: number) => (
-                      <Tag color="cyan" key={code} style={{ fontSize: 13, padding: "4px 8px" }}>
-                        Bước {idx + 1}: <strong>{code}</strong>
-                      </Tag>
-                    ))}
-                  </Space>
-                  <p style={{ margin: "8px 0 0", color: "#555" }}>
-                    Bệnh nhân đã chuyển sang trạng thái <strong>PARACLINICAL_PENDING</strong>.
-                  </p>
-                </div>
-              }
-            />
-          )}
-
-          <div>
-            <label style={{ fontWeight: 600, display: "block", marginBottom: 6 }}>
-              Chẩn đoán sơ bộ:
-            </label>
-            <Input
-              value={workingDiagnosis}
-              onChange={(e) => setWorkingDiagnosis(e.target.value)}
-              placeholder="Ví dụ: Đau thượng vị cấp theo dõi viêm dạ dày"
-            />
-          </div>
-
-          <div>
-            <label style={{ fontWeight: 600, display: "block", marginBottom: 6 }}>
-              Chọn các trạm cận lâm sàng (Kahn DAG):
-            </label>
-            <Checkbox.Group
-              value={selectedOrders}
-              onChange={(values) => setSelectedOrders(values as string[])}
-              style={{ width: "100%" }}
-            >
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {AVAILABLE_ORDERS.map((order) => (
-                  <div
-                    key={order.code}
-                    style={{
-                      border: "1px solid #e2e8f0",
-                      borderRadius: 8,
-                      padding: "8px 12px",
-                      background: selectedOrders.includes(order.code) ? "#f0fdfa" : "#fff",
-                    }}
-                  >
-                    <Checkbox value={order.code}>
-                      <strong>[{order.code}]</strong> {order.name}
-                      <div style={{ fontSize: 11, color: "#64748b" }}>
-                        Tầng {order.floor} · {order.badge}
-                      </div>
-                    </Checkbox>
-                  </div>
-                ))}
-              </div>
-            </Checkbox.Group>
-          </div>
-
-          <div
-            style={{
-              padding: "10px 12px",
-              background: "#fffbeb",
-              border: "1px solid #fde68a",
-              borderRadius: 8,
-            }}
-          >
-            <Checkbox
-              checked={pregnancySuspected}
-              onChange={(e) => setPregnancySuspected(e.target.checked)}
-            >
-              <span style={{ color: "#92400e", fontWeight: 600 }}>
-                Nghi ngờ có thai (Kích hoạt bộ lọc chống chỉ định bức xạ X-Quang P.302)
-              </span>
-            </Checkbox>
-          </div>
-
-          <div>
-            <label style={{ fontWeight: 600, display: "block", marginBottom: 6 }}>
-              Ghi chú cho kỹ thuật viên:
-            </label>
-            <Input.TextArea
-              rows={2}
-              value={doctorNotes}
-              onChange={(e) => setDoctorNotes(e.target.value)}
-              placeholder="Ví dụ: Đánh giá kỹ thành dạ dày và túi mật"
-            />
-          </div>
-        </div>
-      </Modal>
-
-      {/* Modal Bước 6: Kết luận chẩn đoán & Kê đơn */}
-      <Modal
-        title={`Kết luận chẩn đoán & Kê đơn thuốc — ${concludingPatient?.patientName || ""}`}
-        open={!!concludingPatient}
-        okText="Ký số & Hoàn tất khám"
-        cancelText="Đóng"
-        confirmLoading={submittingConclusion}
-        width={600}
-        onCancel={() => setConcludingPatient(null)}
-        onOk={async () => {
-          if (!concludingPatient) return;
-          setSubmittingConclusion(true);
-          try {
-            await clinicalActions.conclude(concludingPatient.visitId, {
-              icd10Code,
-              icd10Name,
-              doctorNotes: conclusionNotes,
-              revisitDate,
-              items: [
-                {
-                  medicationName: "Esomeprazole 40mg",
-                  dosage: "40mg",
-                  route: "ORAL",
-                  frequency: "1 viên/ngày trước ăn sáng",
-                  durationDays: 14,
-                  quantity: 14,
-                  instructions: "Uống trước bữa ăn sáng 30 phút",
-                },
-              ],
-            });
-            toast.success("Đã hoàn tất lượt khám và ký đơn thuốc thành công!");
-            setConcludingPatient(null);
-            await queue.refresh();
-          } catch (err) {
-            toast.error(clinicalErrorMessage(err));
-          } finally {
-            setSubmittingConclusion(false);
-          }
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div>
-            <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Mã ICD-10 & Tên bệnh:
-            </label>
-            <Input
-              value={`${icd10Code} - ${icd10Name}`}
-              onChange={(e) => {
-                const parts = e.target.value.split("-");
-                setIcd10Code(parts[0]?.trim() || "K29.7");
-                setIcd10Name(parts[1]?.trim() || "Viêm dạ dày, không đặc hiệu");
-              }}
-            />
-          </div>
-          <div>
-            <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Lời dặn bác sĩ:
-            </label>
-            <Input.TextArea
-              rows={2}
-              value={conclusionNotes}
-              onChange={(e) => setConclusionNotes(e.target.value)}
-            />
-          </div>
-          <div>
-            <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Ngày hẹn tái khám:
-            </label>
-            <Input
-              type="date"
-              value={revisitDate}
-              onChange={(e) => setRevisitDate(e.target.value)}
-            />
-          </div>
-          <Alert
-            type="info"
-            showIcon
-            title="Đơn thuốc mẫu đi kèm"
-            description="Esomeprazole 40mg x 14 viên (Uống 1 viên trước ăn sáng 30 phút). Hệ thống sẽ tự động kiểm tra tương tác dị ứng thuốc."
-          />
-        </div>
-      </Modal>
-    </>
-  );
-}
-
 export function StaffClinicalPanel({ workspace }: { workspace: "nurse" | "doctor" }) {
   return (
     <section
@@ -825,7 +621,7 @@ export function StaffClinicalPanel({ workspace }: { workspace: "nurse" | "doctor
         </div>
       </div>
       <div className={styles.content}>
-        {workspace === "nurse" ? <NursePanel /> : <DoctorPanel />}
+        {workspace === "nurse" ? <NursePanel /> : <DoctorWorkspace />}
       </div>
     </section>
   );

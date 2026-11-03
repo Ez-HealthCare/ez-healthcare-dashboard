@@ -19,9 +19,9 @@ const roles = {
 };
 const sections = {
   patient: ["", "visits", "records"],
-  receptionist: ["", "queue", "requests", "records"],
-  nurse: [""],
-  doctor: ["", "queue", "consultation"],
+  receptionist: ["", "queue", "appointments", "requests", "records"],
+  nurse: ["", "queue", "history", "records"],
+  doctor: ["", "results", "history"],
   admin: ["", "users", "departments", "schedules", "settings"],
 };
 const cookie = (role) => "ez_access=valid." + role;
@@ -61,6 +61,7 @@ const api = createServer((req, res) => {
     id: role,
     email: role.toLowerCase() + "@fixture.test",
     name: "Fixture " + role,
+    profileComplete: true,
     role,
   });
 });
@@ -188,6 +189,18 @@ test("every page and RSC request enforces the complete role/workspace matrix", a
         }
       }
     }
+  }
+});
+
+test("Doctor legacy aliases redirect only after authorization and preserve visit context", async () => {
+  for (const [section, target] of [
+    ["queue", "/dashboard/doctor?visitId=visit-a"],
+    ["consultation", "/dashboard/doctor?visitId=visit-a&view=clinical"],
+  ]) {
+    redirected(await page(`/dashboard/doctor/${section}?visitId=visit-a`, "DOCTOR"), target);
+    redirected(await page(`/dashboard/doctor/${section}`), "/");
+    const denied = await page(`/dashboard/doctor/${section}`, "PATIENT");
+    assert.ok(denied.body.includes("WorkspaceAccessDenied"));
   }
 });
 

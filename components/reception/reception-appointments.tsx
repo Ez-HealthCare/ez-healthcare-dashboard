@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDate, formatTime } from "@/lib/display-format";
+
 import { Button, Empty, Input, Modal, Segmented, Spin, Tag, message } from "antd";
 import { useMemo, useState } from "react";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
@@ -22,17 +24,8 @@ const filters: Array<{ label: string; value: "ALL" | AppointmentStatus }> = [
   { label: "Không đến", value: "NO_SHOW" },
 ];
 
-function time(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(
-    new Date(value)
-  );
-}
-
-function date(value?: string) {
-  return value
-    ? new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value))
-    : "Chưa cập nhật";
-}
+const time = formatTime;
+const date = formatDate;
 
 export function ReceptionAppointments() {
   const appointments = useClinicalData(clinicalActions.receptionAppointments);

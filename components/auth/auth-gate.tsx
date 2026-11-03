@@ -1,5 +1,7 @@
 "use client";
 
+import { confirmDiscardChanges } from "@/hooks/use-unsaved-changes";
+
 import type { ReactNode } from "react";
 import type { UserProfile } from "@/lib/auth";
 import { Alert, Button, Spin } from "antd";
@@ -40,7 +42,14 @@ export function LogoutButton() {
   const { loading, error, logout } = useLogout();
   return (
     <div>
-      <Button size="small" aria-label="Đăng xuất" loading={loading} onClick={() => void logout()}>
+      <Button
+        size="small"
+        aria-label="Đăng xuất"
+        loading={loading}
+        onClick={() => {
+          if (confirmDiscardChanges()) void logout();
+        }}
+      >
         Đăng xuất
       </Button>
       {error && (

@@ -13,6 +13,8 @@ export type VisitStatus =
   | "CANCELLED";
 
 export interface CurrentVisit {
+  returnReportedAt?: string | null;
+  canReportReturn?: boolean;
   visitId: string;
   hallTicketNumber: string;
   clinicTicketNumber?: string;
@@ -99,6 +101,8 @@ export interface ReceptionVisit {
 }
 
 export interface ClinicQueueItem {
+  returnReportedAt?: string | null;
+  currentDoctor?: { id: string; name: string } | null;
   visitId: string;
   clinicTicketNumber: string;
   hallTicketNumber: string;
@@ -170,6 +174,7 @@ export interface AppointmentCheckInResult {
 }
 
 export interface NotificationItem {
+  visitId?: string | null;
   id: string;
   type: string;
   title: string;

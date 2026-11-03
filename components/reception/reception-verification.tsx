@@ -1,7 +1,10 @@
 "use client";
 
-import { Button, Checkbox, Input, message } from "antd";
-import { useState } from "react";
+import { formatDate } from "@/lib/display-format";
+
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { Alert, Button, Checkbox, Input, message } from "antd";
+import { useRef, useState } from "react";
 import { clinicalActions } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
 import type { ReceptionVisit } from "@/lib/types/clinical";
@@ -36,26 +39,36 @@ function ReceptionVerificationForm({
   const [nationalIdVerified, setNationalIdVerified] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
+  const changes = useUnsavedChanges();
+  const lock = useRef(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, context] = message.useMessage();
   const canVerify = visit.status === "HALL_WAITING" && visit.ticketStatus === "CALLED";
 
   const run = async (action: () => Promise<unknown>, success: string) => {
+    if (lock.current) return;
+    lock.current = true;
+    setError("");
     try {
       setLoading(true);
       await action();
+      changes.markSaved();
       toast.success(success);
       await onComplete();
     } catch (error) {
-      toast.error(clinicalErrorMessage(error));
+      setError(clinicalErrorMessage(error));
     } finally {
+      lock.current = false;
       setLoading(false);
     }
   };
 
   return (
-    <div className={styles.panel}>
+    <div className={styles.panel} onChangeCapture={changes.markDirty}>
       {context}
+      {changes.dirty && <p role="status">Thông tin đối chiếu chưa được xác nhận.</p>}
+      {error && <Alert type="error" showIcon title="Chưa hoàn tất xác minh" description={error} />}
       <div className={styles.header}>
         <div>
           <span className={styles.kicker}>Phiếu tiếp nhận & xác minh</span>
@@ -66,7 +79,7 @@ function ReceptionVerificationForm({
 
       <div className={styles.patient}>
         <strong>{visit.patient.name}</strong>
-        <span>Ngày sinh: {visit.patient.dateOfBirth || "Chưa cập nhật"}</span>
+        <span>Ngày sinh: {formatDate(visit.patient.dateOfBirth)}</span>
         <span>CCCD: {visit.patient.nationalId || "Chưa có dữ liệu"}</span>
       </div>
 
@@ -97,6 +110,10 @@ function ReceptionVerificationForm({
               />
             </label>
           ) : null}
+          {!nationalIdVerified && !rejecting && (
+            <p>Đối chiếu và tích xác nhận CCCD trước khi tiếp nhận.</p>
+          )}
+          {rejecting && !reason.trim() && <p>Nhập lý do để xác nhận từ chối.</p>}
           <div className={styles.actions}>
             {rejecting ? (
               <>

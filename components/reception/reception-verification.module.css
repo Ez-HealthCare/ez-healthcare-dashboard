@@ -1,72 +1,75 @@
 .panel {
   display: grid;
-  gap: 14px;
+  gap: var(--space-20);
+  padding-top: var(--space-16);
 }
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-12);
 }
 .kicker {
-  color: #64736f;
-  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .header h4 {
-  margin: 3px 0 0;
-  color: #131b2e;
+  margin: var(--space-4) 0 0;
+  color: var(--color-text);
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-brand);
+  font-weight: 700;
 }
 .ticket {
-  border-radius: 8px;
-  background: #e7f4f1;
-  color: #00685f;
-  padding: 5px 8px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-subtle);
+  color: var(--color-primary);
+  padding: var(--space-4) var(--space-8);
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: var(--text-meta);
   font-weight: 800;
 }
 .patient {
   display: grid;
-  gap: 3px;
-  border-radius: 12px;
-  background: #f2f8ff;
-  padding: 14px;
-  color: #526568;
-  font-size: 12px;
+  gap: var(--space-4);
+  border-radius: var(--radius-soft);
+  background: var(--color-surface-subtle);
+  padding: var(--space-16);
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
 }
 .patient strong {
-  color: #131b2e;
-  font-size: 14px;
+  color: var(--color-text);
+  font-size: var(--text-body-staff);
 }
 .field {
   display: grid;
-  gap: 6px;
-  color: #3d4947;
-  font-size: 12px;
+  gap: var(--space-8);
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
   font-weight: 700;
 }
 .field :global(.ant-input) {
   border-radius: 9px;
+  background: var(--surface-subtle);
 }
 .actions {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-8);
 }
 .actions :global(.ant-btn-primary) {
-  background: #00685f;
+  background: var(--color-primary);
 }
 .done {
   margin: 0;
-  border-left: 3px solid #00685f;
-  background: #f0fbf9;
-  color: #3d4947;
-  padding: 12px;
-  font-size: 12px;
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-success-bg);
+  color: var(--color-text-secondary);
+  padding: var(--space-12);
+  font-size: var(--text-meta);
 }

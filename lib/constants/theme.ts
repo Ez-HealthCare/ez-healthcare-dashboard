@@ -1,17 +1,40 @@
+import { DESIGN_TOKENS as t } from "../design-tokens";
+
 export const APP_THEME = {
   token: {
-    colorPrimary: "#007f6d",
-    colorInfo: "#1677ff",
-    colorSuccess: "#15803d",
-    colorWarning: "#b45309",
-    colorError: "#dc2626",
-    colorText: "#0f172a",
-    colorBgLayout: "#f6f8fb",
-    borderRadius: 12,
-    controlHeight: 44,
-    fontFamily:
-      '"Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    colorPrimary: t.color.primary,
+    colorPrimaryHover: t.color.primaryHover,
+    colorPrimaryActive: t.color.primaryActive,
+    colorInfo: t.color.info,
+    colorSuccess: t.color.success,
+    colorWarning: t.color.warning,
+    colorError: t.color.error,
+    colorText: t.color.text,
+    colorTextSecondary: t.color.textSecondary,
+    colorTextDescription: t.color.textSecondary,
+    colorTextTertiary: t.color.textSecondary,
+    colorTextPlaceholder: t.color.textSecondary,
+    colorBorder: t.color.controlBorder,
+    colorBgLayout: t.color.background,
+    colorBgContainer: t.color.surface,
+    borderRadius: t.radius.control,
+    borderRadiusLG: t.radius.card,
+    borderRadiusSM: t.radius.small,
+    controlHeight: t.control.patientMin,
+    fontSize: t.font.bodyStaff.size,
+    fontSizeSM: t.font.meta.size,
+    fontSizeHeading1: t.font.h1.size,
+    fontSizeHeading2: t.font.h2.size,
+    fontSizeHeading3: t.font.h3.size,
+    fontFamily: "var(--font-body)",
+    padding: t.component.padding,
+    paddingSM: t.component.paddingSmall,
+    paddingLG: t.component.paddingLarge,
   },
+};
+export const STAFF_THEME = { token: { controlHeight: t.control.staffDesktopMin } };
+export const PATIENT_THEME = {
+  token: { fontSize: t.font.bodyPatient.size, controlHeight: t.control.patientMin },
 };
 
 export const STAT_TONE_STYLES = {

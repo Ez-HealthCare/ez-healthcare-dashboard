@@ -1,76 +1,76 @@
 .workspace {
   display: grid;
-  gap: 20px;
+  gap: var(--space-20);
 }
 .header,
 .card {
-  border: 1px solid #e4e8ee;
-  border-radius: 16px;
-  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
   box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
 }
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 22px 24px;
+  gap: var(--space-24);
+  padding: var(--space-24) var(--space-24);
 }
 .eyebrow {
-  color: #64736f;
-  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .header h2 {
-  margin: 4px 0 0;
-  color: #131b2e;
+  margin: var(--space-4) 0 0;
+  color: var(--color-text);
   font-family: var(--font-display);
   font-size: 24px;
 }
 .header p {
-  margin: 4px 0 0;
-  color: #64736f;
-  font-size: 13px;
+  margin: var(--space-4) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-staff);
 }
 .metrics {
   display: flex;
-  gap: 10px;
+  gap: var(--space-12);
 }
 .metrics div {
   display: grid;
-  gap: 2px;
+  gap: var(--space-4);
   min-width: 110px;
-  border-radius: 12px;
-  background: #f0fbf9;
-  padding: 10px 14px;
+  border-radius: var(--radius-soft);
+  background: var(--color-success-bg);
+  padding: var(--space-12) var(--space-16);
 }
 .metrics strong {
-  color: #00685f;
+  color: var(--color-primary);
   font-family: var(--font-display);
   font-size: 22px;
 }
 .metrics span {
-  color: #64736f;
-  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
 }
 .error {
   margin: 0;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  background: #fff1f2;
-  color: #b42318;
-  padding: 12px 16px;
+  border: 1px solid var(--color-error-bg);
+  border-radius: var(--radius-soft);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  padding: var(--space-12) var(--space-16);
 }
 .card {
-  padding: 18px;
+  padding: var(--space-20);
 }
 .toolbar {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
 }
 .toolbar :global(.ant-input) {
   max-width: 300px;
@@ -78,36 +78,36 @@
 }
 .list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-8);
 }
 .row {
   display: grid;
   grid-template-columns: 62px minmax(190px, 1.35fr) minmax(160px, 1fr) auto auto;
   align-items: center;
-  gap: 16px;
-  border: 1px solid #edf0f3;
-  border-radius: 12px;
-  padding: 14px;
+  gap: var(--space-16);
+  border: 1px solid var(--color-surface-subtle);
+  border-radius: var(--radius-soft);
+  padding: var(--space-16);
 }
 .time {
-  color: #00685f;
+  color: var(--color-primary);
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 800;
 }
 .patient {
   display: grid;
-  gap: 3px;
+  gap: var(--space-4);
 }
 .patient strong {
-  color: #243834;
-  font-size: 14px;
+  color: var(--color-text);
+  font-size: var(--text-body-staff);
 }
 .patient span,
 .row p {
   margin: 0;
-  color: #64736f;
-  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
 }
 .row p {
   overflow: hidden;
@@ -117,25 +117,25 @@
 .tag {
   margin: 0;
   border: 0;
-  border-radius: 999px;
-  font-size: 11px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-meta);
   font-weight: 700;
 }
 .BOOKED {
-  background: #e7f4f1;
-  color: #00685f;
+  background: var(--color-success-bg);
+  color: var(--color-primary);
 }
 .CHECKED_IN {
-  background: #e9f2ff;
-  color: #1d5eaa;
+  background: var(--color-info-bg);
+  color: var(--color-info);
 }
 .CANCELLED {
-  background: #fff1f2;
-  color: #b42318;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 .NO_SHOW {
-  background: #fff4df;
-  color: #9b6200;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 .loading {
   display: grid;
@@ -144,15 +144,15 @@
 }
 .detail {
   display: grid;
-  gap: 18px;
+  gap: var(--space-20);
 }
 .identity {
   display: flex;
   align-items: center;
-  gap: 12px;
-  border-radius: 12px;
-  background: #f0fbf9;
-  padding: 14px;
+  gap: var(--space-12);
+  border-radius: var(--radius-soft);
+  background: var(--color-success-bg);
+  padding: var(--space-16);
 }
 .identity > span {
   display: grid;
@@ -160,61 +160,61 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #00685f;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   font-family: var(--font-display);
   font-weight: 800;
 }
 .identity > div {
   display: grid;
   flex: 1;
-  gap: 3px;
+  gap: var(--space-4);
 }
 .identity small {
-  color: #64736f;
+  color: var(--color-text-secondary);
 }
 .detail dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--space-12);
   margin: 0;
 }
 .detail dl div {
-  border-radius: 8px;
-  background: #f6f7fb;
-  padding: 10px;
+  border-radius: var(--radius-control);
+  background: var(--color-background);
+  padding: var(--space-12);
 }
 .detail dt {
-  color: #64736f;
-  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
 }
 .detail dd {
-  margin: 3px 0 0;
-  color: #243834;
-  font-size: 13px;
+  margin: var(--space-4) 0 0;
+  color: var(--color-text);
+  font-size: var(--text-body-staff);
   font-weight: 600;
 }
 .complaint {
   display: grid;
-  gap: 4px;
+  gap: var(--space-4);
   margin: 0;
-  color: #3d4947;
-  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-staff);
 }
 .complaint strong {
-  color: #00685f;
+  color: var(--color-primary);
 }
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-8);
 }
 .done {
   margin: 0;
-  border-left: 3px solid #1d5eaa;
-  background: #f2f8ff;
-  color: #1d5eaa;
-  padding: 10px 12px;
+  border-left: 3px solid var(--color-info);
+  background: var(--color-info-bg);
+  color: var(--color-info);
+  padding: var(--space-12) var(--space-12);
 }
 @media (max-width: 850px) {
   .header,
@@ -234,7 +234,7 @@
 }
 @media (max-width: 560px) {
   .header {
-    padding: 18px;
+    padding: var(--space-20);
   }
   .metrics {
     width: 100%;
@@ -243,11 +243,11 @@
     flex: 1;
   }
   .card {
-    padding: 12px;
+    padding: var(--space-12);
   }
   .row {
     grid-template-columns: 1fr auto;
-    gap: 8px;
+    gap: var(--space-8);
   }
   .time {
     grid-column: 1;

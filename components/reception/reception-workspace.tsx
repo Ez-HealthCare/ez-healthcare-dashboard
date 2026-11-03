@@ -1,27 +1,23 @@
 "use client";
 
-import { Button, Empty, Input, Modal, QRCode, Spin, message } from "antd";
-import { useMemo, useState } from "react";
+import { formatDate, formatDateTime } from "@/lib/display-format";
+import { RecordIdentifier } from "@/components/clinical/record-identifier";
+
+import { confirmDiscardChanges } from "@/hooks/use-unsaved-changes";
+import { Alert, Button, Empty, Input, Modal, QRCode, Spin, message } from "antd";
+import Image from "next/image";
+import Link from "next/link";
+import { RECEPTION_STATUS } from "@/lib/constants/reception";
+import { ROUTES } from "@/lib/constants/routes";
+import { useIdentity } from "@/hooks/use-auth-session";
+import { useMemo, useRef, useState } from "react";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
 import type { ReceptionVisit } from "@/lib/types/clinical";
 import { ReceptionVerification } from "./reception-verification";
 import styles from "./reception-workspace.module.css";
 
-const statusLabel: Record<ReceptionVisit["status"], string> = {
-  HALL_WAITING: "Chờ tiếp nhận",
-  RECEPTION_VERIFIED: "Đã xác minh",
-  TRIAGE_PENDING: "Chờ sàng lọc",
-  CLINIC_WAITING: "Đã cấp số khám",
-  CLINIC_CALLED: "Đã gọi vào phòng",
-  TEMPORARILY_ABSENT: "Tạm vắng",
-  IN_EXAMINATION: "Đang khám",
-  PARACLINICAL_PENDING: "Chờ cận lâm sàng",
-  RE_EXAM_CALLING: "Chờ tái khám",
-  COMPLETED: "Hoàn tất",
-  EMERGENCY_DISPATCHED: "Đã chuyển cấp cứu",
-  CANCELLED: "Đã hủy",
-};
+const statusLabel = RECEPTION_STATUS;
 
 function patientSearchText(visit: ReceptionVisit) {
   return [
@@ -36,15 +32,22 @@ function patientSearchText(visit: ReceptionVisit) {
     .toLocaleLowerCase("vi-VN");
 }
 
-function displayDate(value?: string) {
-  if (!value) return "Chưa có dữ liệu";
-  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value));
-}
+const displayDate = formatDate;
 
-export function ReceptionWorkspace() {
+export function ReceptionWorkspace({ section = "" }: { section?: string }) {
+  const user = useIdentity();
+  const [queueFilter, setQueueFilter] = useState("all");
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [verificationVisit, setVerificationVisit] = useState<ReceptionVisit>();
+  const [pauseOpen, setPauseOpen] = useState(false);
+  const [pauseReason, setPauseReason] = useState("");
+  const title = section === "queue" ? "Hàng đợi tiếp nhận" : "Bàn làm việc tiếp nhận ngoại trú";
   const queue = useClinicalData(clinicalActions.receptionQueue);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState("");
+  const actionLock = useRef(false);
+  const walkInLock = useRef(false);
+  const [actionError, setActionError] = useState("");
   const [acting, setActing] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [walkInOpen, setWalkInOpen] = useState(false);
@@ -59,31 +62,46 @@ export function ReceptionWorkspace() {
 
   const visits = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("vi-VN");
-    if (!normalizedQuery) return queue.data || [];
-    return (queue.data || []).filter((visit) => patientSearchText(visit).includes(normalizedQuery));
-  }, [query, queue.data]);
+    return (queue.data || []).filter((visit) => {
+      const matchesQuery = !normalizedQuery || patientSearchText(visit).includes(normalizedQuery);
+      const matchesStatus =
+        queueFilter === "all" ||
+        (queueFilter === "waiting"
+          ? visit.status === "HALL_WAITING" && visit.ticketStatus !== "CALLED"
+          : queueFilter === "called"
+            ? visit.ticketStatus === "CALLED"
+            : visit.isPriority);
+      return matchesQuery && matchesStatus;
+    });
+  }, [query, queue.data, queueFilter]);
 
   const selected = visits.find((visit) => visit.visitId === selectedId) || visits[0];
   const isHallWaiting = (visit: ReceptionVisit) =>
     visit.ticketKind === "HALL" && visit.status === "HALL_WAITING";
-  const waiting = (queue.data || []).filter(isHallWaiting).length;
-  const verified = (queue.data || []).filter(
-    (visit) => visit.status === "RECEPTION_VERIFIED"
+  const waiting = (queue.data || []).filter(
+    (visit) => isHallWaiting(visit) && visit.ticketStatus === "ACTIVE"
   ).length;
+  const totalAtDesk = queue.data?.length || 0;
   const called = (queue.data || []).filter((visit) => visit.ticketStatus === "CALLED").length;
   const nextVisit = (queue.data || []).find(
     (visit) => isHallWaiting(visit) && visit.ticketStatus === "ACTIVE"
   );
 
   const runQueueAction = async (action: () => Promise<unknown>, success: string) => {
+    if (actionLock.current) return false;
+    actionLock.current = true;
+    setActionError("");
     try {
       setActing(true);
       await action();
       toast.success(success);
       await queue.refresh();
+      return true;
     } catch (error) {
-      toast.error(clinicalErrorMessage(error));
+      setActionError(clinicalErrorMessage(error));
+      return false;
     } finally {
+      actionLock.current = false;
       setActing(false);
     }
   };
@@ -107,20 +125,26 @@ export function ReceptionWorkspace() {
   };
 
   const lookupWalkIn = async () => {
+    if (walkInLock.current) return;
+    walkInLock.current = true;
+    setActionError("");
     try {
       setWalkInLoading(true);
       const patient = await clinicalActions.findPatientByNationalId(nationalId.trim());
       setWalkInPatient(patient);
     } catch (error) {
       setWalkInPatient(undefined);
-      toast.error(clinicalErrorMessage(error));
+      setActionError(clinicalErrorMessage(error));
     } finally {
+      walkInLock.current = false;
       setWalkInLoading(false);
     }
   };
 
   const createWalkIn = async () => {
-    if (!walkInPatient) return;
+    if (!walkInPatient || walkInLock.current) return;
+    walkInLock.current = true;
+    setActionError("");
     try {
       setWalkInLoading(true);
       const ticket = await clinicalActions.createWalkInTicket(walkInPatient.id);
@@ -132,8 +156,9 @@ export function ReceptionWorkspace() {
       await queue.refresh();
       setSelectedId(ticket.visitId);
     } catch (error) {
-      toast.error(clinicalErrorMessage(error));
+      setActionError(clinicalErrorMessage(error));
     } finally {
+      walkInLock.current = false;
       setWalkInLoading(false);
     }
   };
@@ -141,20 +166,51 @@ export function ReceptionWorkspace() {
   return (
     <section className={styles.workspace} aria-label="Bàn làm việc tiếp nhận ngoại trú">
       {context}
+      {actionError && (
+        <Alert
+          type="error"
+          showIcon
+          title="Chưa thực hiện được thao tác"
+          description={actionError}
+        />
+      )}
+      <div className={styles.breadcrumb}>
+        Khu tiếp đón trung tâm ›{" "}
+        <strong>{section === "queue" ? "Hàng đợi tiếp nhận" : "Bàn làm việc tiếp nhận"}</strong>
+      </div>
       <header className={styles.subheader}>
         <div>
-          <div className={styles.eyebrow}>Khu tiếp đón trung tâm · HIS v4.8</div>
           <div className={styles.titleRow}>
-            <h2>Bàn làm việc tiếp nhận ngoại trú</h2>
+            <span className={styles.titleIcon}>
+              <Image src="/reception/badge.svg" width={22} height={22} alt="" />
+            </span>
+            <h1>{title}</h1>
             <span className={styles.live}>Trực ban tích cực</span>
           </div>
-          <p>Tra cứu hồ sơ, đối soát hành chính và bàn giao người bệnh sang sàng lọc.</p>
+          <p>Gọi người bệnh đã được cấp số, xác minh giấy tờ tại quầy và bàn giao sang sàng lọc.</p>
         </div>
-        <div className={styles.shift}>Ca hiện tại · 07:00 – 12:00</div>
+        <Button loading={acting} onClick={() => void queue.refresh()}>
+          ↻ Làm mới
+        </Button>
       </header>
 
       {queue.error ? <p className={styles.error}>Không tải được hàng đợi: {queue.error}</p> : null}
 
+      {section === "queue" && (
+        <div className={styles.overviewMetrics}>
+          {[
+            [waiting, "Đang chờ"],
+            [called, "Đang gọi"],
+            [totalAtDesk, "Trong hàng đợi"],
+          ].map(([value, label]) => (
+            <div key={label}>
+              <small>{label}</small>
+              <strong>{value}</strong>
+              <span>Lượt trong hàng đợi hiện tại</span>
+            </div>
+          ))}
+        </div>
+      )}
       <div className={styles.grid}>
         <aside className={styles.card} aria-label="Hàng đợi tiếp nhận">
           <div className={styles.cardHeading}>
@@ -164,7 +220,23 @@ export function ReceptionWorkspace() {
             </div>
             <span className={styles.counter}>{queue.data?.length || 0}</span>
           </div>
-          <div className={styles.queueHint}>Hệ thống gọi Patient đứng đầu hàng đợi tiếp nhận.</div>
+          <div className={styles.queueFilters} aria-label="Lọc hàng đợi tiếp nhận">
+            {[
+              ["all", "Tất cả"],
+              ["waiting", "Đang chờ"],
+              ["called", "Đã gọi"],
+              ["priority", "Ưu tiên"],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={queueFilter === key}
+                onClick={() => setQueueFilter(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className={styles.queueControls}>
             <Button
               disabled={!nextVisit || acting}
@@ -178,8 +250,39 @@ export function ReceptionWorkspace() {
               }
               type="primary"
             >
+              <Image src="/reception/call.svg" width={15} height={15} alt="" />
               Gọi số tiếp theo
             </Button>
+            <div className={styles.secondaryCalls}>
+              <Button
+                disabled={
+                  acting ||
+                  !selected ||
+                  selected.ticketStatus !== "CALLED" ||
+                  selected.status !== "HALL_WAITING"
+                }
+                onClick={() => setPauseOpen(true)}
+              >
+                Tạm bỏ qua
+              </Button>
+              <Button
+                disabled={
+                  acting ||
+                  !selected ||
+                  selected.status !== "HALL_WAITING" ||
+                  !["CALLED", "PAUSED"].includes(selected.ticketStatus || "")
+                }
+                onClick={() =>
+                  selected &&
+                  void runQueueAction(
+                    () => clinicalActions.recallReceptionTicket(selected.visitId),
+                    "Đã gọi lại số tiếp nhận."
+                  )
+                }
+              >
+                Gọi lại
+              </Button>
+            </div>
             {selected ? (
               <span className={styles.callMeta}>
                 {selected.callAttempts ? `Đã gọi ${selected.callAttempts} lần` : "Chưa gọi"}
@@ -218,23 +321,36 @@ export function ReceptionWorkspace() {
         <section className={styles.card} aria-label="Tra cứu và tiếp nhận lượt khám">
           <div className={styles.cardHeading}>
             <div>
-              <span className={styles.kicker}>Tra cứu & tiếp nhận</span>
-              <h3>Hồ sơ người bệnh</h3>
+              <h2 className={styles.lookupTitle}>
+                <Image src="/reception/lookup.svg" width={17} height={16} alt="" />
+                Hồ sơ đang tiếp nhận
+              </h2>
             </div>
             <span className={styles.readOnly}>Đối soát hồ sơ</span>
           </div>
-          <Input
-            aria-label="Tìm mã tiếp nhận hoặc hồ sơ bệnh nhân"
-            className={styles.search}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Số tiếp nhận, họ tên, CCCD hoặc BHYT"
-            value={query}
-          />
+          <div className={styles.lookup}>
+            <Input
+              prefix={<Image src="/reception/search.svg" width={15} height={15} alt="" />}
+              allowClear
+              aria-label="Tìm mã tiếp nhận hoặc hồ sơ bệnh nhân"
+              className={styles.search}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Số tiếp nhận, họ tên, CCCD hoặc BHYT"
+              value={query}
+            />
+            <Button type="primary" onClick={() => setQrOpen(true)}>
+              Quét QR
+            </Button>
+          </div>
           {selected ? (
             <div className={styles.patientCard}>
               <div className={styles.identity}>
                 <span className={styles.initial}>
-                  {selected.patient.name.slice(0, 1).toUpperCase()}
+                  {selected.patient.name
+                    .split(/\s+/)
+                    .slice(-2)
+                    .map((part) => part[0])
+                    .join("")}
                 </span>
                 <div>
                   <h4>{selected.patient.name}</h4>
@@ -243,6 +359,16 @@ export function ReceptionWorkspace() {
                 <span className={styles.status}>{statusLabel[selected.status]}</span>
               </div>
               <dl className={styles.details}>
+                <div>
+                  <dt>Mã lượt khám</dt>
+                  <dd>
+                    <RecordIdentifier value={selected.visitId} />
+                  </dd>
+                </div>
+                <div>
+                  <dt>Số tiếp nhận</dt>
+                  <dd className={styles.ticketNumber}>{selected.hallTicketNumber}</dd>
+                </div>
                 <div>
                   <dt>Ngày sinh</dt>
                   <dd>{displayDate(selected.patient.dateOfBirth)}</dd>
@@ -260,21 +386,38 @@ export function ReceptionWorkspace() {
                   <dd>{selected.chiefComplaint || "Chưa ghi nhận — Điều dưỡng sẽ khai thác."}</dd>
                 </div>
               </dl>
-              <div className={styles.handoff}>
-                <strong>Trạng thái bàn giao</strong>
-                <span>
-                  {selected.status === "RECEPTION_VERIFIED"
-                    ? "Sẵn sàng cho sàng lọc"
-                    : "Chờ hoàn tất đối soát hành chính"}
-                </span>
-              </div>
-              {selected.ticketStatus === "CALLED" ? (
-                <div className={styles.hallActions}>
-                  <strong>Patient đang được gọi đến quầy</strong>
-                  <span>Hoàn tất xác minh để chuyển Patient sang điều dưỡng sàng lọc.</span>
+              <section className={styles.verificationSummary}>
+                <h3>Đối soát hồ sơ hành chính tiếp nhận</h3>
+                <div className={styles.checklist}>
+                  <div>
+                    <strong>CCCD / VNeID</strong>
+                    <span>
+                      {selected.patient.nationalId
+                        ? "Có thông tin · Cần đối chiếu trực tiếp"
+                        : "Chưa có thông tin"}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Thẻ bảo hiểm y tế</strong>
+                    <span>
+                      {selected.patient.insuranceCardNumber
+                        ? "Có thông tin thẻ BHYT"
+                        : "Chưa cập nhật thẻ BHYT"}
+                    </span>
+                  </div>
                 </div>
-              ) : null}
-              <ReceptionVerification visit={selected} onComplete={queue.refresh} />
+              </section>
+              <Button
+                type="primary"
+                block
+                className={styles.openVerification}
+                onClick={() => {
+                  setVerificationVisit(selected);
+                  setVerificationOpen(true);
+                }}
+              >
+                Mở phiếu tiếp nhận & xác minh →
+              </Button>
             </div>
           ) : (
             <Empty description="Chọn một lượt trong hàng đợi để xem hồ sơ" />
@@ -285,6 +428,13 @@ export function ReceptionWorkspace() {
           <section className={styles.card}>
             <span className={styles.kicker}>Trạng thái quầy</span>
             <h3>Quầy tiếp đón 02</h3>
+            <div className={styles.staffIdentity}>
+              <span>{(user.name || user.email).slice(0, 1).toUpperCase()}</span>
+              <div>
+                <strong>{user.name || user.email}</strong>
+                <small>Lễ tân · Quầy tiếp đón 02</small>
+              </div>
+            </div>
             <p className={counterOpen ? styles.open : styles.closed}>
               {counterOpen ? "● Đang hoạt động" : "● Tạm ngưng nhận lượt mới"}
             </p>
@@ -294,8 +444,8 @@ export function ReceptionWorkspace() {
                 <span>Đang chờ</span>
               </div>
               <div>
-                <strong>{verified}</strong>
-                <span>Đã xác minh</span>
+                <strong>{totalAtDesk}</strong>
+                <span>Trong hàng đợi</span>
               </div>
               <div>
                 <strong>{called}</strong>
@@ -318,13 +468,9 @@ export function ReceptionWorkspace() {
               <button onClick={() => setWalkInOpen(true)} type="button">
                 Tạo lượt walk-in
               </button>
-              <button disabled type="button">
-                Gọi loa sảnh
-              </button>
+              <Link href={ROUTES.RECEPTIONIST + "/appointments"}>Tra cứu lịch hẹn khám →</Link>
+              <Link href={ROUTES.RECEPTIONIST + "/requests"}>Yêu cầu tiếp nhận trực tuyến →</Link>
             </div>
-            <p className={styles.phaseNote}>
-              Các thao tác này sẽ được mở ở các phần triển khai tiếp theo.
-            </p>
           </section>
           <section className={styles.note}>
             <strong>Ghi chú trực ban</strong>
@@ -343,6 +489,62 @@ export function ReceptionWorkspace() {
           </section>
         </aside>
       </div>
+      <Modal
+        open={pauseOpen}
+        title="Tạm bỏ qua lượt tiếp nhận"
+        okText="Xác nhận tạm bỏ qua"
+        cancelText="Quay lại"
+        confirmLoading={acting}
+        okButtonProps={{ disabled: !pauseReason.trim() || acting }}
+        onCancel={() => {
+          if (!acting) {
+            setPauseOpen(false);
+            setPauseReason("");
+          }
+        }}
+        onOk={async () => {
+          if (!selected || !pauseReason.trim() || acting) return;
+          const saved = await runQueueAction(
+            () => clinicalActions.pauseReceptionTicket(selected.visitId, pauseReason.trim()),
+            "Đã tạm bỏ qua lượt tiếp nhận."
+          );
+          if (saved) {
+            setPauseOpen(false);
+            setPauseReason("");
+          }
+        }}
+      >
+        <p>
+          Số tiếp nhận: <strong>{selected?.hallTicketNumber}</strong>
+        </p>
+        <Input.TextArea
+          aria-label="Lý do tạm bỏ qua"
+          placeholder="Nhập lý do tạm bỏ qua"
+          value={pauseReason}
+          onChange={(event) => setPauseReason(event.target.value)}
+          disabled={acting}
+        />
+      </Modal>
+      <Modal
+        open={verificationOpen}
+        onCancel={() => {
+          if (confirmDiscardChanges()) setVerificationOpen(false);
+        }}
+        title="Phiếu tiếp nhận bệnh nhân"
+        footer={null}
+        width={760}
+        destroyOnHidden
+      >
+        {verificationVisit && (
+          <ReceptionVerification
+            visit={verificationVisit}
+            onComplete={async () => {
+              setVerificationOpen(false);
+              await queue.refresh();
+            }}
+          />
+        )}
+      </Modal>
       <Modal
         cancelText="Hủy"
         okText="Mở hồ sơ"
@@ -366,6 +568,7 @@ export function ReceptionWorkspace() {
         okButtonProps={{ disabled: !walkInPatient, loading: walkInLoading }}
         okText="Cấp số tiếp nhận"
         onCancel={() => {
+          if (walkInLoading) return;
           setWalkInOpen(false);
           setNationalId("");
           setWalkInPatient(undefined);
@@ -374,6 +577,9 @@ export function ReceptionWorkspace() {
         open={walkInOpen}
         title="Tạo lượt khám walk-in"
       >
+        {actionError && (
+          <Alert type="error" showIcon title="Chưa cấp được số" description={actionError} />
+        )}
         <p>Tra cứu hồ sơ bệnh nhân bằng CCCD trước khi cấp số.</p>
         <div className={styles.walkInLookup}>
           <Input
@@ -433,12 +639,7 @@ export function ReceptionWorkspace() {
               </div>
               <div>
                 <dt>Thời gian cấp</dt>
-                <dd>
-                  {new Intl.DateTimeFormat("vi-VN", {
-                    dateStyle: "short",
-                    timeStyle: "short",
-                  }).format(new Date())}
-                </dd>
+                <dd>{formatDateTime(new Date())}</dd>
               </div>
             </dl>
           </div>

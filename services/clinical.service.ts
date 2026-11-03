@@ -1,4 +1,11 @@
 import { http } from "@/lib/api/http";
+import type { ReceptionRecordsPage } from "@/lib/types/reception";
+import type {
+  DiagnosticResult,
+  DoctorVisitHistory,
+  PatientVisitHistory,
+  VisitDossier,
+} from "@/lib/types/doctor";
 import type {
   ClinicQueue,
   CurrentVisit,
@@ -21,6 +28,20 @@ const key = () =>
   Array.from(crypto.getRandomValues(new Uint32Array(4)), (value) => value.toString(16)).join("-");
 
 export const clinicalService = {
+  doctorHistory: (query: { page: number; search?: string; completedDate?: string }) =>
+    http
+      .get<DoctorVisitHistory>(path("visits/doctor/history"), {
+        params: { ...query, pageSize: 10 },
+      })
+      .then((r) => r.data),
+  doctorHistoryDetail: (visitId: string) =>
+    http.get<VisitDossier>(path(`visits/doctor/history/${visitId}`)).then((r) => r.data),
+  patientHistory: (page = 1, completedOnly = false) =>
+    http
+      .get<PatientVisitHistory>(path("visits/me/history"), {
+        params: { page, pageSize: 10, ...(completedOnly ? { status: "COMPLETED" } : {}) },
+      })
+      .then((r) => r.data),
   currentReceptionRequest: () =>
     http.get<ReceptionRequest | null>(path("reception-requests/me/current")).then((r) => r.data),
   pendingReceptionRequests: (search?: string) =>
@@ -42,6 +63,12 @@ export const clinicalService = {
   myProfile: () => http.get<PatientProfile>(path("users/me/profile")).then((r) => r.data),
   updateMyProfile: (input: UpdatePatientProfileInput) =>
     http.put<PatientProfile>(path("users/me/profile"), input).then((r) => r.data),
+  reportReturn: (visitId: string) =>
+    http
+      .post<{ visitId: string; status: string; returnReportedAt: string }>(
+        path("visits/" + visitId + "/report-return")
+      )
+      .then((r) => r.data),
   currentVisit: () => http.get<CurrentVisit | null>(path("visits/me/current")).then((r) => r.data),
   requestHallTicket: () =>
     http
@@ -54,6 +81,18 @@ export const clinicalService = {
         { kind: "HALL" },
         { headers: { "Idempotency-Key": key() } }
       )
+      .then((r) => r.data),
+  receptionRecords: (params: {
+    businessDate: string;
+    search?: string;
+    status?: string;
+    page?: number;
+    pageSize?: number;
+  }) =>
+    http
+      .get<ReceptionRecordsPage>(path("visits/reception/records"), {
+        params,
+      })
       .then((r) => r.data),
   receptionQueue: () =>
     http.get<ReceptionVisit[]>(path("visits/reception/queue")).then((r) => r.data),
@@ -81,6 +120,17 @@ export const clinicalService = {
   doctorRooms: () =>
     http
       .get<Array<{ code: string; name: string; shiftType: string }>>(path("visits/doctor/rooms"))
+      .then((r) => r.data),
+  visitDossier: (visitId: string) =>
+    http.get<VisitDossier>(path(`visits/${visitId}`)).then((r) => r.data),
+  diagnosticResult: (stepId: string) =>
+    http.get<DiagnosticResult>(path(`paraclinical/${stepId}/result`)).then((r) => r.data),
+  transferClinic: (
+    visitId: string,
+    input: { targetDepartmentCode: string; transferReason: string; clinicalSummary?: string }
+  ) =>
+    http
+      .post(path(`visits/${visitId}/transfer`), input, { headers: { "Idempotency-Key": key() } })
       .then((r) => r.data),
   verify: (visitId: string, insuranceCardNumber?: string) =>
     http

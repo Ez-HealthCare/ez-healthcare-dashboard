@@ -1,0 +1,404 @@
+.workspace {
+  --nurse-primary: var(--primary, var(--color-primary));
+  --nurse-soft: var(--surface-subtle, var(--color-surface-subtle));
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--foreground);
+  font: 14px/1.5 var(--font-body);
+}
+.workspace * {
+  box-sizing: border-box;
+}
+.workspace a {
+  text-decoration: none;
+}
+.workspace :is(a, button):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.skip {
+  position: fixed;
+  z-index: 100;
+  left: 16px;
+  top: -100px;
+  background: var(--color-surface);
+  padding: var(--space-12);
+}
+.skip:focus-visible {
+  top: 12px;
+}
+.header {
+  background: var(--color-surface);
+  box-shadow: 0 1px 4px var(--color-shadow);
+}
+.headerInner {
+  min-height: 80px;
+  max-width: 1600px;
+  margin: auto;
+  padding: var(--space-16) var(--space-24);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-24);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-shrink: 0;
+  color: var(--foreground);
+  font: 600 var(--text-brand)/var(--leading-brand) var(--font-display);
+  letter-spacing: -0.45px;
+}
+.brand small {
+  display: block;
+  font: 600 0.75rem/1.667 var(--font-body);
+  color: var(--primary);
+  letter-spacing: 0.55px;
+}
+.logo {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-soft);
+  background: var(--primary);
+  box-shadow: 0 2px 4px var(--color-shadow);
+}
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-4);
+  border-radius: var(--radius-soft);
+  background: var(--color-surface-subtle);
+}
+.navigation a {
+  white-space: nowrap;
+  padding: var(--space-8);
+  border-radius: var(--radius-control);
+  color: var(--foreground);
+  font-size: var(--text-body-staff);
+  font-weight: 600;
+  letter-spacing: 0.24px;
+}
+.navigation a[aria-current="page"] {
+  color: var(--primary);
+  font-weight: 700;
+}
+.navigation a:hover {
+  background: var(--color-brand-tint);
+}
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+.roomPill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 40px;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-subtle);
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.roomPill i {
+  width: 7px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.roomPill > span {
+  color: var(--color-text-secondary);
+}
+.roomPill strong {
+  color: var(--primary);
+  font-weight: 600;
+}
+.roomPill i,
+.roomPill strong {
+  flex-shrink: 0;
+}
+.stationText {
+  min-width: 0;
+}
+
+/* Long consultation-room names must not wrap the desktop Doctor header. */
+.workspace[data-role="doctor"] .headerActions {
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.workspace[data-role="doctor"] .roomPill {
+  min-width: 0;
+  flex-shrink: 1;
+  max-width: clamp(150px, 21vw, 300px);
+}
+.workspace[data-role="doctor"] .stationText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 1280px) {
+  .workspace[data-role="doctor"] .headerInner {
+    flex-wrap: nowrap;
+  }
+  .workspace[data-role="doctor"] .navigation {
+    flex-shrink: 0;
+  }
+  .workspace[data-role="doctor"] .headerActions {
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
+    gap: var(--space-12);
+  }
+  .workspace[data-role="doctor"] .roomPill {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .workspace[data-role="doctor"] .stationText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .workspace[data-role="doctor"] .profile {
+    flex-shrink: 0;
+  }
+}
+.notificationButton {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius-soft);
+  background: var(--surface-subtle);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.notificationButton i {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-error);
+  box-shadow: 0 0 0 2px white;
+}
+.profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  background: transparent;
+  padding: 0 0 0 var(--space-8);
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.profile strong {
+  display: block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-body-staff);
+  line-height: 18px;
+  text-align: right;
+}
+.profile small {
+  display: block;
+  margin-top: var(--space-4);
+  text-align: right;
+  font-size: var(--text-meta);
+  line-height: 14px;
+  color: var(--color-text-secondary);
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+.account {
+  max-width: 280px;
+  overflow-wrap: anywhere;
+  display: grid;
+  gap: var(--space-12);
+}
+.notifications {
+  max-width: min(340px, 80vw);
+  max-height: 400px;
+  overflow-y: auto;
+}
+.notifications article {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-12) 0;
+}
+.main {
+  width: 100%;
+  max-width: 1340px;
+  margin: auto;
+  padding: var(--space-24);
+  flex: 1;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: var(--space-16) var(--space-24);
+  background: var(--color-surface);
+  font-size: var(--text-meta);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 1279px) {
+  .headerInner {
+    gap: var(--space-16);
+    flex-wrap: wrap;
+  }
+  .navigation {
+    order: 3;
+    justify-content: center;
+    width: 100%;
+  }
+  .roomPill {
+    font-size: var(--text-meta);
+  }
+}
+@media (max-width: 767px) {
+  .main {
+    padding: var(--space-20) var(--space-16);
+  }
+  .headerInner {
+    padding: var(--space-16);
+  }
+  .headerActions {
+    margin-left: auto;
+    gap: var(--space-12);
+  }
+  .roomPill {
+    display: none;
+  }
+  .navigation {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+}
+@media (max-width: 479px) {
+  .profile > span:first-child {
+    display: none;
+  }
+  .navigation a {
+    font-size: var(--text-body-staff);
+    padding: var(--space-8) var(--space-8);
+  }
+  .headerActions {
+    gap: var(--space-8);
+  }
+  .footer {
+    flex-direction: column;
+  }
+}
+
+/* P1: readable navigation and keyboard/touch targets. */
+.navigation {
+  gap: var(--space-8);
+}
+.navigation a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.navigation a[aria-current="page"] {
+  background: var(--color-selected);
+}
+.notificationButton,
+.profile {
+  min-width: 44px;
+  min-height: 44px;
+}
+.notificationButton {
+  width: 44px;
+  height: 44px;
+}
+.notificationState {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+  margin-bottom: var(--space-4);
+}
+.notifications article {
+  display: grid;
+  gap: var(--space-8);
+  overflow-wrap: anywhere;
+  font-size: var(--text-body-staff);
+}
+.notifications time {
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+}
+.notificationLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-primary);
+  text-decoration: underline !important;
+}
+.footer {
+  font-size: var(--text-meta);
+  line-height: 1.667;
+}
+@media (max-width: 767px) {
+  .navigation {
+    scrollbar-width: thin;
+    padding-bottom: var(--space-8);
+  }
+}
+@media (max-width: 479px) {
+  .navigation a {
+    font-size: var(--text-body-staff);
+    padding: var(--space-8) var(--space-12);
+  }
+}
+
+.notifications {
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+.notificationDrawer :global(.ant-drawer-close) {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.footer {
+  display: block;
+  padding: 0;
+}
+.footerInner {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+.workspace {
+  font: var(--text-body-staff)/var(--leading-body-staff) var(--font-body);
+}
+@media (max-width: 767px) {
+  .footerInner {
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+}

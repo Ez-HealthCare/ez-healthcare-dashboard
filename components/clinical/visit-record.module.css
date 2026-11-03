@@ -1,0 +1,283 @@
+﻿.section {
+  display: grid;
+  gap: var(--space-24);
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 16px;
+  line-height: 1.7;
+}
+.section[data-detail="true"] {
+  width: 100%;
+  max-width: var(--layout-detail-max);
+  margin-inline: auto;
+}
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+}
+.heading > div {
+  min-width: 0;
+}
+.section h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.section h2 {
+  margin: 0 0 var(--space-16);
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.section h3 {
+  margin: 0 0 var(--space-8);
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.section h4 {
+  margin: var(--space-20) 0 var(--space-8);
+  font-size: 16px;
+  font-weight: 600;
+}
+.section p {
+  margin: var(--space-8) 0;
+}
+.list {
+  display: grid;
+  gap: var(--space-16);
+}
+.card {
+  min-width: 0;
+  padding: var(--space-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  overflow-wrap: anywhere;
+}
+.card > :last-child {
+  margin-bottom: 0;
+}
+.muted,
+.section time,
+.details dt {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.openLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+.openLink:hover {
+  text-decoration: underline;
+}
+.openLink:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-small);
+}
+.identity {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+}
+.identity h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.patientAvatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-soft);
+  background: var(--color-patient-highlight);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.eyebrow {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  display: block;
+  margin-bottom: var(--space-4);
+}
+.details {
+  margin: var(--space-16) 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16) var(--space-24);
+}
+.summaryDetails {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-20);
+  margin-top: var(--space-20);
+}
+.details dt {
+  font-size: 13px;
+}
+.details dd {
+  margin: var(--space-4) 0 0;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: pre-wrap;
+}
+.preformatted {
+  white-space: pre-wrap;
+}
+.summaryCard > .preformatted {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-12);
+  margin-top: var(--space-12);
+  font-size: 14px;
+}
+.recordGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--space-24);
+  align-items: start;
+}
+.recordMain,
+.recordAside {
+  display: grid;
+  gap: var(--space-24);
+  min-width: 0;
+}
+.recordAside h2 {
+  font-size: 16px;
+}
+.followUp {
+  background: var(--color-patient-highlight);
+}
+.sideIcon {
+  color: var(--color-primary);
+  display: inline-flex;
+  margin-bottom: var(--space-12);
+}
+.followUp .revisitDate {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-primary);
+}
+.medications {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-20);
+}
+.medications > li {
+  padding: var(--space-20);
+  background: var(--color-patient-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-soft);
+}
+.medications h4 {
+  margin-top: 0;
+}
+.medications > li > .preformatted {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-12);
+  font-size: 14px;
+}
+.steps {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-12);
+  font-size: 14px;
+}
+.steps li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.steps li + li {
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--color-border);
+}
+.steps li > span:first-child {
+  flex: 1 1 160px;
+}
+.section :global(.ant-tag) {
+  border: 0;
+  border-radius: var(--radius-small);
+  padding: var(--space-4) var(--space-8);
+  margin: 0;
+  font-size: 12px;
+}
+.heading :global(.ant-btn) {
+  min-height: 44px;
+  height: auto;
+  white-space: normal;
+}
+@media (max-width: 1023px) {
+  .recordGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .recordAside {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .summaryDetails {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .section {
+    gap: var(--space-20);
+  }
+  .section h1 {
+    font-size: 24px;
+  }
+  .section h2 {
+    font-size: 18px;
+  }
+  .card {
+    padding: var(--space-20);
+  }
+  .recordGrid {
+    gap: var(--space-20);
+  }
+  .recordMain,
+  .recordAside {
+    gap: var(--space-20);
+  }
+  .recordAside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .medications > li {
+    padding: var(--space-16);
+  }
+  .details dd {
+    font-size: 16px;
+  }
+  .summaryDetails {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-16);
+  }
+  .identity h2 {
+    font-size: 18px;
+  }
+}
+@media (max-width: 374px) {
+  .summaryDetails {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
