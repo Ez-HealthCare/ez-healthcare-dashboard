@@ -13,9 +13,9 @@ const output = join(tmpdir(), "ez-healthcare-doctor-history");
 await mkdir(output, { recursive: true });
 const id = "11111111-1111-4111-8111-111111111111";
 const foreignId = "99999999-9999-4999-8999-999999999999";
-let status = "IN_EXAMINATION",
-  hasVisit = true,
-  read = false,
+const status = "IN_EXAMINATION";
+const hasVisit = true;
+let read = false,
   failHistory = true,
   failDetail = false;
 const items = Array.from({ length: 12 }, (_, i) => ({
@@ -89,15 +89,13 @@ const api = createServer(async (req, res) => {
     const rows = search ? items.filter((item) => item.clinicTicketNumber === search) : items;
     const filtered = date && date !== "2026-11-03" ? [] : rows;
     return reply({
-      items: filtered
-        .slice((page - 1) * 10, page * 10)
-        .map((item) => ({
-          ...item,
-          patientName: "Nguyễn Minh Anh",
-          completedAt: item.updatedAt,
-          icd10Code: "TEST-E2E",
-          icd10Name: "Kết luận mô phỏng",
-        })),
+      items: filtered.slice((page - 1) * 10, page * 10).map((item) => ({
+        ...item,
+        patientName: "Nguyễn Minh Anh",
+        completedAt: item.updatedAt,
+        icd10Code: "TEST-E2E",
+        icd10Name: "Kết luận mô phỏng",
+      })),
       total: filtered.length,
       page,
       pageSize: 10,
@@ -244,7 +242,7 @@ try {
   await p.goto(origin + "/dashboard/doctor/history?completedDate=2026-11-04");
   await p.getByText("Không có lượt khám đã hoàn tất phù hợp", { exact: true }).waitFor();
   assert.deepEqual(errors, []);
-  console.log(
+  process.stdout.write(
     JSON.stringify({
       passed: true,
       checks: [

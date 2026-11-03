@@ -249,7 +249,7 @@ try {
     );
   }
   assert.deepEqual(errors, []);
-  console.log(
+  process.stdout.write(
     JSON.stringify({
       passed: true,
       checks: [
