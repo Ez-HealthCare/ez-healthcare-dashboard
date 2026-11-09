@@ -7,23 +7,21 @@ import { clinicalErrorMessage } from "@/lib/clinical-error";
 import { PATIENT_THEME } from "@/lib/constants/theme";
 import Image from "next/image";
 import Link from "next/link";
-import { Alert, Button, ConfigProvider, List, Popover, Spin, message } from "antd";
+import { Alert, Button, ConfigProvider, List, Popover, message } from "antd";
 import { PatientRecords } from "./patient-records";
 import { PatientIcon } from "./patient-icon";
-import { isFinalVisit, patientRecordLink, visitStatusLabel } from "@/lib/visit-status";
-import { useRouter } from "next/navigation";
+import { patientRecordLink } from "@/lib/visit-status";
 import { LogoutButton } from "@/components/auth/auth-gate";
 import { WorkspaceAccessDenied } from "@/components/auth/workspace-state";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { useIdentity } from "@/hooks/use-auth-session";
 import { PATIENT_NAVIGATION, ROUTES } from "@/lib/constants/routes";
 import styles from "./patient-dashboard.module.css";
-import { PatientReturnNotice } from "./patient-return-notice";
+import { PatientVisitFlow } from "./patient-journey";
 import { PatientProfilePage } from "./patient-profile";
 import { ReceptionRequestFormPage } from "./reception-request-form";
 
 export function PatientDashboard({ tab }: { tab: string }) {
-  const router = useRouter();
   const user = useIdentity();
   const visit = useClinicalData(clinicalActions.currentVisit);
   const receptionRequest = useClinicalData(clinicalActions.currentReceptionRequest, 8_000);
@@ -32,6 +30,7 @@ export function PatientDashboard({ tab }: { tab: string }) {
   const readLock = useRef(false);
   const [readBusy, setReadBusy] = useState(false);
   const [readError, setReadError] = useState("");
+  const [accountOpen, setAccountOpen] = useState(false);
   if (user.role !== "PATIENT") return <WorkspaceAccessDenied />;
   const name = user.name || user.email;
 
@@ -75,19 +74,33 @@ export function PatientDashboard({ tab }: { tab: string }) {
                 )}
               </Link>
               <Popover
+                open={accountOpen}
+                onOpenChange={setAccountOpen}
                 trigger="click"
                 placement="bottomRight"
                 content={
-                  <div className={styles.account}>
+                  <div className={styles.account} id="patient-account-menu">
                     <strong>{name}</strong>
                     <p>{user.email}</p>
                     <p data-testid="identity-role">Bệnh nhân</p>
-                    <Link href={ROUTES.PATIENT_PROFILE}>Thông tin cá nhân</Link>
+                    <Link
+                      href={ROUTES.PATIENT_PROFILE}
+                      className={styles.accountLink}
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      <PatientIcon name="user" />
+                      Hồ sơ cá nhân
+                    </Link>
                     <LogoutButton />
                   </div>
                 }
               >
-                <button className={styles.profile} aria-label="Tài khoản bệnh nhân">
+                <button
+                  className={styles.profile}
+                  aria-label="Tài khoản bệnh nhân"
+                  aria-expanded={accountOpen}
+                  aria-controls={accountOpen ? "patient-account-menu" : undefined}
+                >
                   <span className={styles.profileText}>
                     <strong>{name}</strong>
                     <small>Bệnh nhân</small>
@@ -98,7 +111,13 @@ export function PatientDashboard({ tab }: { tab: string }) {
             </div>
           </div>
         </header>
-        <main id="patient-content" className={styles.main} data-layout="container" data-part="main">
+        <main
+          id="patient-content"
+          className={styles.main}
+          data-layout="container"
+          data-part="main"
+          data-tab={tab || "home"}
+        >
           {tab === "" ? (
             <div className={styles.welcome}>
               <div>
@@ -119,7 +138,7 @@ export function PatientDashboard({ tab }: { tab: string }) {
                   : tab === "visits"
                     ? "Lượt khám của tôi"
                     : tab === "profile"
-                      ? "Thông tin cá nhân"
+                      ? "Hồ sơ cá nhân"
                       : "Yêu cầu tiếp nhận"}
               </span>
             </div>
@@ -150,136 +169,23 @@ export function PatientDashboard({ tab }: { tab: string }) {
                   }
                 />
               )}
-              {visit.error && (
+              {visit.error && visit.data && (
                 <Alert
                   type="error"
                   showIcon
                   title="Không tải được lượt khám"
                   description={visit.error}
+                  action={<Button onClick={() => void visit.refresh()}>Thử lại</Button>}
                 />
               )}
-              <div className={styles.dashboardGrid}>
-                <section className={styles.visit} aria-label="Lượt khám hiện tại">
-                  <div className={styles.visitBody}>
-                    <div className={styles.visitBadges}>
-                      <span className={styles.visitBadge}>Lượt khám hôm nay</span>
-                      <span className={styles.pendingBadge}>
-                        {visit.data
-                          ? visit.data.status === "HALL_WAITING" &&
-                            visit.data.ticketStatus === "CALLED"
-                            ? "Đã được gọi đến quầy tiếp nhận"
-                            : visitStatusLabel(visit.data.status)
-                          : "Chưa có số tiếp nhận"}
-                      </span>
-                    </div>
-                    {visit.loading ? (
-                      <Spin />
-                    ) : visit.data ? (
-                      <>
-                        {visit.data.ticketStatus === "EXPIRED" &&
-                          !isFinalVisit(visit.data.status) && (
-                            <Alert
-                              type="warning"
-                              showIcon
-                              title="Lượt đã hết hiệu lực"
-                              description="Bạn không thể tự cấp lại. Vui lòng liên hệ lễ tân để được cấp số mới."
-                              style={{ marginBottom: 16 }}
-                            />
-                          )}
-                        <h2>
-                          {visit.data.clinicTicketNumber
-                            ? `Số khám ${visit.data.clinicTicketNumber}`
-                            : `Số tiếp nhận ${visit.data.hallTicketNumber}`}
-                        </h2>
-                        {visit.data.status === "COMPLETED" ? (
-                          <Alert
-                            type="success"
-                            showIcon
-                            title="Bác sĩ đã lưu kết luận và đơn thuốc"
-                            description="Bạn có thể xem lại chi tiết, lời dặn và lịch tái khám trong Hồ sơ khám bệnh."
-                          />
-                        ) : visit.data.status === "PARACLINICAL_PENDING" ? (
-                          <p>
-                            Vui lòng thực hiện các chỉ định CLS. Khi đủ kết quả, bạn sẽ quay lại
-                            phòng khám để tái khám.
-                          </p>
-                        ) : visit.data.status === "RE_EXAM_CALLING" ? (
-                          <p>
-                            Đã có đủ kết quả CLS. Vui lòng quay lại phòng khám và chờ bác sĩ tiếp
-                            nhận tái khám.
-                          </p>
-                        ) : visit.data.status === "TRIAGE_PENDING" ? (
-                          <p>
-                            Đã tiếp nhận hồ sơ - Vui lòng chờ điều dưỡng gọi vào phòng sàng lọc đo
-                            sinh hiệu
-                          </p>
-                        ) : visit.data.status === "CLINIC_WAITING" ? (
-                          <p>Vui lòng di chuyển đến trước cửa phòng khám và theo dõi số thứ tự.</p>
-                        ) : visit.data.status === "HALL_WAITING" ? (
-                          <p>Vui lòng chờ lễ tân gọi đến quầy tiếp nhận để xác minh.</p>
-                        ) : null}
-                        <PatientReturnNotice
-                          key={
-                            visit.data.visitId +
-                            "-" +
-                            (visit.data.returnReportedAt || visit.data.status)
-                          }
-                          visit={visit.data}
-                          onRefresh={visit.refresh}
-                        />
-                        {visit.data.room && (
-                          <div className={styles.notice}>
-                            <p>
-                              <strong>{visit.data.room.code}</strong> · {visit.data.room.name}
-                            </p>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <h2>Bạn chưa có lượt khám hôm nay</h2>
-                        <p>Tạo yêu cầu tiếp nhận để được lễ tân kiểm tra và cấp số.</p>
-                      </>
-                    )}
-                  </div>
-                  <aside className={styles.queue}>
-                    <span className={styles.actionLabel}>Việc cần làm</span>
-                    {visit.data && isFinalVisit(visit.data.status) ? (
-                      <Link href={patientRecordLink(visit.data.visitId)}>
-                        <Button type="primary" block>
-                          {visit.data.status === "COMPLETED"
-                            ? "Xem kết luận & Đơn thuốc"
-                            : "Xem hồ sơ lượt khám"}
-                        </Button>
-                      </Link>
-                    ) : visit.data ? (
-                      <>
-                        <p>Xem thông tin và hướng dẫn cho lượt khám hiện tại.</p>
-                        <Link href={patientRecordLink(visit.data.visitId)}>
-                          <Button type="primary" block>
-                            Xem lượt khám
-                          </Button>
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          type="primary"
-                          block
-                          disabled={!!visit.data || visit.loading}
-                          onClick={() => router.push(ROUTES.PATIENT_RECEPTION_REQUEST)}
-                        >
-                          Tạo yêu cầu tiếp nhận
-                        </Button>
-                        {visit.data && (
-                          <p>
-                            Bạn đang có lượt khám. Theo dõi lượt hiện tại trước khi tạo yêu cầu mới.
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </aside>
-                </section>
+              <PatientVisitFlow
+                key={visit.data?.visitId || "no-visit"}
+                visit={visit.data}
+                loading={visit.loading}
+                error={visit.error}
+                requestStatus={receptionRequest.data?.status}
+                onRefresh={visit.refresh}
+              >
                 <section className={styles.card} id="notifications">
                   <div className={styles.sectionHeading}>
                     <h2>Thông báo</h2>
@@ -356,7 +262,7 @@ export function PatientDashboard({ tab }: { tab: string }) {
                     )}
                   />
                 </section>
-              </div>
+              </PatientVisitFlow>
               <section className={styles.quickLinks} aria-label="Truy cập nhanh">
                 <Link href={`${ROUTES.PATIENT}/visits`}>
                   <span className={styles.quickIcon}>
@@ -383,7 +289,7 @@ export function PatientDashboard({ tab }: { tab: string }) {
                     <PatientIcon name="user" />
                   </span>
                   <div>
-                    <h2>Thông tin cá nhân</h2>
+                    <h2>Hồ sơ cá nhân</h2>
                     <p>Cập nhật thông tin tiếp nhận và dị ứng.</p>
                   </div>
                   <PatientIcon name="arrow" />

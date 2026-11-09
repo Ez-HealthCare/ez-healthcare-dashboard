@@ -42,49 +42,57 @@ export function DoctorWorkspace({ section = "" }: { section?: string }) {
       section={section}
       stationLabel={room ? `${room.code} · ${room.name}` : "Phòng khám bác sĩ"}
     >
-      {section === "history" ? (
-        <DoctorHistory />
-      ) : (
-        <>
-          <div className={styles.roomSelector}>
-            <span>Phòng khám được phân công</span>
-            <Select
-              aria-label="Phòng được phân công"
-              value={room?.code}
-              loading={rooms.loading}
-              placeholder="Chọn phòng khám"
-              onChange={(code) => {
-                if (confirmDiscardChanges()) setRoomCode(code);
-              }}
-              options={(rooms.data || []).map((item) => ({
-                value: item.code,
-                label: `${item.code} · ${item.name} · ${shiftLabel(item.shiftType)}`,
-              }))}
-            />
-          </div>
-          {rooms.error ? (
-            <Alert
-              type="error"
-              showIcon
-              title="Không tải được phòng khám"
-              description={rooms.error}
-              action={<Button onClick={() => void rooms.refresh()}>Thử lại</Button>}
-            />
-          ) : room ? (
-            <DoctorRoom
-              key={room.code + section + requestedVisit + requestedView}
-              room={room}
-              section={section}
-            />
-          ) : rooms.loading ? (
-            <Skeleton active />
-          ) : (
-            <div className={styles.card}>
-              <Empty description="Chưa có phòng khám được phân công" />
+      <div className={styles.doctorSurface}>
+        {section === "history" ? (
+          <DoctorHistory />
+        ) : (
+          <>
+            <div className={styles.roomSelector}>
+              <span>Phòng khám được phân công</span>
+              {rooms.data?.length === 1 && room ? (
+                <strong className={styles.assignedRoom}>
+                  {room.code} · {room.name} <span>{shiftLabel(room.shiftType)}</span>
+                </strong>
+              ) : (
+                <Select
+                  aria-label="Phòng được phân công"
+                  value={room?.code}
+                  loading={rooms.loading}
+                  placeholder="Chọn phòng khám"
+                  onChange={(code) => {
+                    if (confirmDiscardChanges()) setRoomCode(code);
+                  }}
+                  options={(rooms.data || []).map((item) => ({
+                    value: item.code,
+                    label: `${item.code} · ${item.name} · ${shiftLabel(item.shiftType)}`,
+                  }))}
+                />
+              )}
             </div>
-          )}
-        </>
-      )}
+            {rooms.error ? (
+              <Alert
+                type="error"
+                showIcon
+                title="Không tải được phòng khám"
+                description={rooms.error}
+                action={<Button onClick={() => void rooms.refresh()}>Thử lại</Button>}
+              />
+            ) : room ? (
+              <DoctorRoom
+                key={room.code + section + requestedVisit + requestedView}
+                room={room}
+                section={section}
+              />
+            ) : rooms.loading ? (
+              <Skeleton active />
+            ) : (
+              <div className={styles.card}>
+                <Empty description="Chưa có phòng khám được phân công" />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </StaffWorkspaceShell>
   );
 }
@@ -271,13 +279,13 @@ function DoctorRoom({ room, section }: { room: { code: string; name: string }; s
           onClose={() => setActionError("")}
         />
       )}
-      {!resultsOnly && roomOccupied && (
-        <p role="status">
+      {!resultsOnly && view === "dashboard" && roomOccupied && (
+        <p role="status" className={styles.roomStatus}>
           Phòng đang có bệnh nhân được khám. Hoàn tất hoặc chuyển lượt đang khám trước khi gọi và
           tiếp nhận lượt tiếp theo.
         </p>
       )}
-      {!resultsOnly && !waiting.length && !roomOccupied && (
+      {!resultsOnly && view === "dashboard" && !waiting.length && !roomOccupied && (
         <p role="status">Chưa có bệnh nhân chờ để gọi tiếp.</p>
       )}
       {queue.error && (
@@ -322,16 +330,17 @@ function DoctorRoom({ room, section }: { room: { code: string; name: string }; s
               </button>
               <div id="doctor-metrics" className={styles.metrics} data-expanded={showMetrics}>
                 {[
-                  ["Chờ khám", waiting.length, "queue"],
+                  ["Chờ khám", waiting.length, "queue", "waiting"],
                   [
                     "Đang khám",
                     rows.filter((row) => row.status === "IN_EXAMINATION").length,
                     "exam",
+                    "examining",
                   ],
-                  ["Chờ / Có kết quả CLS", pendingResults.length, "complete"],
-                  ["Ưu tiên", rows.filter((row) => row.isPriority).length, "exam"],
-                ].map(([label, value, icon]) => (
-                  <div className={styles.metric} key={label}>
+                  ["Chờ / Có kết quả CLS", pendingResults.length, "complete", "results"],
+                  ["Ưu tiên", rows.filter((row) => row.isPriority).length, "exam", "priority"],
+                ].map(([label, value, icon, tone]) => (
+                  <div className={styles.metric} key={label} data-tone={tone}>
                     <div className={styles.cardHeading}>
                       <small>{label}</small>
                       <Image src={`/doctor/${icon}.svg`} width={18} height={18} alt="" />
@@ -463,48 +472,55 @@ function DoctorRoom({ room, section }: { room: { code: string; name: string }; s
                         </p>
                       )}
                       <div className={styles.actions} data-results={resultsOnly}>
-                        {!resultsOnly && (
-                          <>
-                            <Button
-                              size="small"
-                              disabled={
-                                busy ||
-                                roomOccupied ||
-                                !["CLINIC_WAITING", "CLINIC_CALLED"].includes(row.status)
-                              }
-                              onClick={() =>
-                                void act(
-                                  () => clinicalActions.call(row.visitId),
-                                  "Đã gọi bệnh nhân."
-                                )
-                              }
-                            >
-                              Gọi ({row.callAttempts}/3)
-                            </Button>
-                            <Button
-                              size="small"
-                              type="primary"
-                              disabled={
-                                busy ||
-                                roomOccupied ||
-                                !["CLINIC_CALLED", "RE_EXAM_CALLING"].includes(row.status)
-                              }
-                              onClick={async () => {
-                                if (row.visitId !== active?.visitId && !confirmDiscardChanges())
-                                  return;
-                                if (
-                                  await act(
-                                    () => clinicalActions.startExam(row.visitId),
-                                    "Đã tiếp nhận khám."
-                                  )
-                                )
-                                  open(row, "clinical");
-                              }}
-                            >
-                              Tiếp nhận khám
-                            </Button>
-                          </>
-                        )}
+                        {!resultsOnly &&
+                          ["CLINIC_WAITING", "CLINIC_CALLED", "RE_EXAM_CALLING"].includes(
+                            row.status
+                          ) && (
+                            <>
+                              {row.status !== "RE_EXAM_CALLING" && (
+                                <Button
+                                  size="small"
+                                  disabled={
+                                    busy ||
+                                    roomOccupied ||
+                                    !["CLINIC_WAITING", "CLINIC_CALLED"].includes(row.status)
+                                  }
+                                  onClick={() =>
+                                    void act(
+                                      () => clinicalActions.call(row.visitId),
+                                      "Đã gọi bệnh nhân."
+                                    )
+                                  }
+                                >
+                                  Gọi ({row.callAttempts}/3)
+                                </Button>
+                              )}
+                              {row.status !== "CLINIC_WAITING" && (
+                                <Button
+                                  size="small"
+                                  type="primary"
+                                  disabled={
+                                    busy ||
+                                    roomOccupied ||
+                                    !["CLINIC_CALLED", "RE_EXAM_CALLING"].includes(row.status)
+                                  }
+                                  onClick={async () => {
+                                    if (row.visitId !== active?.visitId && !confirmDiscardChanges())
+                                      return;
+                                    if (
+                                      await act(
+                                        () => clinicalActions.startExam(row.visitId),
+                                        "Đã tiếp nhận khám."
+                                      )
+                                    )
+                                      open(row, "clinical");
+                                  }}
+                                >
+                                  Tiếp nhận khám
+                                </Button>
+                              )}
+                            </>
+                          )}
                         <Button
                           size="small"
                           disabled={busy}
@@ -602,38 +618,38 @@ function DoctorRoom({ room, section }: { room: { code: string; name: string }; s
                   )}
                 </div>
               )}
-            </div>
-            {!resultsOnly && view === "dashboard" && pendingResults.length > 0 && (
-              <aside className={`${styles.stack} ${styles.supportPane}`}>
-                <section className={styles.card}>
-                  <div className={styles.supportHeading}>
-                    <h2>Kết quả CLS</h2>
-                    <span
-                      className={styles.queueCount}
-                      aria-label={`${pendingResults.length} lượt chờ hoặc có kết quả CLS`}
-                    >
-                      {pendingResults.length}
-                    </span>
-                  </div>
-                  {pendingResults.length ? (
-                    pendingResults.map((row) => (
-                      <button
-                        key={row.visitId}
-                        className={styles.resultLink}
-                        onClick={() => open(row, "results")}
+              {!resultsOnly && view === "dashboard" && pendingResults.length > 0 && (
+                <aside className={`${styles.stack} ${styles.supportPane}`}>
+                  <section className={styles.card}>
+                    <div className={styles.supportHeading}>
+                      <h2>Theo dõi cận lâm sàng</h2>
+                      <span
+                        className={styles.queueCount}
+                        aria-label={`${pendingResults.length} lượt chờ hoặc có kết quả CLS`}
                       >
-                        <strong>{row.patientName}</strong>
-                        <span>
-                          {row.clinicTicketNumber} · {DOCTOR_STATUS[row.status]}
-                        </span>
-                      </button>
-                    ))
-                  ) : (
-                    <p className={styles.meta}>Chưa có bệnh nhân chờ kết quả.</p>
-                  )}
-                </section>
-              </aside>
-            )}
+                        {pendingResults.length}
+                      </span>
+                    </div>
+                    {pendingResults.length ? (
+                      pendingResults.map((row) => (
+                        <button
+                          key={row.visitId}
+                          className={styles.resultLink}
+                          onClick={() => open(row, "results")}
+                        >
+                          <strong>{row.patientName}</strong>
+                          <span>
+                            {row.clinicTicketNumber} · {DOCTOR_STATUS[row.status]}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <p className={styles.meta}>Chưa có bệnh nhân chờ kết quả.</p>
+                    )}
+                  </section>
+                </aside>
+              )}
+            </div>
           </div>
         </>
       )}

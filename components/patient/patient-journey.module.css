@@ -1,0 +1,526 @@
+.overview,
+.journey {
+  min-width: 0;
+  padding: var(--space-24);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.overview {
+  margin-top: var(--space-16);
+}
+.overviewHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding-bottom: var(--space-20);
+  margin-bottom: var(--space-24);
+  border-bottom: 1px solid var(--color-border);
+}
+.label,
+.kicker {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-staff);
+  font-weight: 600;
+}
+.status {
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
+  background: var(--color-selected);
+  font-size: var(--text-body-staff);
+  font-weight: 600;
+}
+.overview[data-tone="warning"] .status {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.overview[data-tone="success"] .status {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+.overviewGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--space-32);
+  align-items: start;
+}
+.nextAction {
+  min-width: 0;
+}
+.nextAction h2 {
+  overflow-wrap: anywhere;
+  margin: var(--space-8) 0 var(--space-12);
+  font-size: 26px;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-wrap: balance;
+}
+.nextAction > p,
+.empty > p {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-patient);
+  line-height: 1.7;
+}
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-16);
+  margin-top: var(--space-24);
+}
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  min-height: 44px;
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-control);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.primaryAction {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.primaryAction:hover {
+  background: var(--color-primary-hover);
+  color: var(--color-on-primary);
+}
+.secondaryAction {
+  color: var(--color-primary);
+}
+.secondaryAction:hover {
+  background: var(--color-patient-highlight);
+}
+.primaryAction svg,
+.secondaryAction svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+.visitFacts {
+  display: grid;
+  gap: var(--space-16);
+  min-width: 0;
+}
+.ticket {
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-20) var(--space-24);
+  border-radius: var(--radius-soft);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.ticket > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-body-staff);
+}
+.ticket svg {
+  width: 20px;
+  height: 20px;
+}
+.ticket strong {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.ticket small {
+  font-size: var(--text-body-staff);
+}
+.destination {
+  display: flex;
+  align-items: start;
+  gap: var(--space-12);
+  padding: var(--space-16);
+  background: var(--color-patient-highlight);
+  border-radius: var(--radius-soft);
+}
+.destination > svg {
+  width: 22px;
+  height: 22px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.destination > div {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.destination span,
+.destination small {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-staff);
+}
+.destination strong {
+  font-size: var(--text-body-patient);
+  overflow-wrap: anywhere;
+}
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin-bottom: var(--space-24);
+}
+.sectionIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  background: var(--color-selected);
+  color: var(--color-primary);
+  border-radius: var(--radius-soft);
+}
+.sectionIcon svg {
+  width: 22px;
+  height: 22px;
+}
+.sectionHeading h2 {
+  font-size: var(--text-h2);
+  font-weight: 700;
+}
+.sectionHeading p {
+  font-size: var(--text-body-staff);
+  color: var(--color-text-secondary);
+}
+.currentStage {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  padding: var(--space-16);
+  margin-bottom: var(--space-20);
+  background: var(--color-patient-highlight);
+  border-radius: var(--radius-soft);
+}
+.currentStage > svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+.currentStage > div {
+  display: grid;
+  gap: var(--space-4);
+}
+.currentStage span {
+  font-size: var(--text-meta);
+  color: var(--color-text-secondary);
+}
+.currentStage strong {
+  font-size: var(--text-body-patient);
+}
+.progressSummary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-block: var(--space-20);
+  font-size: var(--text-body-staff);
+}
+.progressSummary span {
+  color: var(--color-text-secondary);
+}
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.timeline > li {
+  position: relative;
+  display: flex;
+  gap: var(--space-16);
+  padding-bottom: var(--space-24);
+}
+.timeline > li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 17px;
+  top: 34px;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-border);
+}
+.timeline > li[data-state="done"]::before {
+  background: var(--color-primary);
+}
+.node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-patient-background);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-staff);
+  font-weight: 600;
+}
+.node svg {
+  width: 18px;
+  height: 18px;
+}
+[data-state="done"] .node {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+[data-state="current"] .node {
+  border: 2px solid var(--color-primary);
+  background: var(--color-selected);
+  color: var(--color-primary);
+}
+.stepBody {
+  flex: 1;
+  min-width: 0;
+  padding-top: var(--space-4);
+}
+.stepHeading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--space-8);
+}
+.stepHeading h3 {
+  font-size: var(--text-body-patient);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.stepStatus {
+  font-size: var(--text-meta);
+  color: var(--color-text-secondary);
+  background: var(--color-patient-background);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-pill);
+}
+[data-state="done"] .stepStatus {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+[data-state="current"] .stepStatus {
+  color: var(--color-primary);
+  background: var(--color-selected);
+}
+[data-state="skipped"] .stepStatus {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.stepBody > p {
+  display: flex;
+  align-items: start;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+  font-size: var(--text-body-staff);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.stepBody > p svg {
+  width: 16px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.footnote,
+.updatedAt {
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+  line-height: 1.7;
+}
+.updatedAt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-16);
+  margin-top: var(--space-16);
+}
+.updatedAt svg {
+  width: 16px;
+  height: 16px;
+}
+.journeyEmpty {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-12);
+  padding-block: var(--space-16);
+}
+.journeyEmpty > svg {
+  width: 28px;
+  height: 28px;
+  color: var(--color-primary);
+}
+.journeyEmpty h3 {
+  font-size: var(--text-body-patient);
+  font-weight: 600;
+}
+.journeyEmpty p {
+  font-size: var(--text-body-staff);
+  color: var(--color-text-secondary);
+}
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-16);
+}
+.empty h2 {
+  font-size: var(--text-h2);
+  font-weight: 700;
+}
+.empty :global(.ant-btn) {
+  min-height: 44px;
+  height: auto;
+  white-space: normal;
+}
+.journey {
+  scroll-margin-top: var(--space-24);
+}
+.journey:focus-visible,
+.overview :is(a, button):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 4px;
+}
+@media (max-width: 767px) {
+  .overview,
+  .journey {
+    padding: var(--space-20);
+  }
+  .overviewHeader {
+    padding-bottom: var(--space-16);
+    margin-bottom: var(--space-20);
+  }
+  .overviewGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-24);
+  }
+  .nextAction h2 {
+    font-size: 23px;
+  }
+  .actionRow {
+    gap: var(--space-8);
+  }
+  .primaryAction,
+  .secondaryAction {
+    width: 100%;
+    text-align: center;
+  }
+  .ticket {
+    padding: var(--space-16);
+  }
+  .ticket strong {
+    font-size: 28px;
+  }
+  .sectionHeading {
+    align-items: start;
+  }
+}
+
+.journeyGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  align-items: start;
+  gap: var(--space-24);
+  margin-top: var(--space-16);
+}
+.journeyGrid > * {
+  min-width: 0;
+}
+.stepToggle {
+  display: inline-flex;
+  align-items: start;
+  gap: var(--space-8);
+  min-height: 44px;
+  padding: var(--space-4) 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.stepToggle > svg {
+  width: 16px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+.stepToggle[aria-expanded="true"] > svg {
+  transform: rotate(90deg);
+}
+.stepToggle:hover {
+  color: var(--color-primary);
+}
+.stepToggle:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-small);
+}
+.timeline > li[data-focus="true"] .stepBody {
+  padding: var(--space-12);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-soft);
+  background: var(--color-patient-highlight);
+}
+.focusLabel,
+.floor {
+  display: inline-flex;
+  margin: var(--space-8) var(--space-8) 0 0;
+  color: var(--color-primary);
+  font-size: var(--text-meta);
+}
+.focusLabel {
+  font-weight: 600;
+}
+.stepDetail {
+  padding: var(--space-16);
+  margin-top: var(--space-12);
+  background: var(--color-patient-background);
+  border-radius: var(--radius-control);
+  font-size: var(--text-body-staff);
+}
+.stepDetail strong {
+  font-size: var(--text-body-staff);
+  font-weight: 600;
+}
+.stepDetail p {
+  margin-top: var(--space-8);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.stepDetail .returnHint {
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-border);
+}
+@media (max-width: 1100px) {
+  .journeyGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .journeyGrid {
+    gap: var(--space-16);
+  }
+}
+
+.stepHeading h3 {
+  min-width: 0;
+  flex: 1 1 160px;
+}
+.stepToggle {
+  min-width: 0;
+  max-width: 100%;
+}

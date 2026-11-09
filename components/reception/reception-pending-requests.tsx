@@ -6,11 +6,12 @@ import { useRef, useState } from "react";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
 import type { ReceptionRequest } from "@/lib/types/clinical";
+import styles from "./reception-workspace.module.css";
 
 export function ReceptionPendingRequests() {
   const [search, setSearch] = useState("");
   return (
-    <div style={{ display: "grid", gap: 20 }}>
+    <div className={styles.workspace}>
       <Input.Search
         aria-label="Tìm yêu cầu tiếp nhận"
         placeholder="Tên, CCCD hoặc số điện thoại"
@@ -51,7 +52,7 @@ function PendingList({ search }: { search: string }) {
     }
   };
   return (
-    <section style={{ background: "#fff", borderRadius: 20, padding: 24 }}>
+    <section className={styles.card}>
       {context}
       <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         <Button onClick={() => void requests.refresh()} loading={requests.loading}>

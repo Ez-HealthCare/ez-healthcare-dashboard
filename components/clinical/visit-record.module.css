@@ -281,3 +281,40 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.recordNavigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  padding: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-soft);
+  background: var(--color-surface);
+}
+.recordNavigation a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-control);
+  color: var(--color-primary);
+  font-size: var(--text-body-staff);
+  font-weight: 600;
+}
+.recordNavigation a:hover {
+  background: var(--color-selected);
+}
+.recordNavigation a:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.section[data-patient="true"] [id] {
+  scroll-margin-top: var(--space-24);
+}
+.section[data-patient="true"] .summaryCard {
+  border-top: 3px solid var(--color-primary);
+}
+.section[data-patient="true"] .medications > li {
+  background: var(--color-surface);
+  border-left: 3px solid var(--color-primary);
+}

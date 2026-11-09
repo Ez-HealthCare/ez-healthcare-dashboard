@@ -13,24 +13,35 @@ export function ReadOnlyVisitRecord({
   load,
   backHref,
   backLabel,
+  patientView = false,
 }: {
   visitId: string;
   load: (id: string) => Promise<VisitDossier>;
   backHref: string;
   backLabel: string;
+  patientView?: boolean;
 }) {
   const dossier = useClinicalData(() => load(visitId), 8_000);
   const data = dossier.data;
   const prescription = data?.prescription;
   return (
-    <section className={styles.section} data-detail="true" aria-label="Chi tiết hồ sơ khám bệnh">
+    <section
+      className={styles.section}
+      data-detail="true"
+      data-patient={patientView || undefined}
+      aria-label="Chi tiết hồ sơ khám bệnh"
+    >
       <div className={styles.heading}>
         <div>
           <Link className={styles.openLink} href={backHref}>
             ← {backLabel}
           </Link>
           <h1>{data?.status === "COMPLETED" ? "Kết luận & Đơn thuốc" : "Chi tiết lượt khám"}</h1>
-          <p className={styles.muted}>Kết luận, đơn thuốc và hướng dẫn đã được lưu trong hồ sơ.</p>
+          <p className={styles.muted}>
+            {data?.status === "COMPLETED"
+              ? "Kết luận, đơn thuốc và hướng dẫn đã được lưu trong hồ sơ."
+              : "Thông tin lượt khám và các bước được ghi nhận trong hồ sơ của bạn."}
+          </p>
         </div>
         <Button onClick={() => void dossier.refresh()}>Làm mới hồ sơ</Button>
       </div>
@@ -46,7 +57,22 @@ export function ReadOnlyVisitRecord({
       {dossier.loading && !data ? <Skeleton active /> : null}
       {data && (
         <>
-          <section className={`${styles.card} ${styles.summaryCard}`}>
+          {patientView && (
+            <nav className={styles.recordNavigation} aria-label="Điều hướng hồ sơ">
+              <a href="#record-summary">Thông tin lượt khám</a>
+              {prescription && (
+                <>
+                  <a href="#record-conclusion">Kết luận</a>
+                  <a href="#record-prescription">Đơn thuốc</a>
+                  <a href="#record-followup">Tái khám</a>
+                </>
+              )}
+            </nav>
+          )}
+          <section
+            id={patientView ? "record-summary" : undefined}
+            className={`${styles.card} ${styles.summaryCard}`}
+          >
             <div className={styles.heading}>
               <div className={styles.identity}>
                 <span className={styles.patientAvatar}>
@@ -103,7 +129,11 @@ export function ReadOnlyVisitRecord({
               )}
               {prescription ? (
                 <>
-                  <section className={styles.card} aria-label="Kết luận khám">
+                  <section
+                    id={patientView ? "record-conclusion" : undefined}
+                    className={styles.card}
+                    aria-label="Kết luận khám"
+                  >
                     <h2>Kết luận chẩn đoán</h2>
                     <p>
                       <Tag>{prescription.icd10Code}</Tag> {prescription.icd10Name}
@@ -118,7 +148,11 @@ export function ReadOnlyVisitRecord({
                       </>
                     )}
                   </section>
-                  <section className={styles.card} aria-label="Đơn thuốc đã lưu">
+                  <section
+                    id={patientView ? "record-prescription" : undefined}
+                    className={styles.card}
+                    aria-label="Đơn thuốc đã lưu"
+                  >
                     <h2>
                       Đơn thuốc{" "}
                       <span className={styles.muted}>
@@ -189,7 +223,10 @@ export function ReadOnlyVisitRecord({
             </div>
             <aside className={styles.recordAside} aria-label="Thông tin theo dõi sau khám">
               {prescription && (
-                <section className={`${styles.card} ${styles.followUp}`}>
+                <section
+                  id={patientView ? "record-followup" : undefined}
+                  className={`${styles.card} ${styles.followUp}`}
+                >
                   <span className={styles.sideIcon}>
                     <PatientIcon name="calendar" />
                   </span>

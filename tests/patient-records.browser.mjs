@@ -177,7 +177,7 @@ try {
     await p
       .getByText(
         {
-          PARACLINICAL_PENDING: "Chờ kết quả CLS",
+          PARACLINICAL_PENDING: "Chưa đủ kết quả CLS",
           RE_EXAM_CALLING: "Có kết quả · Chờ tái khám",
           COMPLETED: "Đã hoàn tất khám",
         }[next],

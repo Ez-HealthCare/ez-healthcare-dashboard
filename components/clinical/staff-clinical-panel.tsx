@@ -298,8 +298,8 @@ function NursePanelContent({
                   }
                 }}
               >
-                <div className={nurseStyles.samples}>
-                  <p id="nurse-cases-label">Ca bệnh mẫu chuẩn (Y Hà Nội 2020)</p>
+                <details className={nurseStyles.samples}>
+                  <summary id="nurse-cases-label">Ca bệnh mẫu chuẩn (Y Hà Nội 2020)</summary>
                   <Space wrap role="group" aria-labelledby="nurse-cases-label">
                     {NURSE_CASES.map((sample) => (
                       <Button
@@ -322,7 +322,7 @@ function NursePanelContent({
                       Gợi ý phòng khám chuyên khoa: <strong>{suggestedDepartmentCode}</strong>
                     </p>
                   )}
-                </div>
+                </details>
                 <div aria-live="polite" className={nurseStyles.clinicalPreview}>
                   <Tag
                     color={
@@ -391,6 +391,7 @@ function NursePanelContent({
                     >
                       <InputNumber min={30} max={240} />
                     </Form.Item>
+                    <small>lần/phút</small>
                   </div>
                   <div className={nurseStyles.measurementCard}>
                     <Form.Item
@@ -400,6 +401,7 @@ function NursePanelContent({
                     >
                       <InputNumber min={50} max={100} />
                     </Form.Item>
+                    <small>%</small>
                   </div>
                   <div className={nurseStyles.measurementCard}>
                     <Form.Item
@@ -409,6 +411,7 @@ function NursePanelContent({
                     >
                       <InputNumber min={34} max={43} step={0.1} />
                     </Form.Item>
+                    <small>°C</small>
                   </div>
                   <div className={nurseStyles.measurementCard}>
                     <Form.Item
@@ -418,6 +421,7 @@ function NursePanelContent({
                     >
                       <InputNumber min={8} max={60} />
                     </Form.Item>
+                    <small>lần/phút</small>
                   </div>
                   <div className={nurseStyles.measurementCard}>
                     <h3>Thể trạng & BMI</h3>

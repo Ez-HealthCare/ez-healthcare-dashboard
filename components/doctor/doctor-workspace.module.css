@@ -1024,3 +1024,551 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Clinic workbench: prioritize the selected record over support panels. */
+.workspace {
+  gap: var(--space-20);
+}
+.card,
+.activePatientCard {
+  border: 1px solid var(--color-border);
+  padding: var(--space-20);
+}
+.pageHeading h1 {
+  font-size: 26px;
+}
+.patientBanner {
+  background: var(--color-brand-tint);
+  border-radius: var(--radius-soft);
+  padding: var(--space-16);
+}
+.patientBanner h2 {
+  overflow-wrap: anywhere;
+}
+.vitals > div {
+  border: 1px solid var(--color-border);
+}
+.flowTabs {
+  flex-wrap: wrap;
+  overflow: visible;
+  padding: var(--space-8);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-soft);
+}
+.flowTabs button {
+  flex: 1 1 130px;
+  white-space: normal;
+}
+.queueCard {
+  padding: var(--space-12);
+}
+.queueCard.selected {
+  background: var(--color-brand-tint);
+  border-color: var(--color-primary);
+}
+.patientSelect {
+  align-items: center;
+}
+.patientSelect strong {
+  overflow-wrap: anywhere;
+}
+.actions :global(.ant-btn),
+.quickActions :global(.ant-btn) {
+  min-height: 44px;
+}
+.notesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16);
+}
+.notesGrid .field {
+  margin: 0;
+  min-width: 0;
+}
+.notesGrid .field:last-child {
+  grid-column: 1 / -1;
+}
+.notesGrid :global(.ant-input-data-count) {
+  font-size: 12px;
+}
+.notesGrid + .meta {
+  margin-top: var(--space-20);
+}
+.orderOption {
+  min-height: 64px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-soft);
+}
+.orderOption:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-brand-tint);
+}
+.medication {
+  border: 1px solid var(--color-border);
+  padding: var(--space-16);
+}
+.allergyNote {
+  padding: var(--space-12);
+  border-radius: var(--radius-control);
+  background: var(--color-warning-bg);
+  overflow-wrap: anywhere;
+}
+.twoColumns {
+  grid-template-columns: minmax(0, 2.5fr) minmax(250px, 1fr);
+  gap: var(--space-20);
+}
+.resultsGrid {
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: var(--space-20);
+}
+.resultsGrid > aside:first-child {
+  grid-column: 1 / -1;
+}
+.resultsGrid > aside:first-child .card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.resultsGrid > aside:first-child h2 {
+  flex-basis: 100%;
+  margin-bottom: var(--space-8);
+}
+.resultsGrid > aside:first-child .resultLink {
+  flex: 1 1 200px;
+  width: auto;
+  margin: 0;
+}
+.resultsGrid .resultLink {
+  min-height: 64px;
+}
+@media (min-width: 1024px) {
+  .dashboardGrid,
+  .dashboardGrid[data-support="false"] {
+    grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.85fr);
+    gap: var(--space-20);
+  }
+  .dashboardGrid > .queuePane {
+    grid-row: 1 / 3;
+  }
+  .dashboardGrid > .supportPane {
+    grid-column: 2;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Result records embedded beside a queue need the full available column. */
+.workspace[data-section="results"] .resultsGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.workspace[data-section="results"] .resultsGrid > aside:first-child {
+  grid-column: auto;
+}
+@media (max-width: 1023px) {
+  .twoColumns,
+  .resultsGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .resultsGrid > aside:first-child {
+    grid-column: auto;
+  }
+}
+@media (max-width: 639px) {
+  .notesGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .notesGrid .field:last-child {
+    grid-column: auto;
+  }
+  .card,
+  .activePatientCard {
+    padding: var(--space-16);
+  }
+  .pageHeading h1 {
+    font-size: 22px;
+  }
+}
+
+/* Shared staff dashboard metric colors. */
+.metrics [data-tone="waiting"] strong {
+  color: var(--color-primary);
+}
+.metrics [data-tone="examining"] strong {
+  color: var(--color-info);
+}
+.metrics [data-tone="results"] strong {
+  color: var(--color-success);
+}
+.metrics [data-tone="priority"] strong {
+  color: var(--color-warning);
+}
+
+/* Focused Clinic board: neutral surfaces, one primary action and compact rows. */
+.recordPane {
+  display: grid;
+  align-content: start;
+  gap: var(--space-20);
+}
+.dashboardGrid > .queuePane {
+  grid-row: auto;
+}
+.queueCard.selected {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  border-left-color: var(--color-primary);
+  box-shadow: none;
+}
+.queueCard .patientSelect {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+.queueCard .pill {
+  border-radius: var(--radius-control);
+  background: var(--color-selected);
+}
+.queueCard .tags {
+  margin: var(--space-8) 0;
+}
+.queueCard p {
+  margin: var(--space-8) 0;
+}
+.queueCard .actions {
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--color-border);
+}
+.queueCard .actions > :nth-child(n) {
+  grid-column: auto;
+  flex: 1 1 110px;
+}
+.activePatientCard {
+  border-top-width: 1px;
+}
+.activePatientCard .eyebrow {
+  font-weight: 600;
+  letter-spacing: normal;
+  color: var(--color-text-secondary);
+}
+.activePatientCard .patientBanner {
+  background: var(--color-surface);
+  padding: 0 0 var(--space-16);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+}
+.activePatientCard .soft {
+  background: var(--color-patient-background);
+  border-left: 3px solid var(--color-border);
+}
+.activePatientCard .vitals > div {
+  background: var(--color-surface);
+}
+.primaryWorkflow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  padding-top: var(--space-20);
+  margin-top: var(--space-20);
+  border-top: 1px solid var(--color-border);
+}
+.primaryWorkflow strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.primaryWorkflow .meta {
+  margin: var(--space-4) 0 0;
+}
+.primaryWorkflow :global(.ant-btn) {
+  min-height: 44px;
+  height: auto;
+  white-space: normal;
+}
+.secondaryWorkflow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
+  padding-top: var(--space-12);
+  margin-top: var(--space-12);
+  border-top: 1px solid var(--color-border);
+}
+.secondaryWorkflow :global(.ant-btn) {
+  min-height: 44px;
+  font-size: 13px;
+  padding-inline: var(--space-8);
+  color: var(--color-text-secondary);
+}
+.supportPane .resultLink {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-12);
+}
+.supportPane .resultLink:hover {
+  background: var(--color-patient-background);
+  border-color: var(--color-primary);
+}
+.supportPane .supportHeading h2 {
+  font-size: 16px;
+}
+@media (max-width: 1023px) {
+  .dashboardGrid[data-pane="queue"] > .recordPane {
+    display: none;
+  }
+  .recordPane > .supportPane {
+    display: none;
+  }
+}
+@media (max-width: 479px) {
+  .primaryWorkflow :global(.ant-btn) {
+    width: 100%;
+  }
+  .secondaryWorkflow :global(.ant-btn) {
+    flex: 1 1 45%;
+    height: auto;
+    white-space: normal;
+  }
+}
+
+/* Clinic finish: calm surfaces and a tighter reading rhythm within Doctor content. */
+.doctorSurface {
+  --color-surface-subtle: var(--color-patient-background);
+  --surface-subtle: var(--color-patient-background);
+  --color-brand-tint: var(--color-success-bg);
+  min-width: 0;
+}
+.roomSelector {
+  justify-content: flex-start;
+  margin-bottom: var(--space-12);
+  gap: var(--space-12);
+  flex-wrap: wrap;
+}
+.assignedRoom {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.assignedRoom span {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  padding-left: var(--space-8);
+  border-left: 1px solid var(--color-border);
+}
+.workspace {
+  gap: var(--space-16);
+}
+.pageHeading {
+  gap: var(--space-16);
+}
+.pageHeading h1 {
+  font-size: 24px;
+  margin-bottom: var(--space-4);
+}
+.pageHeading p {
+  font-size: 13px;
+}
+.roomStatus {
+  margin: 0;
+  padding: var(--space-8) var(--space-12);
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-control);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.metric {
+  padding: var(--space-12) var(--space-16);
+  box-shadow: none;
+}
+.metric .cardHeading {
+  margin-bottom: var(--space-4);
+}
+.metric strong {
+  font-size: 26px;
+  line-height: 1.3;
+}
+.metric span {
+  font-size: 12px;
+}
+.card,
+.activePatientCard {
+  box-shadow: 0 1px 2px var(--color-shadow);
+  border-radius: 14px;
+}
+.card h2 {
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.queueHeading h2 {
+  font-size: 18px;
+}
+.stack {
+  gap: var(--space-16);
+}
+.patientBanner {
+  background: var(--color-surface);
+  padding: 0;
+}
+.patientBanner h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+.patientTicket {
+  padding: var(--space-8) var(--space-12);
+  background: var(--color-patient-background);
+  border-radius: var(--radius-control);
+}
+.patientTicket strong {
+  font-size: 22px;
+}
+.patientBanner .avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+  box-shadow: none;
+}
+[data-view]:not([data-view="dashboard"]) > .card:first-of-type {
+  padding-block: var(--space-16);
+}
+.vitals {
+  gap: var(--space-8);
+  margin-block: var(--space-12);
+}
+.vitals > div {
+  padding: var(--space-12);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+.vitals strong {
+  font-size: 20px;
+}
+.soft {
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-control);
+}
+.flowTabs {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--space-4);
+  border-radius: var(--radius-soft);
+}
+.flowTabs button {
+  border-radius: var(--radius-control);
+  padding: var(--space-8) var(--space-12);
+  font-weight: 500;
+  transition:
+    background-color var(--motion-feedback),
+    color var(--motion-feedback);
+}
+.flowTabs button[aria-current="step"] {
+  background: var(--color-selected);
+  font-weight: 600;
+}
+.flowTabs button:hover:not(:disabled) {
+  background: var(--color-patient-background);
+  color: var(--color-primary);
+}
+.flowTabs button[aria-current="step"]:hover {
+  background: var(--color-selected);
+}
+.twoColumns {
+  grid-template-columns: minmax(0, 2.4fr) minmax(270px, 1fr);
+  gap: var(--space-20);
+}
+.contextSidebar h2 {
+  font-size: 15px;
+}
+.contextSidebar .progress {
+  gap: var(--space-12);
+  font-size: 13px;
+  padding-left: var(--space-20);
+}
+.contextSidebar .progress span {
+  font-size: 12px;
+}
+.contextSidebar .notice {
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-border);
+  padding: var(--space-16);
+  border-radius: var(--radius-soft);
+}
+.contextSidebar .notice h2 {
+  margin-bottom: var(--space-8);
+}
+.contextSidebar > .card:first-child:has(.selectedOrder) {
+  border-top: 3px solid var(--color-primary);
+}
+.orderList {
+  gap: var(--space-8);
+}
+.orderOption {
+  background: var(--color-surface);
+  padding: var(--space-12);
+  min-height: 64px;
+  transition:
+    border-color var(--motion-feedback),
+    background-color var(--motion-feedback);
+}
+.orderOption p {
+  margin-top: var(--space-4);
+}
+.orderOption:hover {
+  border-color: var(--color-primary);
+  background: var(--color-patient-background);
+}
+.orderOption:has(input:checked) {
+  background: var(--color-success-bg);
+  border-color: var(--color-primary);
+}
+.orderOption:has(input:disabled) {
+  cursor: not-allowed;
+}
+.field :global(.ant-input) {
+  background: var(--color-surface);
+}
+.selectedOrder {
+  background: var(--color-patient-background);
+}
+.queueToolbar .filters {
+  background: var(--color-patient-background);
+}
+.queueToolbar .filters button {
+  border-radius: var(--radius-control);
+  font-size: 13px;
+}
+.primaryWorkflow {
+  padding-top: var(--space-16);
+  margin-top: var(--space-16);
+}
+.secondaryWorkflow {
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
+}
+@media (max-width: 1023px) {
+  .twoColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 479px) {
+  .pageHeading h1 {
+    font-size: 22px;
+  }
+  .patientTicket strong {
+    font-size: 20px;
+  }
+  .roomSelector {
+    align-items: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orderOption,
+  .flowTabs button {
+    transition: none;
+  }
+}

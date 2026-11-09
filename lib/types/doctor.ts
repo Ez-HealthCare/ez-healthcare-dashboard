@@ -29,7 +29,7 @@ export interface VisitDossier {
     gender?: string;
     allergies?: string[];
   };
-  currentDepartment?: { id: string; code: string; name: string };
+  currentDepartment?: { id: string; code: string; name: string; floor?: number; roomType?: string };
   currentDoctor?: { id: string; name: string };
   vital?: {
     bloodPressureSystolic?: number;
@@ -47,7 +47,7 @@ export interface VisitDossier {
     sequenceOrder: number;
     status: string;
     isReExam: boolean;
-    department?: { code: string; name: string; roomType?: string };
+    department?: { code: string; name: string; roomType?: string; floor?: number };
   }>;
   prescription?: {
     id: string;

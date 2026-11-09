@@ -172,6 +172,7 @@ export function DoctorResults({
               <button
                 className={`${styles.resultLink} ${selected?.stepId === step.stepId ? styles.activeResult : ""}`}
                 key={step.stepId}
+                aria-pressed={selected?.stepId === step.stepId}
                 onClick={() => setStepId(step.stepId)}
               >
                 <strong>
@@ -223,7 +224,7 @@ export function DoctorResults({
           <h2>Biện luận của Bác sĩ</h2>
           <Input.TextArea
             aria-label="Biện luận kết quả CLS"
-            rows={6}
+            autoSize={{ minRows: 4, maxRows: 12 }}
             value={assessment}
             disabled={busy || !canWrite}
             onChange={(event) => onAssessment(event.target.value)}

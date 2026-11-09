@@ -9,7 +9,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { RECEPTION_STATUS } from "@/lib/constants/reception";
 import { ROUTES } from "@/lib/constants/routes";
-import { useIdentity } from "@/hooks/use-auth-session";
 import { useMemo, useRef, useState } from "react";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
@@ -35,8 +34,8 @@ function patientSearchText(visit: ReceptionVisit) {
 const displayDate = formatDate;
 
 export function ReceptionWorkspace({ section = "" }: { section?: string }) {
-  const user = useIdentity();
   const [queueFilter, setQueueFilter] = useState("all");
+  const [mobilePane, setMobilePane] = useState("queue");
   const [verificationOpen, setVerificationOpen] = useState(false);
   const [verificationVisit, setVerificationVisit] = useState<ReceptionVisit>();
   const [pauseOpen, setPauseOpen] = useState(false);
@@ -45,6 +44,7 @@ export function ReceptionWorkspace({ section = "" }: { section?: string }) {
   const queue = useClinicalData(clinicalActions.receptionQueue);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState("");
+  const detailHeading = useRef<HTMLHeadingElement>(null);
   const actionLock = useRef(false);
   const walkInLock = useRef(false);
   const [actionError, setActionError] = useState("");
@@ -87,6 +87,14 @@ export function ReceptionWorkspace({ section = "" }: { section?: string }) {
     (visit) => isHallWaiting(visit) && visit.ticketStatus === "ACTIVE"
   );
 
+  const selectVisit = (visitId: string) => {
+    setSelectedId(visitId);
+    setMobilePane("detail");
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      requestAnimationFrame(() => detailHeading.current?.focus());
+    }
+  };
+
   const runQueueAction = async (action: () => Promise<unknown>, success: string) => {
     if (actionLock.current) return false;
     actionLock.current = true;
@@ -118,7 +126,7 @@ export function ReceptionWorkspace({ section = "" }: { section?: string }) {
       return;
     }
     setQuery("");
-    setSelectedId(matched.visitId);
+    selectVisit(matched.visitId);
     setQrOpen(false);
     setQrValue("");
     toast.success(`Đã mở hồ sơ số ${matched.hallTicketNumber}.`);
@@ -154,7 +162,7 @@ export function ReceptionWorkspace({ section = "" }: { section?: string }) {
       setNationalId("");
       setWalkInPatient(undefined);
       await queue.refresh();
-      setSelectedId(ticket.visitId);
+      selectVisit(ticket.visitId);
     } catch (error) {
       setActionError(clinicalErrorMessage(error));
     } finally {
@@ -189,36 +197,90 @@ export function ReceptionWorkspace({ section = "" }: { section?: string }) {
           </div>
           <p>Gọi người bệnh đã được cấp số, xác minh giấy tờ tại quầy và bàn giao sang sàng lọc.</p>
         </div>
-        <Button loading={acting} onClick={() => void queue.refresh()}>
-          ↻ Làm mới
-        </Button>
+        <div className={styles.pageActions}>
+          <Button loading={queue.loading || acting} onClick={() => void queue.refresh()}>
+            Làm mới
+          </Button>
+          <Button type="primary" onClick={() => setWalkInOpen(true)}>
+            Tạo lượt walk-in
+          </Button>
+        </div>
       </header>
 
       {queue.error ? <p className={styles.error}>Không tải được hàng đợi: {queue.error}</p> : null}
 
-      {section === "queue" && (
-        <div className={styles.overviewMetrics}>
-          {[
-            [waiting, "Đang chờ"],
-            [called, "Đang gọi"],
-            [totalAtDesk, "Trong hàng đợi"],
-          ].map(([value, label]) => (
-            <div key={label}>
-              <small>{label}</small>
-              <strong>{value}</strong>
-              <span>Lượt trong hàng đợi hiện tại</span>
+      <div className={styles.overviewMetrics} aria-label="Tổng quan hàng đợi hiện tại">
+        {[
+          [totalAtDesk, "Trong hàng đợi", "Tổng số lượt tại quầy", "total"],
+          [waiting, "Đang chờ", "Chờ được gọi tiếp nhận", "waiting"],
+          [called, "Đang gọi", "Đã gọi đến quầy", "called"],
+          [
+            (queue.data || []).filter((visit) => visit.isPriority).length,
+            "Ưu tiên",
+            "Lượt có đánh dấu ưu tiên",
+            "priority",
+          ],
+        ].map(([value, label, description, tone]) => (
+          <div key={label} data-tone={tone}>
+            <small>{label}</small>
+            <strong>{queue.loading && !queue.data ? "—" : value}</strong>
+            <span>{description}</span>
+          </div>
+        ))}
+      </div>
+      <div className={styles.paneSwitch} aria-label="Chọn vùng làm việc">
+        <button
+          type="button"
+          aria-pressed={mobilePane === "queue"}
+          aria-controls="reception-queue"
+          onClick={() => setMobilePane("queue")}
+        >
+          Hàng đợi <span>{visits.length}</span>
+        </button>
+        <button
+          type="button"
+          aria-pressed={mobilePane === "detail"}
+          aria-controls="reception-detail"
+          onClick={() => setMobilePane("detail")}
+        >
+          Hồ sơ {selected ? `· ${selected.hallTicketNumber}` : ""}
+        </button>
+      </div>
+      <div className={styles.grid} data-pane={mobilePane}>
+        <aside
+          id="reception-queue"
+          className={`${styles.card} ${styles.queuePanel}`}
+          aria-label="Hàng đợi tiếp nhận"
+        >
+          <div className={styles.counterBar} aria-label="Trạng thái quầy">
+            <div>
+              <strong>Quầy tiếp đón 02</strong>
+              <span className={counterOpen ? styles.open : styles.closed} role="status">
+                {counterOpen ? "● Đang hoạt động" : "● Tạm ngưng"}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
-      <div className={styles.grid}>
-        <aside className={styles.card} aria-label="Hàng đợi tiếp nhận">
+            <Button onClick={() => setCounterOpen((open) => !open)}>
+              {counterOpen ? "Tạm ngưng quầy" : "Mở lại quầy"}
+            </Button>
+          </div>
           <div className={styles.cardHeading}>
             <div>
               <span className={styles.kicker}>Hàng đợi tiếp nhận</span>
               <h3>{queue.loading ? "Đang tải" : `${waiting} đang chờ`}</h3>
             </div>
             <span className={styles.counter}>{queue.data?.length || 0}</span>
+          </div>
+          <div className={styles.lookup}>
+            <Input
+              prefix={<Image src="/reception/search.svg" width={15} height={15} alt="" />}
+              allowClear
+              aria-label="Tìm mã tiếp nhận hoặc hồ sơ bệnh nhân"
+              className={styles.search}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Số tiếp nhận, họ tên, CCCD hoặc BHYT"
+              value={query}
+            />
+            <Button onClick={() => setQrOpen(true)}>Quét QR</Button>
           </div>
           <div className={styles.queueFilters} aria-label="Lọc hàng đợi tiếp nhận">
             {[
@@ -297,7 +359,8 @@ export function ReceptionWorkspace({ section = "" }: { section?: string }) {
                 <button
                   className={`${styles.queueItem} ${visit.visitId === selected?.visitId ? styles.selected : ""}`}
                   key={visit.visitId}
-                  onClick={() => setSelectedId(visit.visitId)}
+                  aria-pressed={visit.visitId === selected?.visitId}
+                  onClick={() => selectVisit(visit.visitId)}
                   type="button"
                 >
                   <span className={styles.ticket}>{visit.hallTicketNumber}</span>
@@ -318,176 +381,129 @@ export function ReceptionWorkspace({ section = "" }: { section?: string }) {
           </div>
         </aside>
 
-        <section className={styles.card} aria-label="Tra cứu và tiếp nhận lượt khám">
-          <div className={styles.cardHeading}>
-            <div>
-              <h2 className={styles.lookupTitle}>
-                <Image src="/reception/lookup.svg" width={17} height={16} alt="" />
-                Hồ sơ đang tiếp nhận
-              </h2>
-            </div>
-            <span className={styles.readOnly}>Đối soát hồ sơ</span>
-          </div>
-          <div className={styles.lookup}>
-            <Input
-              prefix={<Image src="/reception/search.svg" width={15} height={15} alt="" />}
-              allowClear
-              aria-label="Tìm mã tiếp nhận hoặc hồ sơ bệnh nhân"
-              className={styles.search}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Số tiếp nhận, họ tên, CCCD hoặc BHYT"
-              value={query}
-            />
-            <Button type="primary" onClick={() => setQrOpen(true)}>
-              Quét QR
-            </Button>
-          </div>
-          {selected ? (
-            <div className={styles.patientCard}>
-              <div className={styles.identity}>
-                <span className={styles.initial}>
-                  {selected.patient.name
-                    .split(/\s+/)
-                    .slice(-2)
-                    .map((part) => part[0])
-                    .join("")}
-                </span>
-                <div>
-                  <h4>{selected.patient.name}</h4>
-                  <p>Mã tiếp nhận {selected.hallTicketNumber}</p>
-                </div>
-                <span className={styles.status}>{statusLabel[selected.status]}</span>
+        <div className={styles.detailColumn}>
+          <section
+            id="reception-detail"
+            className={`${styles.card} ${styles.detailPanel}`}
+            aria-label="Tra cứu và tiếp nhận lượt khám"
+          >
+            <div className={styles.cardHeading}>
+              <div>
+                <h2 className={styles.lookupTitle} ref={detailHeading} tabIndex={-1}>
+                  <Image src="/reception/lookup.svg" width={17} height={16} alt="" />
+                  Hồ sơ đang tiếp nhận
+                </h2>
               </div>
-              <dl className={styles.details}>
-                <div>
-                  <dt>Mã lượt khám</dt>
-                  <dd>
-                    <RecordIdentifier value={selected.visitId} />
-                  </dd>
-                </div>
-                <div>
-                  <dt>Số tiếp nhận</dt>
-                  <dd className={styles.ticketNumber}>{selected.hallTicketNumber}</dd>
-                </div>
-                <div>
-                  <dt>Ngày sinh</dt>
-                  <dd>{displayDate(selected.patient.dateOfBirth)}</dd>
-                </div>
-                <div>
-                  <dt>CCCD</dt>
-                  <dd>{selected.patient.nationalId || "Chưa đối soát"}</dd>
-                </div>
-                <div>
-                  <dt>BHYT</dt>
-                  <dd>{selected.patient.insuranceCardNumber || "Chưa đối soát"}</dd>
-                </div>
-                <div>
-                  <dt>Lý do khám</dt>
-                  <dd>{selected.chiefComplaint || "Chưa ghi nhận — Điều dưỡng sẽ khai thác."}</dd>
-                </div>
-              </dl>
-              <section className={styles.verificationSummary}>
-                <h3>Đối soát hồ sơ hành chính tiếp nhận</h3>
-                <div className={styles.checklist}>
+              <span className={styles.readOnly}>
+                {selected ? `Số ${selected.hallTicketNumber}` : "Chưa chọn lượt"}
+              </span>
+            </div>
+            {selected ? (
+              <div className={styles.patientCard}>
+                <div className={styles.identity}>
+                  <span className={styles.initial}>
+                    {selected.patient.name
+                      .split(/\s+/)
+                      .slice(-2)
+                      .map((part) => part[0])
+                      .join("")}
+                  </span>
                   <div>
-                    <strong>CCCD / VNeID</strong>
-                    <span>
-                      {selected.patient.nationalId
-                        ? "Có thông tin · Cần đối chiếu trực tiếp"
-                        : "Chưa có thông tin"}
-                    </span>
+                    <h4>{selected.patient.name}</h4>
+                    <p>Mã tiếp nhận {selected.hallTicketNumber}</p>
+                  </div>
+                  <span className={styles.status}>{statusLabel[selected.status]}</span>
+                </div>
+                <dl className={styles.details}>
+                  <div>
+                    <dt>Mã lượt khám</dt>
+                    <dd>
+                      <RecordIdentifier value={selected.visitId} />
+                    </dd>
                   </div>
                   <div>
-                    <strong>Thẻ bảo hiểm y tế</strong>
-                    <span>
-                      {selected.patient.insuranceCardNumber
-                        ? "Có thông tin thẻ BHYT"
-                        : "Chưa cập nhật thẻ BHYT"}
-                    </span>
+                    <dt>Số tiếp nhận</dt>
+                    <dd className={styles.ticketNumber}>{selected.hallTicketNumber}</dd>
                   </div>
-                </div>
-              </section>
-              <Button
-                type="primary"
-                block
-                className={styles.openVerification}
-                onClick={() => {
-                  setVerificationVisit(selected);
-                  setVerificationOpen(true);
-                }}
-              >
-                Mở phiếu tiếp nhận & xác minh →
-              </Button>
-            </div>
-          ) : (
-            <Empty description="Chọn một lượt trong hàng đợi để xem hồ sơ" />
-          )}
-        </section>
-
-        <aside className={styles.rightColumn} aria-label="Trạng thái quầy và thao tác nhanh">
-          <section className={styles.card}>
-            <span className={styles.kicker}>Trạng thái quầy</span>
-            <h3>Quầy tiếp đón 02</h3>
-            <div className={styles.staffIdentity}>
-              <span>{(user.name || user.email).slice(0, 1).toUpperCase()}</span>
-              <div>
-                <strong>{user.name || user.email}</strong>
-                <small>Lễ tân · Quầy tiếp đón 02</small>
+                  <div>
+                    <dt>Ngày sinh</dt>
+                    <dd>{displayDate(selected.patient.dateOfBirth)}</dd>
+                  </div>
+                  <div>
+                    <dt>CCCD</dt>
+                    <dd>{selected.patient.nationalId || "Chưa đối soát"}</dd>
+                  </div>
+                  <div>
+                    <dt>BHYT</dt>
+                    <dd>{selected.patient.insuranceCardNumber || "Chưa đối soát"}</dd>
+                  </div>
+                  <div>
+                    <dt>Lý do khám</dt>
+                    <dd>{selected.chiefComplaint || "Chưa ghi nhận — Điều dưỡng sẽ khai thác."}</dd>
+                  </div>
+                </dl>
+                <section className={styles.verificationSummary}>
+                  <h3>Đối soát hồ sơ hành chính tiếp nhận</h3>
+                  <div className={styles.checklist}>
+                    <div>
+                      <strong>CCCD / VNeID</strong>
+                      <span>
+                        {selected.patient.nationalId
+                          ? "Có thông tin · Cần đối chiếu trực tiếp"
+                          : "Chưa có thông tin"}
+                      </span>
+                    </div>
+                    <div>
+                      <strong>Thẻ bảo hiểm y tế</strong>
+                      <span>
+                        {selected.patient.insuranceCardNumber
+                          ? "Có thông tin thẻ BHYT"
+                          : "Chưa cập nhật thẻ BHYT"}
+                      </span>
+                    </div>
+                  </div>
+                </section>
+                <Button
+                  type="primary"
+                  block
+                  className={styles.openVerification}
+                  onClick={() => {
+                    setVerificationVisit(selected);
+                    setVerificationOpen(true);
+                  }}
+                >
+                  Mở phiếu tiếp nhận & xác minh →
+                </Button>
               </div>
-            </div>
-            <p className={counterOpen ? styles.open : styles.closed}>
-              {counterOpen ? "● Đang hoạt động" : "● Tạm ngưng nhận lượt mới"}
-            </p>
-            <div className={styles.metrics}>
-              <div>
-                <strong>{waiting}</strong>
-                <span>Đang chờ</span>
-              </div>
-              <div>
-                <strong>{totalAtDesk}</strong>
-                <span>Trong hàng đợi</span>
-              </div>
-              <div>
-                <strong>{called}</strong>
-                <span>Đã gọi</span>
-              </div>
-            </div>
-            <Button
-              className={styles.counterToggle}
-              onClick={() => setCounterOpen((open) => !open)}
-            >
-              {counterOpen ? "Tạm ngưng quầy" : "Mở lại quầy"}
-            </Button>
+            ) : (
+              <Empty description="Chọn một lượt trong hàng đợi để xem hồ sơ" />
+            )}
           </section>
-          <section className={styles.card}>
-            <span className={styles.kicker}>Thao tác nhanh</span>
-            <div className={styles.actions}>
-              <button onClick={() => setQrOpen(true)} type="button">
-                Quét mã QR
-              </button>
-              <button onClick={() => setWalkInOpen(true)} type="button">
-                Tạo lượt walk-in
-              </button>
-              <Link href={ROUTES.RECEPTIONIST + "/appointments"}>Tra cứu lịch hẹn khám →</Link>
-              <Link href={ROUTES.RECEPTIONIST + "/requests"}>Yêu cầu tiếp nhận trực tuyến →</Link>
-            </div>
-          </section>
-          <section className={styles.note}>
-            <strong>Ghi chú trực ban</strong>
-            <p>
-              Ưu tiên hướng dẫn người bệnh có dấu hiệu khó thở, đau ngực hoặc chóng mặt vào khu vực
-              đánh giá nhanh.
-            </p>
-            <Input.TextArea
-              aria-label="Ghi chú bàn giao ca"
-              className={styles.shiftNote}
-              onChange={(event) => setShiftNote(event.target.value)}
-              placeholder="Thêm ghi chú cho ca trực này"
-              rows={2}
-              value={shiftNote}
-            />
-          </section>
-        </aside>
+          <aside className={styles.supportGrid} aria-label="Thao tác nhanh và ghi chú ca trực">
+            <section className={styles.card}>
+              <span className={styles.kicker}>Thao tác nhanh</span>
+              <div className={styles.actions}>
+                <Link href={ROUTES.RECEPTIONIST + "/appointments"}>Tra cứu lịch hẹn khám →</Link>
+                <Link href={ROUTES.RECEPTIONIST + "/requests"}>Yêu cầu tiếp nhận trực tuyến →</Link>
+              </div>
+            </section>
+            <section className={styles.note}>
+              <strong>Ghi chú trực ban</strong>
+              <p>
+                Ưu tiên hướng dẫn người bệnh có dấu hiệu khó thở, đau ngực hoặc chóng mặt vào khu
+                vực đánh giá nhanh.
+              </p>
+              <Input.TextArea
+                aria-label="Ghi chú bàn giao ca"
+                className={styles.shiftNote}
+                onChange={(event) => setShiftNote(event.target.value)}
+                placeholder="Thêm ghi chú cho ca trực này"
+                rows={2}
+                value={shiftNote}
+              />
+            </section>
+          </aside>
+        </div>
       </div>
       <Modal
         open={pauseOpen}

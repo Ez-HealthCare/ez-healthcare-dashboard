@@ -1,5 +1,6 @@
 "use client";
 
+import { VISIT_STATUS_LABELS } from "@/lib/visit-status";
 import { formatDate } from "@/lib/display-format";
 import { RecordIdentifier } from "@/components/clinical/record-identifier";
 
@@ -88,7 +89,7 @@ function PatientBanner({ patient, dossier }: { patient: ClinicQueueItem; dossier
         </p>
       </div>
       <div className={styles.patientTicket}>
-        <small>SỐ KHÁM</small>
+        <small>Số khám</small>
         <strong>{patient.clinicTicketNumber}</strong>
       </div>
     </div>
@@ -212,8 +213,60 @@ export function DoctorWorkbench({
         }
       />
     ) : null;
+  const orderSummary = (
+    <section className={styles.card}>
+      <h2>
+        Chỉ định đang tạo <span className={styles.pill}>{selectedOrders.length} dịch vụ</span>
+      </h2>
+      {selectedOrders.length ? (
+        selectedOrders.map((code) => (
+          <div className={styles.selectedOrder} key={code}>
+            <span>{AVAILABLE_ORDERS.find((order) => order.code === code)?.name || code}</span>
+            <Button
+              type="text"
+              disabled={busy || !canWrite}
+              aria-label={`Bỏ dịch vụ ${code}`}
+              onClick={() => {
+                markDirty();
+                setSelectedOrders((old) => old.filter((value) => value !== code));
+              }}
+            >
+              ×
+            </Button>
+          </div>
+        ))
+      ) : (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa chọn dịch vụ" />
+      )}
+      <Button
+        type="primary"
+        block
+        disabled={busy || !canWrite || !selectedOrders.length || !diagnosis.trim()}
+        onClick={() => setOrderConfirm(true)}
+      >
+        Xác nhận gửi chỉ định
+      </Button>
+      {dag && (
+        <Alert
+          type="success"
+          showIcon
+          title="Đã gửi chỉ định cận lâm sàng"
+          description={
+            <div className={styles.tags}>
+              {dag.sortedOrder.map((code, index) => (
+                <Tag color="cyan" key={code}>
+                  {index + 1}. {code}
+                </Tag>
+              ))}
+            </div>
+          }
+        />
+      )}
+    </section>
+  );
   const sidebar = (
-    <aside className={styles.stack}>
+    <aside className={`${styles.stack} ${styles.contextSidebar}`}>
+      {view === "orders" && orderSummary}
       <section className={styles.card}>
         <h2>Tiến trình lượt khám</h2>
         <ol className={styles.progress}>
@@ -240,23 +293,11 @@ export function DoctorWorkbench({
           </li>
         </ol>
       </section>
-      <section className={styles.card}>
-        <h2>Tóm tắt phiếu khám</h2>
-        <p>
-          <strong>{patient.patientName}</strong>
-        </p>
-        <p>
+      <section className={styles.notice}>
+        <h2>Đối chiếu trước y lệnh</h2>
+        <p className={styles.meta}>
           {room.code} · {room.name}
         </p>
-        <p className={styles.meta}>Số khám: {patient.clinicTicketNumber}</p>
-        <DoctorVitals patient={patient} dossier={dossier.data} />
-        <div className={styles.soft}>
-          <small>LÝ DO KHÁM</small>
-          <p>{patient.chiefComplaint || "Chưa ghi nhận"}</p>
-        </div>
-      </section>
-      <section className={styles.notice}>
-        <h2>Lưu ý khi hoàn tất</h2>
         <p>Đối chiếu hồ sơ, dị ứng và kết quả đã duyệt trước khi xác nhận y lệnh.</p>
         <p className={styles.meta}>
           Dị ứng đã ghi nhận: {dossier.data?.patient.allergies?.join(", ") || "Chưa có thông tin"}
@@ -267,6 +308,7 @@ export function DoctorWorkbench({
   return (
     <section
       className={styles.stack}
+      data-view={view}
       aria-label="Hồ sơ khám bệnh"
       onChangeCapture={(event) => {
         if (!(
@@ -297,38 +339,43 @@ export function DoctorWorkbench({
         <>
           <div className={styles.activePatientCard}>
             <div className={styles.cardHeading}>
-              <span className={styles.eyebrow}>● HỒ SƠ BỆNH NHÂN</span>
-              <Tag color="cyan">{patient.clinicTicketNumber}</Tag>
+              <span className={styles.eyebrow}>Hồ sơ đang chọn</span>
+              <Tag color="cyan">{VISIT_STATUS_LABELS[visitStatus] || visitStatus}</Tag>
             </div>
             <PatientBanner patient={patient} dossier={dossier.data} />
             <h3>Chỉ số sinh hiệu lúc tiếp nhận</h3>
             <DoctorVitals patient={patient} dossier={dossier.data} />
             <div className={styles.soft}>
-              <small>LÝ DO KHÁM & TRIỆU CHỨNG</small>
+              <small>Lý do khám & triệu chứng</small>
               <h3>{patient.chiefComplaint || "Chưa ghi nhận lý do khám"}</h3>
               <p>
                 {dossier.data?.vital?.notes ||
                   "Đối chiếu trực tiếp với người bệnh trong buồng khám."}
               </p>
             </div>
-            <div className={styles.flowTabs}>
-              {openViews.slice(0, 3).map(([target, label]) => (
-                <button key={target} onClick={() => changeView(target)} disabled={busy}>
-                  {label} →
-                </button>
-              ))}
-            </div>
-            <div className={styles.actions}>
+            <div className={styles.primaryWorkflow}>
+              <div>
+                <strong>Tiếp tục lượt khám</strong>
+                <p className={styles.meta}>Mở hồ sơ để ghi nhận khám và thực hiện y lệnh.</p>
+              </div>
               <Button type="primary" onClick={() => changeView("clinical")} disabled={busy}>
                 Mở hồ sơ khám bệnh
               </Button>
-              <Button onClick={() => changeView("transfer")} disabled={busy}>
+            </div>
+            <nav className={styles.secondaryWorkflow} aria-label="Mở nhanh hồ sơ khám">
+              <Button type="text" onClick={() => changeView("orders")} disabled={busy}>
+                Chỉ định CLS →
+              </Button>
+              <Button type="text" onClick={() => changeView("results")} disabled={busy}>
+                Kết quả CLS →
+              </Button>
+              <Button type="text" onClick={() => changeView("transfer")} disabled={busy}>
                 Chuyển chuyên khoa
               </Button>
-              <Button onClick={() => changeView("conclusion")} disabled={busy}>
+              <Button type="text" onClick={() => changeView("conclusion")} disabled={busy}>
                 Kết luận & Kê đơn
               </Button>
-            </div>
+            </nav>
           </div>
         </>
       ) : (
@@ -411,25 +458,28 @@ export function DoctorWorkbench({
                     </section>
                     <section className={styles.card}>
                       <h2>Ghi chép khám bệnh lâm sàng của Bác sĩ</h2>
-                      {[
-                        ["history", "1. Bệnh sử hiện tại"],
-                        ["examination", "2. Khám thực thể"],
-                        ["assessment", "3. Nhận định lâm sàng ban đầu"],
-                      ].map(([key, label]) => (
-                        <label className={styles.field} key={key}>
-                          <span>{label}</span>
-                          <Input.TextArea
-                            disabled={busy || !canWrite}
-                            rows={4}
-                            maxLength={2000}
-                            value={notes[key as keyof typeof notes]}
-                            onChange={(event) =>
-                              setNotes((old) => ({ ...old, [key]: event.target.value }))
-                            }
-                            placeholder="Nhập ghi nhận khám bệnh…"
-                          />
-                        </label>
-                      ))}
+                      <div className={styles.notesGrid}>
+                        {[
+                          ["history", "1. Bệnh sử hiện tại"],
+                          ["examination", "2. Khám thực thể"],
+                          ["assessment", "3. Nhận định lâm sàng ban đầu"],
+                        ].map(([key, label]) => (
+                          <label className={styles.field} key={key}>
+                            <span>{label}</span>
+                            <Input.TextArea
+                              disabled={busy || !canWrite}
+                              autoSize={{ minRows: 3, maxRows: 10 }}
+                              showCount
+                              maxLength={2000}
+                              value={notes[key as keyof typeof notes]}
+                              onChange={(event) =>
+                                setNotes((old) => ({ ...old, [key]: event.target.value }))
+                              }
+                              placeholder="Nhập ghi nhận khám bệnh…"
+                            />
+                          </label>
+                        ))}
+                      </div>
                       <p className={styles.meta}>
                         Ghi chú được dùng khi gửi chỉ định, chuyển chuyên khoa hoặc hoàn tất khám.
                       </p>
@@ -456,7 +506,7 @@ export function DoctorWorkbench({
                     <section className={styles.card}>
                       <h2>Thông tin lâm sàng liên quan</h2>
                       <div className={styles.soft}>
-                        <small>LÝ DO KHÁM</small>
+                        <small>Lý do khám</small>
                         <p>{patient.chiefComplaint || "Chưa ghi nhận"}</p>
                       </div>
                       <DoctorVitals patient={patient} dossier={dossier.data} />
@@ -509,11 +559,12 @@ export function DoctorWorkbench({
                       </div>
                     </section>
                     <section className={styles.card}>
-                      <h2>Ghi chú lâm sàng cho chỉ định</h2>
+                      <h2>Ghi chú cho nơi thực hiện</h2>
                       <Input.TextArea
                         aria-label="Ghi chú chỉ định"
                         disabled={busy || !canWrite}
-                        rows={4}
+                        autoSize={{ minRows: 3, maxRows: 8 }}
+                        placeholder="Thông tin cần lưu ý khi thực hiện dịch vụ…"
                         value={orderNotes}
                         onChange={(event) => setOrderNotes(event.target.value)}
                       />
@@ -526,61 +577,6 @@ export function DoctorWorkbench({
                           Nghi ngờ có thai
                         </Checkbox>
                       </div>
-                    </section>
-                    <section className={styles.card}>
-                      <h2>
-                        Chỉ định đang tạo{" "}
-                        <span className={styles.pill}>{selectedOrders.length} dịch vụ</span>
-                      </h2>
-                      {selectedOrders.length ? (
-                        selectedOrders.map((code) => (
-                          <div className={styles.selectedOrder} key={code}>
-                            <span>
-                              {AVAILABLE_ORDERS.find((order) => order.code === code)?.name || code}
-                            </span>
-                            <Button
-                              type="text"
-                              disabled={busy || !canWrite}
-                              aria-label={`Bỏ dịch vụ ${code}`}
-                              onClick={() => {
-                                markDirty();
-                                setSelectedOrders((old) => old.filter((value) => value !== code));
-                              }}
-                            >
-                              ×
-                            </Button>
-                          </div>
-                        ))
-                      ) : (
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description="Chưa chọn dịch vụ"
-                        />
-                      )}
-                      <Button
-                        type="primary"
-                        block
-                        disabled={busy || !canWrite || !selectedOrders.length || !diagnosis.trim()}
-                        onClick={() => setOrderConfirm(true)}
-                      >
-                        Xác nhận gửi chỉ định
-                      </Button>
-                      {dag && (
-                        <Alert
-                          type="success"
-                          showIcon
-                          title="Đã gửi chỉ định cận lâm sàng"
-                          description={
-                            <div className={styles.tags}>
-                              {dag.sortedOrder.map((code, index) => (
-                                <Tag color="cyan" key={code}>
-                                  {index + 1}. {code}
-                                </Tag>
-                              ))}
-                            </div>
-                          }
-                        />
-                      )}
                     </section>
                   </>
                 )}
@@ -717,6 +713,10 @@ export function DoctorWorkbench({
                     </section>
                     <section className={styles.card}>
                       <h2>Toa thuốc điện tử</h2>
+                      <p className={styles.allergyNote}>
+                        <strong>Dị ứng đã ghi nhận: </strong>
+                        {dossier.data?.patient.allergies?.join(", ") || "Chưa có thông tin"}
+                      </p>
                       <Form.List name="items">
                         {(fields, { add, remove }) => (
                           <>

@@ -1,0 +1,270 @@
+.section {
+  width: 100%;
+  max-width: var(--layout-detail-max);
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-24);
+  min-width: 0;
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+}
+.heading > div {
+  min-width: 0;
+}
+.heading h1 {
+  font-size: var(--text-h1);
+  line-height: var(--leading-h1);
+  font-weight: 700;
+  margin-block: var(--space-4) var(--space-8);
+}
+.heading p {
+  color: var(--color-text-secondary);
+}
+.heading :global(.ant-btn) {
+  min-height: 44px;
+}
+.eyebrow {
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+  font-weight: 500;
+}
+.contextBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-20) var(--space-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.contextIcon,
+.visitIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: var(--radius-soft);
+  color: var(--color-primary);
+  background: var(--color-selected);
+}
+.contextIcon svg,
+.visitIcon svg {
+  width: 22px;
+  height: 22px;
+}
+.contextBar > div {
+  flex: 1;
+  min-width: 0;
+}
+.contextBar strong {
+  font-size: var(--text-body-patient);
+  font-weight: 600;
+}
+.contextBar p {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-staff);
+  margin-top: var(--space-4);
+}
+.total {
+  display: grid;
+  justify-items: end;
+  flex-shrink: 0;
+  font-size: var(--text-metric);
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+.total small {
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.list {
+  display: grid;
+  gap: var(--space-16);
+}
+.visitCard {
+  display: flex;
+  align-items: start;
+  gap: var(--space-20);
+  padding: var(--space-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.visitIcon {
+  background: var(--color-patient-highlight);
+}
+.visitBody {
+  flex: 1;
+  min-width: 0;
+}
+.visitHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+}
+.visitHeading h2 {
+  font-size: var(--text-h2);
+  font-weight: 700;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.status {
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-info-bg);
+  color: var(--color-info);
+  font-size: var(--text-meta);
+  font-weight: 600;
+}
+.status[data-tone="done"] {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.status[data-tone="stopped"] {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+.status[data-tone="warning"] {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.reason {
+  font-size: var(--text-body-patient);
+  margin-block: var(--space-12);
+  overflow-wrap: anywhere;
+}
+.metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-24);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-staff);
+}
+.metadata > span,
+.visitFooter time {
+  display: flex;
+  align-items: start;
+  gap: var(--space-8);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.metadata svg,
+.visitFooter svg {
+  width: 18px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.visitFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-12);
+  margin-top: var(--space-16);
+}
+.visitFooter time {
+  font-size: var(--text-body-staff);
+  color: var(--color-text-secondary);
+}
+.openLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-primary);
+  font-size: var(--text-body-staff);
+  font-weight: 600;
+}
+.openLink:hover {
+  text-decoration: underline;
+}
+.openLink:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  font-size: var(--text-body-staff);
+  color: var(--color-text-secondary);
+}
+.empty,
+.loading {
+  display: grid;
+  gap: var(--space-24);
+  justify-items: center;
+  padding: var(--space-32);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+.empty a {
+  color: var(--color-primary);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+@media (max-width: 767px) {
+  .heading h1 {
+    font-size: var(--text-h1-mobile);
+    line-height: var(--leading-h1-mobile);
+  }
+  .contextBar {
+    flex-wrap: wrap;
+    padding: var(--space-16);
+    gap: var(--space-12);
+  }
+  .contextIcon {
+    width: 40px;
+    height: 40px;
+  }
+  .contextBar > div {
+    flex-basis: calc(100% - 52px);
+  }
+  .total {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-8);
+    margin-left: 52px;
+    font-size: var(--text-h2);
+  }
+  .visitCard {
+    padding: var(--space-20);
+    gap: var(--space-12);
+  }
+  .visitIcon {
+    display: none;
+  }
+  .visitHeading {
+    align-items: start;
+  }
+  .metadata {
+    display: grid;
+    gap: var(--space-8);
+  }
+  .visitFooter {
+    align-items: start;
+  }
+  .visitFooter .openLink {
+    width: 100%;
+  }
+  .pagination {
+    justify-content: center;
+  }
+}

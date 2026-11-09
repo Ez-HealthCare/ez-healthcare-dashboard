@@ -96,7 +96,7 @@ test("all visit states have shared labels and exact patient record links", () =>
 
 test("patient UI uses the live queue contract without symptom self-declaration", async () => {
   const [patient, service] = await Promise.all([
-    read("components/patient/patient-dashboard.tsx"),
+    readPatientUI(),
     read("services/clinical.service.ts"),
   ]);
   assert.match(service, /visits\/hall-ticket/);
@@ -111,18 +111,15 @@ test("nurse triage endpoint passes the BFF and requires intake before assignment
   const [panel, service, patient] = await Promise.all([
     readStaffUI(),
     read("services/clinical.service.ts"),
-    read("components/patient/patient-dashboard.tsx"),
+    readPatientUI(),
   ]);
   assert.match(service, /visits\/triage\/queue/);
   assert.match(panel, /useClinicalData\(clinicalActions.triageQueue\)/);
   assert.doesNotMatch(panel, /clinicalActions.verify/);
   assert.match(panel, /disabled=\{!row.intakeCompleted\}/);
-  assert.match(
-    patient.replace(/\s+/g, " "),
-    /Vui lòng chờ điều dưỡng gọi vào phòng sàng lọc đo sinh hiệu/
-  );
-  assert.match(patient, /Vui lòng di chuyển đến trước cửa phòng khám/);
-  assert.match(patient, /visit.data.room.name/);
+  assert.match(patient.replace(/\s+/g, " "), /Điều dưỡng sẽ gọi bạn để đo sinh hiệu và sàng lọc/);
+  assert.match(patient, /Đến khu vực chờ trước phòng khám/);
+  assert.match(patient, /next.destination.name/);
 });
 
 test("NEWS2 preview covers incomplete inputs, risk thresholds, and red flags", () => {
@@ -257,7 +254,7 @@ test("nurse UI wires quick chips, F.A.S.T alert and suggestions scoped to the sa
 
 test("staff UI exposes intake, assignment, scheduled-room queue and examination start", async () => {
   const [panel, service] = await Promise.all([readStaffUI(), read("services/clinical.service.ts")]);
-  for (const label of ["Ghi thông tin bệnh", "Phân phòng", "Tiếp nhận khám"]) {
+  for (const label of ["Mở phiếu sàng lọc", "Bàn giao & phân phòng", "Tiếp nhận khám"]) {
     assert.match(panel, new RegExp(label));
   }
   for (const endpoint of ["/intake", "/assign-clinic", "/doctor/rooms", "/start-exam"]) {
@@ -330,7 +327,7 @@ test("doctor dossier, diagnostic results and specialty transfer preserve the bac
 test("Phase C presents structured clinical failures and expired-ticket recovery", async () => {
   const [messages, patient, staff, service] = await Promise.all([
     read("lib/clinical-error.ts"),
-    read("components/patient/patient-dashboard.tsx"),
+    readPatientUI(),
     readStaffUI(),
     read("services/clinical.service.ts"),
   ]);
@@ -383,3 +380,13 @@ test("doctor writes require the current doctor's identity and matching examinati
     false
   );
 });
+
+async function readPatientUI() {
+  return (
+    await Promise.all([
+      read("components/patient/patient-dashboard.tsx"),
+      read("components/patient/patient-journey.tsx"),
+      read("lib/patient-journey.ts"),
+    ])
+  ).join("\n");
+}

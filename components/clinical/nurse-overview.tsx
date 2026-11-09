@@ -29,7 +29,7 @@ export function PatientIdentity({ visit }: { visit: ReceptionVisit }) {
         </p>
       </div>
       <div className={styles.ticket}>
-        <small>SỐ TIẾP NHẬN</small>
+        <small>Số tiếp nhận</small>
         <strong>{visit.hallTicketNumber}</strong>
         <small>{visit.intakeCompleted ? "Đã sàng lọc" : "Chờ sàng lọc"}</small>
       </div>
@@ -126,10 +126,10 @@ export function NurseOverview({
     ) : (
       <div className={styles.actions}>
         <Button type="primary" loading={busy} onClick={() => onOpen(row)}>
-          Ghi thông tin bệnh
+          Mở phiếu sàng lọc
         </Button>
         <Button disabled={!row.intakeCompleted} onClick={() => onAssign(row)}>
-          Phân phòng
+          Bàn giao & phân phòng
         </Button>
         {row.clinicTicketNumber && (
           <Button
@@ -243,26 +243,32 @@ export function NurseOverview({
           ↻ Làm mới
         </Button>
       </div>
-      {queuePage && (
+      {
         <div className={styles.metrics}>
           {[
-            ["ĐANG CHỜ", pending.length, "bệnh nhân"],
-            ["ĐÃ ĐO SINH HIỆU", rows.filter((row) => row.intakeCompleted).length, "bệnh nhân"],
-            ["ƯU TIÊN", rows.filter((row) => row.isPriority).length, "bệnh nhân"],
+            ["Đang chờ", pending.length, "bệnh nhân", "waiting"],
             [
-              "CHUYỂN CẤP CỨU",
+              "Đã đo sinh hiệu",
+              rows.filter((row) => row.intakeCompleted).length,
+              "bệnh nhân",
+              "done",
+            ],
+            ["Ưu tiên", rows.filter((row) => row.isPriority).length, "bệnh nhân", "priority"],
+            [
+              "Chuyển cấp cứu",
               rows.filter((row) => row.status === "EMERGENCY_DISPATCHED").length,
               "bệnh nhân",
+              "emergency",
             ],
-          ].map(([label, value, unit]) => (
-            <div className={styles.card} key={label}>
+          ].map(([label, value, unit, tone]) => (
+            <div className={styles.card} key={label} data-tone={tone}>
               <small>{label}</small>
               <strong>{value}</strong>
               <small>{unit}</small>
             </div>
           ))}
         </div>
-      )}
+      }
       <div className={queuePage ? styles.queueLayout : styles.dashboardGrid}>
         <section className={styles.stack} aria-label="Hàng đợi sàng lọc">
           <div className={styles.card}>
@@ -293,7 +299,7 @@ export function NurseOverview({
               <>
                 <div className={styles.card}>
                   <div className={styles.cardHeading}>
-                    <span className={styles.eyebrow}>● BỆNH NHÂN TẠI BUỒNG SÀNG LỌC</span>
+                    <span className={styles.eyebrow}>Bệnh nhân đang chọn</span>
                     <span className={styles.pill}>Phòng 102</span>
                   </div>
                   <PatientIdentity visit={active} />
@@ -303,9 +309,22 @@ export function NurseOverview({
                   </p>
                 </div>
                 <div className={styles.card}>
+                  <h2>
+                    <NurseIcon name="43-310-imgContainer" width={20} height={15} />
+                    Dấu hiệu sinh tồn ban đầu
+                  </h2>
+                  <VitalSummary values={intakes[active.visitId]} />
+                  <p className={styles.muted}>
+                    {intakes[active.visitId]?.notes ||
+                      (active.intakeCompleted
+                        ? "Sinh hiệu đã lưu trên hệ thống. Mở phiếu để ghi nhận số đo mới."
+                        : "Chưa nhập số đo. Mở phiếu sàng lọc để bắt đầu.")}
+                  </p>
+                </div>
+                <div className={styles.card}>
                   <h2>Triệu chứng bệnh nhân đã khai</h2>
                   <div className={styles.soft}>
-                    <small>LÝ DO KHÁM CHÍNH</small>
+                    <small>Lý do khám chính</small>
                     <h3>{active.chiefComplaint || "Chưa ghi nhận"}</h3>
                   </div>
                   <div className={styles.tags}>
@@ -322,19 +341,16 @@ export function NurseOverview({
                   </p>
                 </div>
                 <div className={styles.card}>
-                  <h2>
-                    <NurseIcon name="43-310-imgContainer" width={20} height={15} />
-                    Dấu hiệu sinh tồn ban đầu
-                  </h2>
-                  <VitalSummary values={intakes[active.visitId]} />
+                  <h2>Bàn giao sau sàng lọc</h2>
                   <p className={styles.muted}>
-                    {intakes[active.visitId]?.notes ||
-                      (active.intakeCompleted
-                        ? "Sinh hiệu đã lưu trên hệ thống. Mở phiếu để ghi nhận số đo mới."
-                        : "Chưa nhập số đo. Mở phiếu sàng lọc để bắt đầu.")}
+                    {active.status === "EMERGENCY_DISPATCHED"
+                      ? "Đã chuyển luồng cấp cứu. Không phân phòng khám thường."
+                      : active.intakeCompleted
+                        ? "Đã lưu sàng lọc. Chọn chuyên khoa và xác nhận phòng tiếp nhận."
+                        : "Ghi nhận và lưu sinh hiệu trước khi bàn giao đến phòng khám."}
                   </p>
+                  {actions(active)}
                 </div>
-                <div className={styles.card}>{actions(active)}</div>
               </>
             ) : (
               <div className={styles.card}>
@@ -350,7 +366,7 @@ export function NurseOverview({
               <span className={styles.pill}>Điều dưỡng</span>
             </div>
             <div className={styles.soft}>
-              <small>HÀNG ĐỢI HIỆN TẠI</small>
+              <small>Hàng đợi hiện tại</small>
               <h3>{pending.length} bệnh nhân chờ sàng lọc</h3>
             </div>
             <p className={styles.muted}>Dữ liệu được cập nhật tự động mỗi 5 giây.</p>

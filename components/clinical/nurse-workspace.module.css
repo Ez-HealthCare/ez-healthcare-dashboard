@@ -269,7 +269,7 @@
   align-items: center;
   gap: var(--space-8);
   margin: 0 0 var(--space-16);
-  font: 700 16px/22px var(--font-display);
+  font: 700 var(--text-h2)/1.4 var(--font-display);
 }
 .card h3 {
   margin: var(--space-4) 0;
@@ -304,7 +304,7 @@
   color: var(--primary);
   font-size: var(--text-meta);
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: normal;
 }
 .filters {
   display: grid;
@@ -385,7 +385,7 @@
 }
 .queueNumber {
   flex-shrink: 0;
-  font: 800 22px/28px var(--font-display);
+  font: 700 22px/28px var(--font-display);
   color: var(--primary);
 }
 .queueCard p {
@@ -451,7 +451,7 @@
   font-size: var(--text-meta);
 }
 .ticket strong {
-  font: 800 var(--text-metric)/var(--leading-metric) var(--font-display);
+  font: 700 var(--text-metric)/var(--leading-metric) var(--font-display);
   white-space: nowrap;
 }
 .dashboardGrid .identity {
@@ -654,7 +654,7 @@
   width: 100%;
   background: var(--color-surface);
   border-color: transparent;
-  font: 700 22px/30px var(--font-display);
+  font: 700 var(--text-vital)/1.4 var(--font-body);
 }
 .vitalFields :global(.ant-input-number-input) {
   height: 40px;
@@ -848,4 +848,195 @@
 .card {
   box-shadow: var(--shadow-card);
   border-radius: var(--radius-card);
+}
+
+/* Clinic workspace: queue and patient sheet share the main canvas. */
+.dashboardGrid {
+  grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.65fr);
+  gap: var(--space-20);
+}
+.dashboardGrid > aside {
+  grid-column: 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.dashboardGrid > aside > :first-child {
+  display: none;
+}
+.dashboardGrid > section:first-child {
+  grid-row: 1 / 3;
+  padding: var(--space-16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.dashboardGrid > section:first-child > .card {
+  padding: 0;
+  box-shadow: none;
+}
+.queueCard {
+  border: 1px solid var(--color-border);
+  border-left-width: 3px;
+  padding: var(--space-12);
+}
+.activeQueue {
+  border-color: var(--primary);
+  background: var(--color-brand-tint);
+}
+.urgentQueue {
+  border-color: var(--color-error);
+}
+.queueNumber {
+  font-size: 18px;
+}
+.queueCard .tags {
+  gap: var(--space-4);
+  margin: var(--space-8) 0;
+}
+.queueCard p {
+  margin: var(--space-8) 0;
+}
+.queueCard button {
+  min-height: 44px;
+}
+.pageHeading h1 {
+  font-size: 26px;
+  letter-spacing: -0.5px;
+}
+.metrics {
+  gap: var(--space-16);
+  margin-bottom: var(--space-20);
+}
+.metrics .card {
+  border: 1px solid var(--color-border);
+  padding: var(--space-16);
+}
+.metrics strong {
+  font-size: 26px;
+  margin-top: var(--space-4);
+}
+.card {
+  border: 1px solid var(--color-border);
+  padding: var(--space-20);
+}
+.card .actions {
+  margin-top: var(--space-16);
+}
+.card .actions button {
+  min-height: 44px;
+}
+.vitalSummary > div {
+  border: 1px solid var(--color-border);
+}
+.formColumns {
+  grid-template-columns: minmax(0, 2.3fr) minmax(250px, 1fr);
+  gap: var(--space-20);
+}
+.vitalFields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.vitalFields :global(.ant-input-number-input) {
+  height: 44px;
+}
+.measurementCard {
+  border: 1px solid var(--color-border);
+}
+.samples summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px;
+  padding-block: var(--space-8);
+}
+.formActions button {
+  min-height: 44px;
+}
+@media (max-width: 1000px) {
+  .dashboardGrid {
+    grid-template-columns: minmax(270px, 0.9fr) minmax(0, 1.4fr);
+  }
+  .vitalSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dashboardGrid > aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .formColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .dashboardGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboardGrid > section:first-child {
+    grid-row: auto;
+  }
+  .dashboardGrid > aside {
+    grid-column: auto;
+  }
+  .pageHeading h1 {
+    font-size: 22px;
+  }
+}
+@media (max-width: 479px) {
+  .vitalFields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Match the shared staff typography used by Reception and Doctor. */
+.pageHeading,
+.card,
+.queueCard,
+.safety,
+.formPage,
+.completion {
+  font-family: var(--font-body);
+}
+.pageHeading p,
+.card p,
+.safety p {
+  font-size: var(--text-body-staff);
+  line-height: var(--leading-body-staff);
+}
+.segmented button {
+  font-family: inherit;
+  font-weight: 500;
+  line-height: var(--leading-body-staff);
+}
+.metrics small {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.metrics .card > small:first-child {
+  font-weight: 600;
+}
+.metrics .card > small:last-child {
+  font-weight: 400;
+}
+.queueCard p,
+.card p.muted,
+.identity p {
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+}
+.eyebrow {
+  font-weight: 600;
+}
+.vitalSummary strong {
+  font-size: var(--text-vital);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Use the same semantic metric colors as Reception. */
+.metrics [data-tone="waiting"] strong {
+  color: var(--color-primary);
+}
+.metrics [data-tone="done"] strong {
+  color: var(--color-info);
+}
+.metrics [data-tone="priority"] strong {
+  color: var(--color-warning);
+}
+.metrics [data-tone="emergency"] strong {
+  color: var(--color-error);
 }

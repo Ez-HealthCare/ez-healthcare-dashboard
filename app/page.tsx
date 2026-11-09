@@ -87,7 +87,7 @@ export default function LoginPage() {
                 <span className={styles.emrBadge}>EMR</span>
               </div>
 
-              <h1 className={styles.leftHeading}>Chủ động hành trình khám của bạn.</h1>
+              <h2 className={styles.leftHeading}>Chủ động hành trình khám của bạn.</h2>
               <p className={styles.leftSubheading}>
                 Theo dõi lượt khám, số thứ tự và hồ sơ sức khỏe trong một nơi tập trung và minh
                 bạch.
@@ -163,7 +163,7 @@ export default function LoginPage() {
           {/* Right Login Card Panel */}
           <section className={styles.rightPanel} aria-label="Đăng nhập tài khoản">
             <div className={styles.loginCard}>
-              <h2 className={styles.loginCardTitle}>Chào mừng trở lại</h2>
+              <h1 className={styles.loginCardTitle}>Chào mừng trở lại</h1>
               <p className={styles.loginCardSubtitle}>
                 Đăng nhập để tiếp tục hành trình khám của bạn.
               </p>
@@ -206,6 +206,7 @@ export default function LoginPage() {
               <Form<LoginFormValues>
                 form={form}
                 layout="vertical"
+                scrollToFirstError={{ focus: true }}
                 onFinish={submit}
                 requiredMark={false}
                 initialValues={{ remember: false }}
@@ -307,12 +308,13 @@ export default function LoginPage() {
                     >
                       <Input
                         id="login_otp"
+                        autoFocus
                         inputMode="numeric"
                         autoComplete="one-time-code"
                         maxLength={OTP_LENGTH}
                         placeholder={`Nhập ${OTP_LENGTH} chữ số`}
                         size="large"
-                        className={styles.inputCustom}
+                        className={`${styles.inputCustom} ${styles.otpInput}`}
                         disabled={loading}
                       />
                     </Form.Item>
@@ -383,12 +385,14 @@ export default function LoginPage() {
               </Form>
 
               {/* Guidance under Submit */}
-              <div className={styles.registerGuidance}>
-                <p className={styles.registerGuidanceTitle}>Chưa có tài khoản bệnh nhân?</p>
-                <p className={styles.registerGuidanceDesc}>
-                  Dùng email và mã OTP để đăng nhập hoặc tạo tài khoản bệnh nhân.
-                </p>
-              </div>
+              {mode === "patient" && !otpEmail && (
+                <div className={styles.registerGuidance}>
+                  <p className={styles.registerGuidanceTitle}>Chưa có tài khoản bệnh nhân?</p>
+                  <p className={styles.registerGuidanceDesc}>
+                    Dùng email và mã OTP để đăng nhập hoặc tạo tài khoản bệnh nhân.
+                  </p>
+                </div>
+              )}
 
               {/* Support / Hotline Box */}
               <div className={styles.supportBox}>
@@ -405,10 +409,6 @@ export default function LoginPage() {
                 </a>
               </div>
             </div>
-
-            <p className={styles.rightDisclaimer}>
-              © 2025 MediRoute EMR. Bảo mật thông tin người bệnh theo quy định Y tế.
-            </p>
           </section>
         </div>
       </main>
