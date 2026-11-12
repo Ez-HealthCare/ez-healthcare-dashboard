@@ -6,6 +6,7 @@ import { formatDate, formatDateTime } from "@/lib/display-format";
 import { visitStatusLabel } from "@/lib/visit-status";
 import type { VisitDossier } from "@/lib/types/doctor";
 import { RecordIdentifier } from "./record-identifier";
+import { PatientRefreshButton } from "../patient/patient-refresh-button";
 import { PatientIcon } from "../patient/patient-icon";
 import styles from "./visit-record.module.css";
 export function ReadOnlyVisitRecord({
@@ -43,15 +44,29 @@ export function ReadOnlyVisitRecord({
               : "Thông tin lượt khám và các bước được ghi nhận trong hồ sơ của bạn."}
           </p>
         </div>
-        <Button onClick={() => void dossier.refresh()}>Làm mới hồ sơ</Button>
+        {patientView ? (
+          <PatientRefreshButton onRefresh={dossier.refresh}>Làm mới hồ sơ</PatientRefreshButton>
+        ) : (
+          <Button onClick={() => void dossier.refresh()}>Làm mới hồ sơ</Button>
+        )}
       </div>
       {dossier.error && (
         <Alert
-          type="error"
+          type={data ? "warning" : "error"}
           showIcon
-          title="Không mở được hồ sơ"
-          description={dossier.error}
-          action={<Button onClick={() => void dossier.refresh()}>Thử lại</Button>}
+          title={data ? "Hồ sơ chưa được cập nhật" : "Không mở được hồ sơ"}
+          description={
+            data
+              ? `Đang hiển thị dữ liệu đã tải${dossier.lastUpdatedAt ? " lúc " + formatDateTime(dossier.lastUpdatedAt) : " trước đó"}. Chưa thể lấy thông tin mới nhất; vui lòng thử lại.`
+              : "Chưa thể tải hồ sơ. Vui lòng thử lại sau ít phút hoặc liên hệ cơ sở y tế nếu vấn đề tiếp diễn."
+          }
+          action={
+            patientView ? (
+              <PatientRefreshButton onRefresh={dossier.refresh}>Thử lại</PatientRefreshButton>
+            ) : (
+              <Button onClick={() => void dossier.refresh()}>Thử lại</Button>
+            )
+          }
         />
       )}
       {dossier.loading && !data ? <Skeleton active /> : null}
@@ -143,7 +158,7 @@ export function ReadOnlyVisitRecord({
                     </p>
                     {prescription.notes && (
                       <>
-                        <h4>Ghi nhận & Lời dặn của bác sĩ</h4>
+                        <h3>Ghi nhận & Lời dặn của bác sĩ</h3>
                         <p className={styles.preformatted}>{prescription.notes}</p>
                       </>
                     )}
@@ -163,9 +178,9 @@ export function ReadOnlyVisitRecord({
                       <ol className={styles.medications}>
                         {prescription.items.map((item, index) => (
                           <li key={index}>
-                            <h4>
+                            <h3>
                               {index + 1}. {item.medicationName}
-                            </h4>
+                            </h3>
                             <dl className={styles.details}>
                               <div>
                                 <dt>Hàm lượng / Liều dùng</dt>

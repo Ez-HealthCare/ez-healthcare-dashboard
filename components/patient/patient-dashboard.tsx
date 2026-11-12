@@ -1,43 +1,55 @@
 "use client";
 
-import { formatDateTime } from "@/lib/display-format";
-
-import { useRef, useState } from "react";
-import { clinicalErrorMessage } from "@/lib/clinical-error";
+import { useEffect, useRef, useState } from "react";
 import { PATIENT_THEME } from "@/lib/constants/theme";
 import Image from "next/image";
 import Link from "next/link";
-import { Alert, Button, ConfigProvider, List, Popover, message } from "antd";
+import { Alert, Button, ConfigProvider, Popover } from "antd";
 import { PatientRecords } from "./patient-records";
+import { PatientNotifications } from "./patient-notifications";
 import { PatientIcon } from "./patient-icon";
-import { patientRecordLink } from "@/lib/visit-status";
 import { LogoutButton } from "@/components/auth/auth-gate";
 import { WorkspaceAccessDenied } from "@/components/auth/workspace-state";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { useIdentity } from "@/hooks/use-auth-session";
 import { PATIENT_NAVIGATION, ROUTES } from "@/lib/constants/routes";
 import styles from "./patient-dashboard.module.css";
+import { useReceptionLive } from "@/hooks/use-reception-live";
 import { PatientVisitFlow } from "./patient-journey";
 import { PatientProfilePage } from "./patient-profile";
 import { ReceptionRequestFormPage } from "./reception-request-form";
 
 export function PatientDashboard({ tab }: { tab: string }) {
   const user = useIdentity();
-  const visit = useClinicalData(clinicalActions.currentVisit);
+  const visit = useClinicalData(clinicalActions.currentVisit, 5_000, true);
+  useReceptionLive(user.role === "PATIENT", visit.refresh);
   const receptionRequest = useClinicalData(clinicalActions.currentReceptionRequest, 8_000);
-  const notifications = useClinicalData(clinicalActions.notifications, 8_000);
-  const [, context] = message.useMessage();
-  const readLock = useRef(false);
-  const [readBusy, setReadBusy] = useState(false);
-  const [readError, setReadError] = useState("");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const accountTrigger = useRef<HTMLButtonElement>(null);
+  const accountLink = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    if (!accountOpen) return;
+    const frame = requestAnimationFrame(() => accountLink.current?.focus());
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setAccountOpen(false);
+        accountTrigger.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", close);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", close);
+    };
+  }, [accountOpen]);
   if (user.role !== "PATIENT") return <WorkspaceAccessDenied />;
   const name = user.name || user.email;
 
   return (
     <ConfigProvider theme={PATIENT_THEME}>
       <div className={styles.page} data-workspace="patient">
-        {context}
         <a href="#patient-content" className={styles.skipLink}>
           Bỏ qua điều hướng
         </a>
@@ -47,9 +59,7 @@ export function PatientDashboard({ tab }: { tab: string }) {
               <span className={styles.logo}>
                 <Image src="/login/brand-mark.svg" alt="" width={18} height={18} />
               </span>
-              <span>
-                MediRoute<small>EMR PORTAL</small>
-              </span>
+              <span>ezHealthcare</span>
             </Link>
             <nav className={styles.navigation} aria-label="Điều hướng bệnh nhân">
               {PATIENT_NAVIGATION.map(([key, label]) => (
@@ -58,45 +68,76 @@ export function PatientDashboard({ tab }: { tab: string }) {
                   href={ROUTES.PATIENT + (key ? "/" + key : "")}
                   aria-current={tab === key ? "page" : undefined}
                 >
-                  {label}
+                  <PatientIcon
+                    name={key === "records" ? "records" : key === "visits" ? "map" : "building"}
+                  />
+                  {key === "visits" ? "Lượt khám" : key === "records" ? "Hồ sơ" : label}
                 </Link>
               ))}
             </nav>
             <div className={styles.headerActions}>
-              <Link
-                href={`${ROUTES.PATIENT}#notifications`}
-                className={styles.iconButton}
-                aria-label="Thông báo"
-              >
-                <PatientIcon name="bell" />
-                {(notifications.data || []).some((item) => !item.readAt) && (
-                  <span className={styles.unreadDot} />
-                )}
-              </Link>
+              <PatientNotifications
+                open={notificationsOpen}
+                onOpenChange={(open) => {
+                  setNotificationsOpen(open);
+                  if (open) setAccountOpen(false);
+                }}
+              />
               <Popover
                 open={accountOpen}
-                onOpenChange={setAccountOpen}
+                onOpenChange={(open) => {
+                  setAccountOpen(open);
+                  if (open) setNotificationsOpen(false);
+                }}
+                classNames={{ root: styles.accountPopover }}
+                getPopupContainer={(trigger) => trigger.parentElement!}
                 trigger="click"
                 placement="bottomRight"
                 content={
-                  <div className={styles.account} id="patient-account-menu">
-                    <strong>{name}</strong>
-                    <p>{user.email}</p>
-                    <p data-testid="identity-role">Bệnh nhân</p>
+                  <div
+                    className={styles.account}
+                    id="patient-account-menu"
+                    role="dialog"
+                    aria-label="Thông tin tài khoản"
+                    onBlur={(event) => {
+                      if (
+                        event.relatedTarget &&
+                        !event.currentTarget.contains(event.relatedTarget as Node)
+                      )
+                        setAccountOpen(false);
+                    }}
+                  >
+                    <div className={styles.accountIdentity}>
+                      <span className={styles.accountAvatar} aria-hidden="true">
+                        {name[0]?.toUpperCase()}
+                      </span>
+                      <div className={styles.accountDetails}>
+                        <strong>{name}</strong>
+                        <p>{user.email}</p>
+                        <span className={styles.accountRole} data-testid="identity-role">
+                          Bệnh nhân
+                        </span>
+                      </div>
+                    </div>
                     <Link
                       href={ROUTES.PATIENT_PROFILE}
+                      ref={accountLink}
                       className={styles.accountLink}
                       onClick={() => setAccountOpen(false)}
                     >
                       <PatientIcon name="user" />
                       Hồ sơ cá nhân
                     </Link>
-                    <LogoutButton />
+                    <div className={styles.accountLogout}>
+                      <LogoutButton />
+                    </div>
                   </div>
                 }
               >
                 <button
+                  ref={accountTrigger}
                   className={styles.profile}
+                  aria-haspopup="dialog"
                   aria-label="Tài khoản bệnh nhân"
                   aria-expanded={accountOpen}
                   aria-controls={accountOpen ? "patient-account-menu" : undefined}
@@ -151,24 +192,6 @@ export function PatientDashboard({ tab }: { tab: string }) {
             <PatientRecords key={tab} completedOnly={tab === "records"} />
           ) : (
             <>
-              {!visit.data && receptionRequest.data?.status === "RECEPTION_PENDING" && (
-                <Alert
-                  type="info"
-                  showIcon
-                  title="Yêu cầu tiếp nhận đang chờ duyệt"
-                  description="Lễ tân sẽ kiểm tra yêu cầu và cấp số tiếp nhận. Sau khi có số, vui lòng chờ gọi đến quầy để đối chiếu CCCD/BHYT."
-                />
-              )}
-              {!visit.data && receptionRequest.data?.status === "DRAFT" && (
-                <Alert
-                  type="warning"
-                  showIcon
-                  title="Bạn có yêu cầu tiếp nhận chưa gửi"
-                  description={
-                    <Link href={ROUTES.PATIENT_RECEPTION_REQUEST}>Tiếp tục khai triệu chứng</Link>
-                  }
-                />
-              )}
               {visit.error && visit.data && (
                 <Alert
                   type="error"
@@ -184,85 +207,13 @@ export function PatientDashboard({ tab }: { tab: string }) {
                 loading={visit.loading}
                 error={visit.error}
                 requestStatus={receptionRequest.data?.status}
-                onRefresh={visit.refresh}
-              >
-                <section className={styles.card} id="notifications">
-                  <div className={styles.sectionHeading}>
-                    <h2>Thông báo</h2>
-                    <button
-                      className={styles.textButton}
-                      disabled={
-                        readBusy || !(notifications.data || []).some((item) => !item.readAt)
-                      }
-                      onClick={async () => {
-                        if (readLock.current) return;
-                        readLock.current = true;
-                        setReadBusy(true);
-                        setReadError("");
-                        try {
-                          await clinicalActions.markAllRead();
-                          await notifications.refresh();
-                        } catch (error) {
-                          setReadError(clinicalErrorMessage(error));
-                        } finally {
-                          readLock.current = false;
-                          setReadBusy(false);
-                        }
-                      }}
-                    >
-                      {readBusy ? "Đang đánh dấu…" : "Đánh dấu đã đọc"}
-                    </button>
-                  </div>
-                  {(readError || notifications.error) && (
-                    <Alert
-                      type="error"
-                      showIcon
-                      title="Chưa cập nhật được thông báo"
-                      description={readError || notifications.error}
-                      action={
-                        <Button onClick={() => void notifications.refresh()}>
-                          Thử lại tải danh sách
-                        </Button>
-                      }
-                    />
-                  )}
-                  <List
-                    pagination={{ pageSize: 4, hideOnSinglePage: true, size: "small" }}
-                    loading={notifications.loading}
-                    dataSource={notifications.data || []}
-                    locale={{ emptyText: "Chưa có thông báo" }}
-                    renderItem={(item) => (
-                      <List.Item>
-                        <List.Item.Meta
-                          title={
-                            <span>
-                              {item.title} · {item.readAt ? "Đã đọc" : "Chưa đọc"}
-                            </span>
-                          }
-                          description={
-                            <div className={styles.notificationContent}>
-                              <p>{item.message}</p>
-                              <time dateTime={item.createdAt}>
-                                {formatDateTime(item.createdAt)}
-                              </time>
-                              {item.visitId && (
-                                <Link
-                                  className={styles.textButton}
-                                  href={patientRecordLink(item.visitId)}
-                                >
-                                  {item.type === "VISIT_COMPLETED"
-                                    ? "Xem kết luận & Đơn thuốc"
-                                    : "Xem lượt khám liên quan"}
-                                </Link>
-                              )}
-                            </div>
-                          }
-                        />
-                      </List.Item>
-                    )}
-                  />
-                </section>
-              </PatientVisitFlow>
+                requestLoading={receptionRequest.loading}
+                requestError={receptionRequest.error}
+                onRefresh={async () => {
+                  await Promise.all([visit.refresh(), receptionRequest.refresh()]);
+                }}
+                patientName={name}
+              />
               <section className={styles.quickLinks} aria-label="Truy cập nhanh">
                 <Link href={`${ROUTES.PATIENT}/visits`}>
                   <span className={styles.quickIcon}>
@@ -300,7 +251,7 @@ export function PatientDashboard({ tab }: { tab: string }) {
         </main>
         <footer className={styles.footer}>
           <div data-layout="container" data-part="footer">
-            © {new Date().getFullYear()} MediRoute EMR · Cổng bệnh nhân
+            © {new Date().getFullYear()} ezHealthcare · Cổng bệnh nhân
           </div>
         </footer>
       </div>

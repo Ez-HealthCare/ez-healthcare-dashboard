@@ -17,6 +17,7 @@ import Image from "next/image";
 import { Alert, Button, Empty, Input, Popconfirm, Select, Skeleton, Tag, message } from "antd";
 import { StaffWorkspaceShell } from "@/components/layout/staff-workspace-shell";
 import { useIdentity } from "@/hooks/use-auth-session";
+import { useReceptionLive } from "@/hooks/use-reception-live";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
 import type { ClinicQueueItem } from "@/lib/types/clinical";
@@ -101,6 +102,7 @@ function DoctorRoom({ room, section }: { room: { code: string; name: string }; s
   const router = useRouter();
   const user = useIdentity();
   const queue = useClinicalData(() => clinicalActions.roomQueue(room.code));
+  useReceptionLive(true, queue.refresh);
   const params = useSearchParams();
   const requestedVisit = params.get("visitId") || "";
   const [activeId, setActiveId] = useState(requestedVisit);
@@ -453,7 +455,9 @@ function DoctorRoom({ room, section }: { room: { code: string; name: string }; s
                       </button>
                       <div className={styles.tags}>
                         <Tag color={row.status === "IN_EXAMINATION" ? "cyan" : undefined}>
-                          {DOCTOR_STATUS[row.status] || row.status}
+                          {row.status === "CLINIC_WAITING" && row.clinicArrivedAt === null
+                            ? "Đang di chuyển"
+                            : DOCTOR_STATUS[row.status] || row.status}
                         </Tag>
                         {row.isPriority && (
                           <Tag color="gold">{row.priorityReason || "Ưu tiên"}</Tag>

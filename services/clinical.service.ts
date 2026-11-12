@@ -9,6 +9,7 @@ import type {
 import type {
   ClinicQueue,
   CurrentVisit,
+  VisitStatus,
   Department,
   IntakeInput,
   PatientProfile,
@@ -16,6 +17,8 @@ import type {
   ReceptionRequestDraft,
   UpdatePatientProfileInput,
   NotificationItem,
+  NotificationFilter,
+  NotificationPage,
   AppointmentCheckInResult,
   AppointmentStatus,
   ReceptionAppointment,
@@ -36,10 +39,14 @@ export const clinicalService = {
       .then((r) => r.data),
   doctorHistoryDetail: (visitId: string) =>
     http.get<VisitDossier>(path(`visits/doctor/history/${visitId}`)).then((r) => r.data),
-  patientHistory: (page = 1, completedOnly = false) =>
+  patientHistory: (page = 1, completedOnly = false, status?: VisitStatus) =>
     http
       .get<PatientVisitHistory>(path("visits/me/history"), {
-        params: { page, pageSize: 10, ...(completedOnly ? { status: "COMPLETED" } : {}) },
+        params: {
+          page,
+          pageSize: 10,
+          ...(completedOnly ? { status: "COMPLETED" } : status ? { status } : {}),
+        },
       })
       .then((r) => r.data),
   currentReceptionRequest: () =>
@@ -70,9 +77,20 @@ export const clinicalService = {
       )
       .then((r) => r.data),
   currentVisit: () => http.get<CurrentVisit | null>(path("visits/me/current")).then((r) => r.data),
-  requestHallTicket: () =>
+  confirmStageArrival: (id: string, station: "triage" | "clinic", ticketNumber?: string) =>
+    http.post(path("visits/" + id + "/station-arrival/" + station), undefined, {
+      params: { ticketNumber },
+    }),
+  startTriage: (id: string) => http.post(path("visits/" + id + "/triage/start")),
+  receptionLiveGrant: () =>
+    http.post<{ token: string }>(path("visits/me/reception-live")).then((r) => r.data),
+  requestHallTicket: (idempotencyKey?: string) =>
     http
-      .post<CurrentVisit>(path("visits/hall-ticket"), {}, { headers: { "Idempotency-Key": key() } })
+      .post<CurrentVisit>(
+        path("visits/hall-ticket"),
+        {},
+        { headers: { "Idempotency-Key": idempotencyKey || key() } }
+      )
       .then((r) => r.data),
   reissueHallTicket: (visitId: string) =>
     http
@@ -233,5 +251,12 @@ export const clinicalService = {
     }
   ) => http.post(path(`visits/${visitId}/conclusion`), data).then((r) => r.data),
   notifications: () => http.get<NotificationItem[]>(path("notifications")).then((r) => r.data),
+  notificationPage: (
+    params: { filter?: NotificationFilter; cursor?: string; limit?: number },
+    signal?: AbortSignal
+  ) =>
+    http.get<NotificationPage>(path("notifications/page"), { params, signal }).then((r) => r.data),
   markAllRead: () => http.patch(path("notifications/read-all")).then((r) => r.data),
+  markNotificationRead: (id: string) =>
+    http.patch(path(`notifications/${encodeURIComponent(id)}/read`)).then((r) => r.data),
 };

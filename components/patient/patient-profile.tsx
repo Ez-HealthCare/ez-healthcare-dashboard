@@ -49,6 +49,9 @@ function ProfileForm({
     try {
       await clinicalActions.updateMyProfile({
         ...values,
+        name: values.name.trim(),
+        phone: values.phone.trim(),
+        nationalId: values.nationalId.trim(),
         allergies: values.allergies || [],
         insuranceCardNumber: values.insuranceCardNumber || undefined,
       });
@@ -143,16 +146,47 @@ function ProfileForm({
               <h3>Nhân thân & Liên hệ</h3>
               <p>Các trường có dấu * là bắt buộc.</p>
             </div>
-            <Form.Item label="Họ và tên" name="name" rules={[{ required: true }]}>
-              <Input />
+            <Form.Item
+              label="Họ và tên"
+              name="name"
+              rules={[
+                { required: true, whitespace: true, message: "Vui lòng nhập họ và tên." },
+                { max: 255, message: "Họ và tên tối đa 255 ký tự." },
+              ]}
+            >
+              <Input autoComplete="name" maxLength={255} />
             </Form.Item>
             <Form.Item
               label="Ngày sinh"
               name="dateOfBirth"
-              rules={[{ required: true }]}
+              rules={[
+                { required: true, message: "Vui lòng chọn ngày sinh." },
+                {
+                  validator: (_, value) =>
+                    !value ||
+                    value.slice(0, 10) <=
+                      new Intl.DateTimeFormat("en-CA", {
+                        timeZone: "Asia/Ho_Chi_Minh",
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      }).format(new Date())
+                      ? Promise.resolve()
+                      : Promise.reject(new Error("Ngày sinh không được ở tương lai.")),
+                },
+              ]}
               extra={`Ngày đã chọn: ${formatDate(dateOfBirth)}`}
             >
-              <Input type="date" />
+              <Input
+                type="date"
+                autoComplete="bday"
+                max={new Intl.DateTimeFormat("en-CA", {
+                  timeZone: "Asia/Ho_Chi_Minh",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                }).format(new Date())}
+              />
             </Form.Item>
             <Form.Item label="Giới tính" name="gender" rules={[{ required: true }]}>
               <Select
@@ -163,18 +197,50 @@ function ProfileForm({
                 ]}
               />
             </Form.Item>
-            <Form.Item label="Số điện thoại" name="phone" rules={[{ required: true }]}>
-              <Input inputMode="tel" />
+            <Form.Item
+              label="Số điện thoại"
+              name="phone"
+              rules={[
+                { required: true, message: "Vui lòng nhập số điện thoại." },
+                {
+                  pattern: /^[0-9+()\-\s]{8,30}$/,
+                  message:
+                    "Nhập số điện thoại từ 8–30 ký tự, chỉ gồm số, +, dấu ngoặc, dấu gạch nối hoặc khoảng trắng.",
+                },
+                {
+                  validator: (_, value) =>
+                    !value || value.replace(/\D/g, "").length >= 8
+                      ? Promise.resolve()
+                      : Promise.reject(new Error("Số điện thoại cần có ít nhất 8 chữ số.")),
+                },
+              ]}
+            >
+              <Input type="tel" autoComplete="tel" maxLength={30} />
             </Form.Item>
             <div className={styles.groupHeading}>
               <h3>Giấy tờ tiếp nhận</h3>
               <p>Đối chiếu thông tin với CCCD và thẻ BHYT của bạn.</p>
             </div>
-            <Form.Item label="CCCD" name="nationalId" rules={[{ required: true }]}>
-              <Input inputMode="numeric" />
+            <Form.Item
+              label="CCCD"
+              name="nationalId"
+              rules={[
+                { required: true, message: "Vui lòng nhập số giấy tờ tùy thân." },
+                {
+                  pattern: /^\d{9,20}$/,
+                  message: "Số giấy tờ cần gồm 9–20 chữ số, theo định dạng hệ thống hỗ trợ.",
+                },
+              ]}
+              extra="Nhập đúng số trên giấy tờ dùng khi tiếp nhận."
+            >
+              <Input inputMode="numeric" maxLength={20} />
             </Form.Item>
-            <Form.Item label="Số thẻ BHYT" name="insuranceCardNumber">
-              <Input />
+            <Form.Item
+              label="Số thẻ BHYT"
+              name="insuranceCardNumber"
+              rules={[{ max: 30, message: "Số thẻ BHYT tối đa 30 ký tự." }]}
+            >
+              <Input maxLength={30} />
             </Form.Item>
             <div className={styles.groupHeading}>
               <h3>Thông tin sức khỏe</h3>

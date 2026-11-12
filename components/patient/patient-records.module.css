@@ -268,3 +268,87 @@
     justify-content: center;
   }
 }
+
+/* Compact spacing without shrinking readable content or touch targets. */
+.section {
+  font-family: var(--font-body);
+  gap: 20px;
+}
+.list {
+  gap: 12px;
+}
+.visitCard {
+  padding: 16px 20px;
+  gap: 16px;
+}
+.visitIcon {
+  width: 40px;
+  height: 40px;
+}
+.visitHeading h2 {
+  font-size: 20px;
+  line-height: 1.5;
+}
+.reason {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-block: 8px;
+}
+.metadata,
+.visitFooter time,
+.openLink {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.visitFooter {
+  margin-top: 8px;
+  padding-top: 4px;
+  gap: 8px;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font: 14px/1.5 var(--font-body);
+}
+.filters label {
+  font-weight: 600;
+}
+.filters select {
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.filters select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.filters > span {
+  color: var(--color-text-secondary);
+}
+.filters :global(.ant-btn) {
+  min-height: 44px;
+  font: inherit;
+}
+@media (max-width: 767px) {
+  .visitCard {
+    padding: 16px;
+  }
+  .visitFooter .openLink {
+    width: auto;
+  }
+  .filters label {
+    flex-basis: 100%;
+  }
+  .filters select {
+    flex: 1 1 180px;
+    width: 100%;
+  }
+}

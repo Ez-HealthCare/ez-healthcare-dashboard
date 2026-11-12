@@ -32,15 +32,18 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
   const lock = useRef(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ name: string[]; errors: string[] }[]>([]);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const save = async (submit: boolean) => {
     if (lock.current) return;
     lock.current = true;
-    setSaving(true);
     setError("");
+    setFieldErrors([]);
     try {
       await form.validateFields(
         submit ? ["chiefComplaint", "symptomCodes", "symptomOnset", "symptomSeverity"] : []
       );
+      setSaving(true);
       await clinicalActions.saveReceptionRequestDraft(form.getFieldsValue());
       if (submit) await clinicalActions.submitReceptionRequest();
       changes.markSaved();
@@ -49,8 +52,10 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
       router.refresh();
     } catch (error) {
       if (error && typeof error === "object" && "errorFields" in error) {
-        const fields = (error as { errorFields: { name: string[] }[] }).errorFields;
-        if (fields[0]) form.scrollToField(fields[0].name, { focus: true });
+        const fields = (error as { errorFields: { name: string[]; errors: string[] }[] })
+          .errorFields;
+        setFieldErrors(fields);
+        requestAnimationFrame(() => summaryRef.current?.focus());
         return;
       }
       setError(clinicalErrorMessage(error));
@@ -69,7 +74,34 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
       </p>
       {changes.dirty && <p role="status">Có nội dung chưa lưu.</p>}
       {error && <Alert type="error" showIcon title="Chưa hoàn tất yêu cầu" description={error} />}
+      {fieldErrors.length > 0 && (
+        <div
+          ref={summaryRef}
+          tabIndex={-1}
+          role="alert"
+          aria-labelledby="request-errors-title"
+          className={styles.formErrorSummary}
+        >
+          <h2 id="request-errors-title">Vui lòng kiểm tra thông tin</h2>
+          <ul>
+            {fieldErrors.map((field) => (
+              <li key={field.name.join(".")}>
+                <a
+                  href={`#reception-request_${field.name.join("_")}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    form.scrollToField(field.name, { focus: true });
+                  }}
+                >
+                  {field.errors[0]}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <Form
+        name="reception-request"
         form={form}
         disabled={saving}
         onValuesChange={changes.markDirty}
@@ -80,7 +112,7 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
         <Form.Item
           label="Lý do đến khám"
           name="chiefComplaint"
-          rules={[{ required: true, message: "Vui lòng mô tả lý do khám." }]}
+          rules={[{ required: true, whitespace: true, message: "Vui lòng mô tả lý do khám." }]}
         >
           <Input.TextArea rows={3} maxLength={2000} />
         </Form.Item>
@@ -91,7 +123,11 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
         >
           <Select mode="multiple" options={symptoms.map((value) => ({ value, label: value }))} />
         </Form.Item>
-        <Form.Item label="Thời điểm khởi phát" name="symptomOnset" rules={[{ required: true }]}>
+        <Form.Item
+          label="Thời điểm khởi phát"
+          name="symptomOnset"
+          rules={[{ required: true, message: "Vui lòng chọn thời điểm khởi phát." }]}
+        >
           <Select
             options={[
               { value: "TODAY", label: "Hôm nay" },
@@ -100,7 +136,11 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
             ]}
           />
         </Form.Item>
-        <Form.Item label="Mức độ khó chịu" name="symptomSeverity" rules={[{ required: true }]}>
+        <Form.Item
+          label="Mức độ khó chịu"
+          name="symptomSeverity"
+          rules={[{ required: true, message: "Vui lòng chọn mức độ khó chịu." }]}
+        >
           <Select
             options={[
               { value: "MILD", label: "Nhẹ" },
@@ -130,24 +170,37 @@ function RequestForm({ initial }: { initial?: ReceptionRequestDraft }) {
 
 export function ReceptionRequestFormPage() {
   const request = useClinicalData(clinicalActions.currentReceptionRequest, 30_000);
-  if (request.loading) return <p role="status">Đang tải yêu cầu…</p>;
+  if (request.loading)
+    return (
+      <section className={styles.profileCard}>
+        <h1>Khai triệu chứng</h1>
+        <p role="status">Đang tải yêu cầu…</p>
+      </section>
+    );
   if (request.error && !request.data)
     return (
-      <Alert
-        type="error"
-        title="Không tải được yêu cầu"
-        description={request.error}
-        action={<Button onClick={() => void request.refresh()}>Thử lại</Button>}
-      />
+      <section className={styles.profileCard}>
+        <h1>Khai triệu chứng</h1>
+        <Alert
+          type="error"
+          showIcon
+          title="Không tải được yêu cầu"
+          description="Chưa thể tải thông tin. Vui lòng thử lại sau ít phút."
+          action={<Button onClick={() => void request.refresh()}>Thử lại</Button>}
+        />
+      </section>
     );
   if (request.data?.status === "RECEPTION_PENDING")
     return (
-      <Alert
-        type="info"
-        showIcon
-        message="Yêu cầu đang chờ lễ tân xác minh"
-        description="Vui lòng đến quầy tiếp nhận để đối chiếu CCCD/BHYT."
-      />
+      <section className={styles.profileCard}>
+        <h1>Khai triệu chứng</h1>
+        <Alert
+          type="info"
+          showIcon
+          message="Yêu cầu đang chờ lễ tân xác minh"
+          description="Vui lòng đến quầy tiếp nhận để đối chiếu CCCD/BHYT."
+        />
+      </section>
     );
   return <RequestForm key="request-form" initial={request.data || undefined} />;
 }

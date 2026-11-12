@@ -19,6 +19,7 @@ import {
 } from "antd";
 import { DoctorWorkspace } from "@/components/doctor/doctor-workspace";
 import { FAST_RED_FLAG_REASON, NURSE_CASES } from "@/lib/constants/nurse";
+import { useReceptionLive } from "@/hooks/use-reception-live";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import { clinicalErrorMessage } from "@/lib/clinical-error";
 import { news2Preview } from "@/lib/news2-preview";
@@ -40,6 +41,7 @@ function NursePanelContent({
   requestedVisit: string;
 }) {
   const queue = useClinicalData(clinicalActions.triageQueue);
+  useReceptionLive(true, queue.refresh);
   const expired = useClinicalData(clinicalActions.expiredReceptionQueue, 30_000);
   const departments = useClinicalData(clinicalActions.departments, 30_000);
   const [selected, setSelected] = useState<ReceptionVisit>();
@@ -255,6 +257,27 @@ function NursePanelContent({
           </div>
           <div className={nurseStyles.formColumns}>
             <div className={nurseStyles.card}>
+              {!selected.intakeCompleted && selected.canStartTriage && (
+                <Button
+                  loading={submitting}
+                  onClick={async () => {
+                    if (
+                      await act(
+                        () => clinicalActions.startTriage(selected.visitId),
+                        "Đã bắt đầu sàng lọc"
+                      )
+                    ) {
+                      setSelected((current) =>
+                        current?.visitId === selected.visitId
+                          ? { ...current, canStartTriage: false }
+                          : current
+                      );
+                    }
+                  }}
+                >
+                  Bắt đầu sàng lọc
+                </Button>
+              )}
               <Form
                 form={form}
                 className={nurseStyles.intakeForm}

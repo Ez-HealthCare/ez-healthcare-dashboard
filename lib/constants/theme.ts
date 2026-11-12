@@ -34,7 +34,27 @@ export const APP_THEME = {
 };
 export const STAFF_THEME = { token: { controlHeight: t.control.staffDesktopMin } };
 export const PATIENT_THEME = {
-  token: { fontSize: t.font.bodyPatient.size, controlHeight: t.control.patientMin },
+  token: {
+    fontSize: t.font.bodyPatient.size,
+    controlHeight: t.control.patientMin,
+    colorPrimary: "#0F766E",
+    colorPrimaryHover: "#115E59",
+    colorPrimaryActive: "#134E4A",
+    colorText: "#17324D",
+    colorTextSecondary: "#52647B",
+    colorTextDescription: "#52647B",
+    colorBgLayout: "#F1F5F9",
+    colorBgContainer: "#FFFFFF",
+  },
+  components: {
+    Button: {
+      colorPrimary: "#C2410C",
+      colorPrimaryHover: "#9A3412",
+      colorPrimaryActive: "#7C2D12",
+      primaryColor: "#FFFFFF",
+      primaryShadow: "none",
+    },
+  },
 };
 
 export const STAT_TONE_STYLES = {

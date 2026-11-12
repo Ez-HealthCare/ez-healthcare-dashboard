@@ -166,7 +166,13 @@ export function NurseOverview({
             <div className={styles.tags}>
               {row.isPriority && <Tag color="gold">{row.priorityReason || "Ưu tiên"}</Tag>}
               <Tag color={row.intakeCompleted ? "cyan" : undefined}>
-                {row.intakeCompleted ? "Đã đo sinh hiệu" : "Chờ sàng lọc"}
+                {row.intakeCompleted
+                  ? "Đã đo sinh hiệu"
+                  : row.triageArrival === "travelling"
+                    ? "Đang di chuyển"
+                    : row.triageArrival === "in-service"
+                      ? "Đang sàng lọc"
+                      : "Chờ sàng lọc"}
               </Tag>
             </div>
             <p>{row.chiefComplaint || "Chưa ghi nhận lý do khám"}</p>

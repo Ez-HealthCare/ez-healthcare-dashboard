@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import Image from "next/image";
+import { useState } from "react";
 import type { VisitDossier } from "@/lib/types/doctor";
-import { useRouter } from "next/navigation";
 import { Alert, Button, Skeleton } from "antd";
 import { clinicalActions, useClinicalData } from "@/hooks/use-clinical";
 import type { CurrentVisit } from "@/lib/types/clinical";
@@ -15,8 +15,8 @@ import {
   patientVisitStatus,
   patientStepDescription,
 } from "@/lib/patient-journey";
-import { ROUTES } from "@/lib/constants/routes";
 import { PatientIcon } from "./patient-icon";
+import { PatientStartVisit } from "./patient-start-visit";
 import { PatientReturnNotice } from "./patient-return-notice";
 import styles from "./patient-journey.module.css";
 
@@ -25,41 +25,109 @@ type VisitFlowProps = {
   loading: boolean;
   error?: string;
   requestStatus?: string;
+  requestLoading?: boolean;
+  requestError?: string;
   onRefresh: () => Promise<void>;
-  children: ReactNode;
+  patientName: string;
 };
 
-export function PatientVisitFlow({ children, ...props }: VisitFlowProps) {
+export function PatientVisitFlow(props: VisitFlowProps) {
   const dossier = useClinicalData(
     () => (props.visit ? clinicalActions.visitDossier(props.visit.visitId) : Promise.resolve(null)),
     8_000
   );
   const [selectedStep, setSelectedStep] = useState<string>();
+  const [helpOpen, setHelpOpen] = useState(false);
   const data = dossier.data?.visitId === props.visit?.visitId ? dossier.data : undefined;
   const refresh = async () => {
     await Promise.all([props.onRefresh(), dossier.refresh()]);
   };
   return (
     <>
-      <PatientVisitOverview
-        {...props}
-        onRefresh={refresh}
-        dossier={dossier.error || props.error ? undefined : data}
-        onSelectStep={setSelectedStep}
-      />
-      <div className={styles.journeyGrid}>
-        <PatientJourney
-          visit={props.visit}
-          loading={props.loading}
-          error={props.error}
-          dossier={data}
-          dossierLoading={dossier.loading}
-          dossierError={dossier.error}
-          onRefresh={dossier.refresh}
-          selectedStep={selectedStep}
-          onSelectStep={setSelectedStep}
-        />
-        {children}
+      <div className={styles.dashboardGrid}>
+        <div className={styles.column}>
+          <PatientVisitOverview
+            {...props}
+            onRefresh={refresh}
+            dossier={dossier.error || props.error ? undefined : data}
+          />
+          {props.visit && (
+            <section className={styles.information} aria-label="Thông tin lượt khám">
+              <div className={styles.sectionHeading}>
+                <h2>Thông tin lượt khám</h2>
+                <PatientIcon name="records" />
+              </div>
+              <dl className={styles.informationList}>
+                <div>
+                  <dt>
+                    <PatientIcon name="user" />
+                    Người khám
+                  </dt>
+                  <dd>{props.patientName}</dd>
+                </div>
+                <div>
+                  <dt>
+                    <PatientIcon name="calendar" />
+                    Ngày tiếp nhận
+                  </dt>
+                  <dd>
+                    {data?.createdAt
+                      ? formatDateTime(data.createdAt)
+                      : props.visit.businessDate
+                        ? formatDate(props.visit.businessDate)
+                        : "Chưa có thông tin thời gian"}
+                  </dd>
+                </div>
+              </dl>
+              <Link className={styles.recordLink} href={patientRecordLink(props.visit.visitId)}>
+                Xem hồ sơ lượt khám <PatientIcon name="arrow" />
+              </Link>
+            </section>
+          )}
+        </div>
+        <div className={styles.column}>
+          <PatientJourney
+            visit={props.visit}
+            loading={props.loading}
+            error={props.error}
+            dossier={data}
+            dossierLoading={dossier.loading}
+            dossierError={dossier.error}
+            onRefresh={dossier.refresh}
+            selectedStep={selectedStep}
+            onSelectStep={setSelectedStep}
+          />
+          <section className={styles.support} aria-labelledby="patient-support-heading">
+            <Image
+              src="/patient/support-nurse.webp"
+              alt=""
+              width={360}
+              height={356}
+              sizes="(max-width: 640px) 145px, 130px"
+              className={styles.nurse}
+            />
+            <div className={styles.supportContent}>
+              <span className={styles.sectionIcon}>
+                <PatientIcon name="support" />
+              </span>
+              <h2 id="patient-support-heading">Cần được hỗ trợ?</h2>
+              <p>Nhân viên tại quầy có thể hỗ trợ bạn tìm phòng hoặc kiểm tra lượt khám.</p>
+              <button
+                type="button"
+                className={styles.secondaryAction}
+                aria-expanded={helpOpen}
+                aria-controls="patient-support-details"
+                onClick={() => setHelpOpen(!helpOpen)}
+              >
+                Xem điểm hỗ trợ <PatientIcon name="arrow" />
+              </button>
+              <p id="patient-support-details" hidden={!helpOpen}>
+                Vui lòng liên hệ quầy tiếp nhận hoặc nhân viên hướng dẫn gần bạn. Chuẩn bị số tiếp
+                nhận để được kiểm tra lượt khám.
+              </p>
+            </div>
+          </section>
+        </div>
       </div>
     </>
   );
@@ -70,47 +138,38 @@ export function PatientVisitOverview({
   loading,
   error,
   requestStatus,
+  requestLoading,
+  requestError,
   onRefresh,
   dossier,
-  onSelectStep,
 }: {
   visit: CurrentVisit | null | undefined;
   loading: boolean;
   error?: string;
   requestStatus?: string;
+  requestLoading?: boolean;
+  requestError?: string;
   onRefresh: () => Promise<void>;
   dossier?: VisitDossier | null;
-  onSelectStep: (id: string) => void;
 }) {
-  const router = useRouter();
+  const [directionsOpen, setDirectionsOpen] = useState(false);
+  const [confirmingArrival, setConfirmingArrival] = useState(false);
+  const [arrivalError, setArrivalError] = useState(false);
   if (loading)
     return (
       <section className={styles.overview} aria-label="Đang tải lượt khám">
         <Skeleton active />
       </section>
     );
-  if (!visit && error)
-    return (
-      <section className={`${styles.overview} ${styles.empty}`} aria-label="Lượt khám hiện tại">
-        <h2>Chưa thể xác định lượt khám</h2>
-        <p>Thử tải lại để kiểm tra lượt khám hiện tại trước khi tạo yêu cầu mới.</p>
-        <Button onClick={() => void onRefresh()}>Thử lại</Button>
-      </section>
-    );
   if (!visit)
     return (
-      <section className={`${styles.overview} ${styles.empty}`} aria-label="Lượt khám hiện tại">
-        <span className={styles.label}>Bắt đầu hành trình khám</span>
-        <h2>Bạn chưa có lượt khám hôm nay</h2>
-        <p>Tạo yêu cầu tiếp nhận để được lễ tân kiểm tra và cấp số.</p>
-        <Button type="primary" onClick={() => router.push(ROUTES.PATIENT_RECEPTION_REQUEST)}>
-          {requestStatus === "DRAFT"
-            ? "Tiếp tục khai triệu chứng"
-            : requestStatus === "RECEPTION_PENDING"
-              ? "Xem yêu cầu tiếp nhận"
-              : "Tạo yêu cầu tiếp nhận"}
-        </Button>
-      </section>
+      <PatientStartVisit
+        error={error}
+        requestStatus={requestStatus}
+        requestLoading={requestLoading}
+        requestError={requestError}
+        onRefresh={onRefresh}
+      />
     );
   const next = patientJourneyFocus(visit, dossier);
   const final = isFinalVisit(visit.status);
@@ -131,33 +190,93 @@ export function PatientVisitOverview({
           </span>
           <h2>{next.title}</h2>
           <p>{next.description}</p>
+          {visit.status === "HALL_WAITING" &&
+            visit.ticketStatus === "ACTIVE" &&
+            visit.receptionEta && <p>{formatReceptionEta(visit.receptionEta)}</p>}
+          {visit.stageEta?.status === "travelling" && (
+            <>
+              <Button
+                loading={confirmingArrival}
+                onClick={async () => {
+                  if (!visit.stageEta) return;
+                  setConfirmingArrival(true);
+                  setArrivalError(false);
+                  try {
+                    await clinicalActions.confirmStageArrival(
+                      visit.visitId,
+                      visit.stageEta.station,
+                      visit.clinicTicketNumber
+                    );
+                    await onRefresh();
+                  } catch {
+                    setArrivalError(true);
+                  } finally {
+                    setConfirmingArrival(false);
+                  }
+                }}
+              >
+                {visit.stageEta.station === "triage"
+                  ? "Tôi đã đến khu sàng lọc"
+                  : "Tôi đã đến phòng khám"}
+              </Button>
+              {arrivalError && <p role="alert">Chưa xác nhận được. Vui lòng thử lại.</p>}
+            </>
+          )}
+          {visit.stageEta?.status === "waiting" && (
+            <p>
+              {formatReceptionEta(
+                visit.stageEta,
+                visit.stageEta.station === "triage" ? "sàng lọc" : "khám"
+              )}
+            </p>
+          )}
+          {visit.stageEta?.status === "in-service" && <p>Đang sàng lọc</p>}
           <PatientReturnNotice
             key={visit.visitId + "-" + (visit.returnReportedAt || visit.status)}
             visit={visit}
             onRefresh={onRefresh}
           />
           <div className={styles.actionRow}>
-            <Link className={styles.primaryAction} href={patientRecordLink(visit.visitId)}>
-              {visit.status === "COMPLETED"
-                ? "Xem kết luận & Đơn thuốc"
-                : final
-                  ? "Xem hồ sơ lượt khám"
-                  : "Xem lượt khám"}
-              <PatientIcon name="arrow" />
-            </Link>
-            {!final && (
-              <a
-                className={styles.secondaryAction}
-                href="#patient-journey"
-                onClick={() => {
-                  if (next.stepId) onSelectStep(next.stepId);
-                }}
+            {final ? (
+              <Link className={styles.primaryAction} href={patientRecordLink(visit.visitId)}>
+                {visit.status === "COMPLETED"
+                  ? "Xem kết luận & Đơn thuốc"
+                  : final
+                    ? "Xem hồ sơ lượt khám"
+                    : "Xem lượt khám"}
+                <PatientIcon name="arrow" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className={styles.primaryAction}
+                aria-expanded={directionsOpen}
+                aria-controls="patient-room-directions"
+                onClick={() => setDirectionsOpen(!directionsOpen)}
               >
-                {next.stepId ? "Xem bước cần theo dõi" : "Xem hành trình"}{" "}
-                <PatientIcon name="list" />
-              </a>
+                <PatientIcon name="pin" />
+                {next.destination ? "Xem hướng dẫn đến phòng" : "Xem hướng dẫn tiếp theo"}
+                <PatientIcon name="arrow" />
+              </button>
             )}
           </div>
+          {!final && (
+            <div
+              className={styles.directions}
+              id="patient-room-directions"
+              hidden={!directionsOpen}
+            >
+              <strong>
+                {next.destination
+                  ? `${next.destination.code} · ${next.destination.name}`
+                  : next.destinationLabel}
+              </strong>
+              <p>
+                {next.destination?.floor != null ? `Tầng ${next.destination.floor}. ` : ""}
+                {next.description}
+              </p>
+            </div>
+          )}
         </div>
         <div className={styles.visitFacts}>
           <div className={styles.ticket}>
@@ -230,8 +349,14 @@ function PatientJourney(props: JourneyProps) {
       ) : (
         <div className={styles.journeyEmpty}>
           <PatientIcon name="map" />
-          <h3>Hành trình sẽ xuất hiện khi có lượt khám</h3>
-          <p>Sau tiếp nhận, theo dõi hướng dẫn và các bước được chỉ định tại đây.</p>
+          <h3>Các bước khám tại viện</h3>
+          <ol className={styles.arrivalSteps}>
+            <li>Đến cơ sở y tế và lấy số tiếp nhận</li>
+            <li>Lễ tân đối chiếu thông tin khi gọi số</li>
+            <li>Điều dưỡng sàng lọc và phân phòng</li>
+            <li>Bác sĩ thăm khám</li>
+          </ol>
+          <p>Hành trình thực tế sẽ được cập nhật khi bạn có số tiếp nhận.</p>
         </div>
       )}
     </section>
@@ -255,15 +380,64 @@ function VisitSteps({
   const stopped =
     (visit.ticketStatus === "EXPIRED" && !isFinalVisit(visit.status)) ||
     ["CANCELLED", "EMERGENCY_DISPATCHED"].includes(visit.status);
+  const receptionDone =
+    !!data?.isVerified ||
+    [
+      "RECEPTION_VERIFIED",
+      "TRIAGE_PENDING",
+      "CLINIC_WAITING",
+      "CLINIC_CALLED",
+      "TEMPORARILY_ABSENT",
+      "IN_EXAMINATION",
+      "PARACLINICAL_PENDING",
+      "RE_EXAM_CALLING",
+      "COMPLETED",
+    ].includes(visit.status);
+  const milestones = [
+    { title: "Tiếp nhận", done: receptionDone, active: visit.status === "HALL_WAITING" },
+    {
+      title: "Sàng lọc điều dưỡng",
+      done: visit.intakeCompleted,
+      active: ["RECEPTION_VERIFIED", "TRIAGE_PENDING"].includes(visit.status),
+    },
+    {
+      title: "Khám bác sĩ",
+      done: visit.status === "COMPLETED",
+      active: [
+        "CLINIC_WAITING",
+        "CLINIC_CALLED",
+        "TEMPORARILY_ABSENT",
+        "IN_EXAMINATION",
+        "PARACLINICAL_PENDING",
+        "RE_EXAM_CALLING",
+      ].includes(visit.status),
+    },
+    { title: "Kết luận và hướng dẫn", done: visit.status === "COMPLETED", active: false },
+  ];
   return (
     <>
-      <div className={styles.currentStage}>
-        <PatientIcon name="info" />
-        <div>
-          <span>Trạng thái lượt khám</span>
-          <strong>Hiện tại: {patientVisitStatus(visit)}</strong>
-        </div>
-      </div>
+      <ol className={styles.milestones} aria-label="Các giai đoạn lượt khám">
+        {milestones.map((stage, index) => (
+          <li
+            key={stage.title}
+            data-state={stage.done ? "done" : stage.active && !stopped ? "current" : "pending"}
+          >
+            <span className={styles.node} aria-hidden="true">
+              {stage.done ? <PatientIcon name="check" /> : index + 1}
+            </span>
+            <div>
+              <strong>{stage.title}</strong>
+              <p>
+                {stage.done
+                  ? "Đã hoàn tất"
+                  : stage.active && !stopped
+                    ? "Đang thực hiện"
+                    : "Chưa đến bước này"}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
       {dossierError && (
         <Alert
           type="warning"
@@ -286,10 +460,10 @@ function VisitSteps({
       ) : steps.length ? (
         <>
           <div className={styles.progressSummary}>
-            <strong>
-              {complete}/{steps.length} bước chỉ định đã hoàn thành
-            </strong>
-            <span>Kế hoạch có thể được cập nhật</span>
+            <h3>Chỉ định trong lượt khám</h3>
+            <span>
+              {complete}/{steps.length} đã hoàn tất
+            </span>
           </div>
           <ol className={styles.timeline}>
             {steps.map((step, index) => {
@@ -334,14 +508,11 @@ function VisitSteps({
                     <p>
                       <PatientIcon name="building" />
                       {step.department
-                        ? `${step.department.code} · ${step.department.name}`
+                        ? `Phòng ${step.department.code}`
                         : "Chưa có thông tin phòng"}
                     </p>
                     {step.department?.floor != null && (
                       <span className={styles.floor}>Tầng {step.department.floor}</span>
-                    )}
-                    {current && !stopped && step.stepId === focus.stepId && (
-                      <span className={styles.focusLabel}>Bước cần theo dõi</span>
                     )}
                     <div
                       className={styles.stepDetail}
@@ -387,4 +558,17 @@ function VisitSteps({
       )}
     </>
   );
+}
+
+function formatReceptionEta(eta: NonNullable<CurrentVisit["receptionEta"]>, service = "xác minh") {
+  if (!eta.estimatedStartAt) return "Đang cập nhật thời gian chờ";
+  const startsAt = new Date(eta.estimatedStartAt);
+  const minutes = Math.ceil((startsAt.getTime() - Date.parse(eta.calculatedAt)) / 60_000);
+  if (minutes <= 0) return "Sắp đến lượt " + service;
+  const clock = startsAt.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+  return "Khoảng " + minutes + " phút đến lượt " + service + " · Dự kiến " + clock;
 }

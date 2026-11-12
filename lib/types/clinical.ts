@@ -13,6 +13,16 @@ export type VisitStatus =
   | "CANCELLED";
 
 export interface CurrentVisit {
+  stageEta?: {
+    station: "triage" | "clinic";
+    status: "travelling" | "waiting" | "in-service";
+    estimatedStartAt: string | null;
+    calculatedAt: string;
+  };
+  receptionEta?: {
+    estimatedStartAt: string | null;
+    calculatedAt: string;
+  };
   returnReportedAt?: string | null;
   canReportReturn?: boolean;
   visitId: string;
@@ -71,6 +81,8 @@ export type ReceptionRequestDraft = Omit<
 >;
 
 export interface ReceptionVisit {
+  canStartTriage?: boolean;
+  triageArrival?: "travelling" | "waiting" | "in-service";
   visitId: string;
   hallTicketNumber: string;
   clinicTicketNumber?: string;
@@ -101,6 +113,7 @@ export interface ReceptionVisit {
 }
 
 export interface ClinicQueueItem {
+  clinicArrivedAt?: string | null;
   returnReportedAt?: string | null;
   currentDoctor?: { id: string; name: string } | null;
   visitId: string;
@@ -181,6 +194,14 @@ export interface NotificationItem {
   message: string;
   readAt?: string;
   createdAt: string;
+}
+
+export type NotificationFilter = "all" | "unread" | "read";
+export interface NotificationPage {
+  items: NotificationItem[];
+  nextCursor: string | null;
+  total: number;
+  unreadCount: number;
 }
 
 export interface IntakeInput {

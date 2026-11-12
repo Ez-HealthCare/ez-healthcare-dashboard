@@ -8,7 +8,8 @@
   box-shadow: var(--shadow-card);
 }
 .overview {
-  margin-top: var(--space-16);
+  margin-top: 0;
+  border-left: 4px solid var(--patient-brand);
 }
 .overviewHeader {
   display: flex;
@@ -44,7 +45,7 @@
 }
 .overviewGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-32);
   align-items: start;
 }
@@ -70,6 +71,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-16);
   margin-top: var(--space-24);
 }
@@ -86,15 +88,24 @@
   overflow-wrap: anywhere;
 }
 .primaryAction {
-  background: var(--color-primary);
+  border: 1px solid var(--patient-cta);
+  background: var(--patient-cta);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
   color: var(--color-on-primary);
 }
 .primaryAction:hover {
-  background: var(--color-primary-hover);
+  background: var(--patient-cta-hover);
   color: var(--color-on-primary);
 }
 .secondaryAction {
   color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  background: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 .secondaryAction:hover {
   background: var(--color-patient-highlight);
@@ -107,16 +118,19 @@
 }
 .visitFacts {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  order: -1;
   gap: var(--space-16);
   min-width: 0;
 }
 .ticket {
   display: grid;
   gap: var(--space-8);
-  padding: var(--space-20) var(--space-24);
-  border-radius: var(--radius-soft);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  padding: 0 var(--space-20) 0 0;
+  border-right: 1px solid var(--color-border);
+  border-radius: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 .ticket > span {
   display: flex;
@@ -129,7 +143,8 @@
   height: 20px;
 }
 .ticket strong {
-  font-size: 32px;
+  font-size: 44px;
+  color: var(--patient-brand);
   font-weight: 700;
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
@@ -142,8 +157,8 @@
   display: flex;
   align-items: start;
   gap: var(--space-12);
-  padding: var(--space-16);
-  background: var(--color-patient-highlight);
+  padding: 0;
+  background: var(--color-surface);
   border-radius: var(--radius-soft);
 }
 .destination > svg {
@@ -273,14 +288,14 @@
   height: 18px;
 }
 [data-state="done"] .node {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-on-primary);
+  background: var(--color-selected);
+  border-color: var(--color-selected);
+  color: var(--color-primary);
 }
 [data-state="current"] .node {
   border: 2px solid var(--color-primary);
-  background: var(--color-selected);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 .stepBody {
   flex: 1;
@@ -523,4 +538,234 @@
 .stepToggle {
   min-width: 0;
   max-width: 100%;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  align-items: start;
+  gap: var(--space-24);
+  margin-top: var(--space-16);
+}
+.column {
+  display: grid;
+  gap: var(--space-24);
+  min-width: 0;
+}
+.information,
+.support {
+  min-width: 0;
+  padding: var(--space-24);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.information .sectionHeading {
+  justify-content: space-between;
+  margin-bottom: var(--space-20);
+}
+.informationList {
+  margin: 0;
+  display: grid;
+  gap: var(--space-16);
+}
+.informationList dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-staff);
+}
+.informationList dd {
+  margin: var(--space-4) 0 0 28px;
+  overflow-wrap: anywhere;
+}
+.recordLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 44px;
+  margin-top: var(--space-12);
+  color: var(--color-primary);
+  font-size: var(--text-body-staff);
+}
+.support {
+  position: relative;
+  overflow: hidden;
+  min-height: 250px;
+  background: linear-gradient(120deg, #fff, #e6fffa 56%, #fff7ed);
+}
+.nurse {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 130px;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+.supportContent {
+  position: relative;
+  max-width: calc(100% - 100px);
+}
+.support h2 {
+  font-size: var(--text-h2);
+  font-weight: 600;
+  margin-top: var(--space-12);
+  overflow-wrap: anywhere;
+}
+.support p {
+  font-size: var(--text-body-staff);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-12);
+  overflow-wrap: anywhere;
+}
+.support .secondaryAction {
+  margin-top: var(--space-16);
+  padding: var(--space-8) var(--space-12);
+  font-size: var(--text-body-staff);
+  max-width: 100%;
+}
+.support button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.directions {
+  margin-top: var(--space-16);
+  padding: var(--space-16);
+  border-radius: var(--radius-soft);
+  background: var(--color-selected);
+  font-size: var(--text-body-staff);
+  overflow-wrap: anywhere;
+}
+.directions[hidden] {
+  display: none;
+}
+.directions p {
+  margin-top: var(--space-8);
+}
+.notifications {
+  margin-top: var(--space-24);
+}
+.milestones {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-24);
+  display: grid;
+  gap: var(--space-20);
+}
+.milestones li {
+  display: flex;
+  align-items: start;
+  gap: var(--space-12);
+}
+.milestones strong {
+  font-size: var(--text-body-patient);
+}
+.milestones p {
+  font-size: var(--text-body-staff);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-4);
+}
+@media (max-width: 900px) {
+  .dashboardGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .dashboardGrid,
+  .column {
+    gap: var(--space-16);
+  }
+  .information,
+  .support {
+    padding: var(--space-20);
+  }
+  .ticket {
+    padding: 0;
+    border-right: 0;
+  }
+  .ticket strong {
+    font-size: 36px;
+  }
+  .visitFacts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .support .secondaryAction {
+    width: auto;
+  }
+}
+
+.arrivalHint {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  margin-block: 12px;
+}
+.arrivalConfirmation {
+  margin-block: 16px;
+}
+.arrivalConfirmation :global(.ant-checkbox-wrapper) {
+  min-height: 44px;
+  align-items: center;
+  font: 400 14px/1.6 var(--font-body);
+}
+.arrivalSteps {
+  margin-block: 16px;
+  padding-left: 24px;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.empty > .arrivalHint {
+  font-size: 14px;
+  margin: 0;
+}
+.empty > .actionRow {
+  justify-self: stretch;
+  margin-top: 0;
+}
+.empty > .arrivalConfirmation {
+  margin: 0;
+}
+.arrivalSteps {
+  list-style: decimal;
+}
+@media (max-width: 767px) {
+  .empty > .actionRow :global(.ant-btn) {
+    width: 100%;
+  }
+}
+
+.milestones {
+  gap: 12px;
+}
+.milestones strong {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.milestones p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.progressSummary {
+  gap: 8px;
+  margin-block: 16px 8px;
+}
+.progressSummary h3 {
+  font: 600 16px/1.5 var(--font-body);
+}
+.progressSummary > span {
+  font-size: 14px;
+}
+.stepHeading h3,
+.stepToggle {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
 }

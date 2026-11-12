@@ -9,6 +9,7 @@ const API_URL = (
 ).replace(/\/$/, "");
 
 const ALLOWED = [
+  /^visits\/me\/reception-live$/,
   /^visits\/triage\/queue$/,
   /^visits\/me\/history$/,
   /^visits\/doctor\/history(\/[0-9a-f-]{36})?$/i,
@@ -25,7 +26,7 @@ const ALLOWED = [
   /^reception-requests\/me\/(current|draft|submit|cancel)$/,
   /^reception-requests\/reception\/pending$/,
   /^reception-requests\/reception\/[0-9a-f-]+\/(confirm|reject)$/i,
-  /^notifications(\/[0-9a-f-]+\/read|\/read-all)?$/i,
+  /^notifications(\/page|\/[0-9a-f-]+\/read|\/read-all)?$/i,
 ];
 
 export function isClinicalProxyPath(path: string) {

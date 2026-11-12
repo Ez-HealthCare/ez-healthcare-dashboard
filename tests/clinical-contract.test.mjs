@@ -12,6 +12,33 @@ import { clinicalService } from "../services/clinical.service.ts";
 import { isClinicalProxyPath } from "../services/clinical-proxy.server.ts";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+test("notification pagination forwards server filter and cursor through the guarded proxy", async () => {
+  const cursor = "11111111-1111-4111-8111-111111111111";
+  assert.equal(isClinicalProxyPath("notifications/page"), true);
+  assert.equal(isClinicalProxyPath("notifications/foreign"), false);
+  const previous = http.defaults.adapter;
+  let actual;
+  http.defaults.adapter = async (config) => {
+    actual = { url: config.url, params: config.params };
+    return {
+      data: { items: [], nextCursor: null, total: 0, unreadCount: 0 },
+      status: 200,
+      statusText: "OK",
+      headers: {},
+      config,
+    };
+  };
+  try {
+    const result = await clinicalService.notificationPage({ limit: 10, filter: "unread", cursor });
+    assert.deepEqual(actual, {
+      url: "/clinical/notifications/page",
+      params: { limit: 10, filter: "unread", cursor },
+    });
+    assert.equal(result.nextCursor, null);
+  } finally {
+    http.defaults.adapter = previous;
+  }
+});
 const readStaffUI = async () =>
   (
     await Promise.all([
@@ -101,7 +128,8 @@ test("patient UI uses the live queue contract without symptom self-declaration",
   ]);
   assert.match(service, /visits\/hall-ticket/);
   assert.match(service, /visits\/me\/current/);
-  assert.match(patient, /Tạo yêu cầu tiếp nhận/);
+  assert.match(patient, /Lấy số tiếp nhận/);
+  assert.doesNotMatch(patient, /Tạo yêu cầu tiếp nhận/);
   assert.match(patient, /PATIENT_RECEPTION_REQUEST/);
 });
 
@@ -386,7 +414,63 @@ async function readPatientUI() {
     await Promise.all([
       read("components/patient/patient-dashboard.tsx"),
       read("components/patient/patient-journey.tsx"),
+      read("components/patient/patient-start-visit.tsx"),
       read("lib/patient-journey.ts"),
     ])
   ).join("\n");
 }
+
+test("hall ticket retries preserve a caller-provided idempotency key through the guarded proxy", async () => {
+  assert.equal(isClinicalProxyPath("visits/hall-ticket"), true);
+  const previous = http.defaults.adapter;
+  const requests = [];
+  http.defaults.adapter = async (config) => {
+    requests.push({
+      url: config.url,
+      method: config.method,
+      key: config.headers.get("Idempotency-Key"),
+    });
+    return {
+      data: { visitId: "fixture", hallTicketNumber: "A-015", status: "HALL_WAITING" },
+      status: 201,
+      statusText: "Created",
+      headers: {},
+      config,
+    };
+  };
+  try {
+    await clinicalService.requestHallTicket("fixture-retry-key");
+    await clinicalService.requestHallTicket("fixture-retry-key");
+    assert.deepEqual(
+      requests,
+      Array.from({ length: 2 }, () => ({
+        url: "/clinical/visits/hall-ticket",
+        method: "post",
+        key: "fixture-retry-key",
+      }))
+    );
+  } finally {
+    http.defaults.adapter = previous;
+  }
+});
+
+test("patient history filters on the server and completed records cannot be broadened by a status override", async () => {
+  const previous = http.defaults.adapter;
+  const queries = [];
+  http.defaults.adapter = async (config) => {
+    queries.push(config.params);
+    return { data: { items: [], total: 0 }, status: 200, statusText: "OK", headers: {}, config };
+  };
+  try {
+    await clinicalService.patientHistory(2, false, "CANCELLED");
+    await clinicalService.patientHistory(1, true, "CANCELLED");
+    await clinicalService.patientHistory(1, false);
+    assert.deepEqual(queries, [
+      { page: 2, pageSize: 10, status: "CANCELLED" },
+      { page: 1, pageSize: 10, status: "COMPLETED" },
+      { page: 1, pageSize: 10 },
+    ]);
+  } finally {
+    http.defaults.adapter = previous;
+  }
+});

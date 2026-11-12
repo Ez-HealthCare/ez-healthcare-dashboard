@@ -253,3 +253,16 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+@media (max-width: 767px) {
+  .profileCard {
+    order: -1;
+  }
+  .summary {
+    gap: var(--space-8);
+  }
+  .summary dl {
+    gap: var(--space-8);
+    padding-top: var(--space-12);
+  }
+}

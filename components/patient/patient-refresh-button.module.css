@@ -1,0 +1,25 @@
+.button:global(.ant-btn.ant-btn-default.ant-btn-variant-outlined) {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  min-height: 44px;
+  height: auto;
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: none;
+  white-space: normal;
+  flex-shrink: 0;
+}
+.button:global(.ant-btn.ant-btn-default.ant-btn-variant-outlined):not(:disabled):hover {
+  color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  background: var(--color-selected);
+}
+.button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
