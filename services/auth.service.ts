@@ -27,11 +27,17 @@ function authError(error: unknown, path: AuthPath): AuthError {
   }
   if (status === 401) {
     return new AuthError(
-      path === AUTH_PATHS.STAFF_LOGIN
+      path === AUTH_PATHS.STAFF_LOGIN || path === AUTH_PATHS.LOGIN
         ? "Email hoặc mật khẩu không đúng, hoặc tài khoản không hoạt động."
         : "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
       status
     );
+  }
+  if (status === 409) {
+    if (/phone/i.test(raw))
+      return new AuthError("Số điện thoại đã được đăng ký trong hệ thống.", status);
+    if (/email/i.test(raw)) return new AuthError("Email này đã được đăng ký tài khoản.", status);
+    return new AuthError(raw || "Thông tin đã tồn tại trong hệ thống.", status);
   }
   if (/expired/i.test(raw))
     return new AuthError("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.", status);
@@ -69,6 +75,15 @@ function getCurrentUser(): Promise<UserProfile> {
 
 export const authService = {
   getCurrentUser,
+  login: (body: { email: string; password: string; rememberMe: boolean }) =>
+    request(AUTH_PATHS.LOGIN, body),
+  registerPatient: (body: { email: string; password: string; name: string; phone: string }) =>
+    request<{ success: boolean; message: string; retryAfterSeconds?: number }>(
+      AUTH_PATHS.REGISTER_PATIENT,
+      body
+    ),
+  verifyPatientRegistration: (body: { email: string; otpCode: string; rememberMe: boolean }) =>
+    request(AUTH_PATHS.VERIFY_REGISTER, body),
   loginStaff: (body: { email: string; password: string; rememberMe: boolean }) =>
     request(AUTH_PATHS.STAFF_LOGIN, body),
   requestPatientOtp: (email: string) => request(AUTH_PATHS.REQUEST_OTP, { email }),

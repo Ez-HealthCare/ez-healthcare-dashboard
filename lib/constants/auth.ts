@@ -11,6 +11,9 @@ export const ROLE_LABELS = {
 export const AUTH_COOKIE_NAMES = ["ez_access", "ez_refresh"] as const;
 
 export const AUTH_PATHS = {
+  LOGIN: "login",
+  REGISTER_PATIENT: "patient/register",
+  VERIFY_REGISTER: "patient/verify-register",
   STAFF_LOGIN: "staff/login",
   REQUEST_OTP: "patient/request-otp",
   VERIFY_OTP: "patient/verify-otp",
@@ -21,6 +24,9 @@ export const AUTH_PATHS = {
 } as const;
 
 export const AUTH_POST_PATHS = [
+  AUTH_PATHS.LOGIN,
+  AUTH_PATHS.REGISTER_PATIENT,
+  AUTH_PATHS.VERIFY_REGISTER,
   AUTH_PATHS.STAFF_LOGIN,
   AUTH_PATHS.REQUEST_OTP,
   AUTH_PATHS.VERIFY_OTP,

@@ -506,6 +506,23 @@
   word-break: break-word;
 }
 
+.registerGuidanceAction {
+  margin-top: 6px;
+}
+
+.linkBtn {
+  color: #00685f !important;
+  font-weight: 600 !important;
+  padding: 0 !important;
+  height: auto !important;
+  font-size: 13px !important;
+}
+
+.linkBtn:hover {
+  text-decoration: underline;
+  color: #004d44 !important;
+}
+
 .supportBox {
   margin-top: 18px;
   background-color: var(--color-patient-highlight);

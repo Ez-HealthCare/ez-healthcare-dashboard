@@ -9,7 +9,7 @@ import {
 
 import { useState } from "react";
 import Image from "next/image";
-import { Alert, Form, Input, Button, Checkbox, Radio } from "antd";
+import { Alert, Form, Input, Button, Checkbox } from "antd";
 import { useLogin, type LoginFormValues } from "@/hooks/use-login";
 import styles from "./login.module.css";
 
@@ -18,15 +18,18 @@ export default function LoginPage() {
   const [form] = Form.useForm<LoginFormValues>();
   const {
     loading,
-    mode,
+    view,
     otpEmail,
     error,
+    successMessage,
     secondsLeft,
     submit,
     resendOtp: resend,
     resetOtp,
-    changeMode,
+    goToRegister,
+    goToLogin,
   } = useLogin();
+
   const resendOtp = async () => {
     if (await resend()) form.resetFields(["otpCode"]);
   };
@@ -160,31 +163,33 @@ export default function LoginPage() {
             </div>
           </section>
 
-          {/* Right Login Card Panel */}
-          <section className={styles.rightPanel} aria-label="Đăng nhập tài khoản">
+          {/* Right Login / Register Card Panel */}
+          <section
+            className={styles.rightPanel}
+            aria-label={
+              view === "register"
+                ? "Đăng ký tài khoản"
+                : view === "verify-otp"
+                  ? "Xác thực OTP"
+                  : "Đăng nhập tài khoản"
+            }
+          >
             <div className={styles.loginCard}>
-              <h1 className={styles.loginCardTitle}>Chào mừng trở lại</h1>
+              <h1 className={styles.loginCardTitle}>
+                {view === "register"
+                  ? "Đăng ký tài khoản"
+                  : view === "verify-otp"
+                    ? "Xác thực tài khoản"
+                    : "Chào mừng trở lại"}
+              </h1>
               <p className={styles.loginCardSubtitle}>
-                Đăng nhập để tiếp tục hành trình khám của bạn.
+                {view === "register"
+                  ? "Tạo tài khoản bệnh nhân để theo dõi hành trình khám và hồ sơ."
+                  : view === "verify-otp"
+                    ? "Nhập mã xác thực gồm 6 chữ số gửi tới email để kích hoạt."
+                    : "Đăng nhập để tiếp tục hành trình khám của bạn."}
               </p>
 
-              <Radio.Group
-                className={styles.modeSwitch}
-                aria-label="Loại tài khoản"
-                value={mode}
-                optionType="button"
-                buttonStyle="solid"
-                disabled={loading}
-                options={[
-                  { label: "Bệnh nhân", value: "patient" },
-                  { label: "Nhân viên y tế", value: "staff" },
-                ]}
-                onChange={(event) => {
-                  changeMode(event.target.value);
-                  setForgotInfo(false);
-                  form.resetFields(["password", "otpCode"]);
-                }}
-              />
               {error && (
                 <Alert
                   className={styles.feedback}
@@ -194,15 +199,19 @@ export default function LoginPage() {
                   role="alert"
                 />
               )}
-              {mode === "patient" && otpEmail && (
+              {successMessage && (
+                <Alert className={styles.feedback} type="success" showIcon title={successMessage} />
+              )}
+              {view === "verify-otp" && otpEmail && (
                 <Alert
                   className={styles.feedback}
-                  type="success"
+                  type="info"
                   showIcon
                   title="Mã OTP đã được gửi"
                   description={`Kiểm tra hộp thư ${otpEmail}. Mã có hiệu lực ${OTP_LIFETIME_MINUTES} phút.`}
                 />
               )}
+
               <Form<LoginFormValues>
                 form={form}
                 layout="vertical"
@@ -211,48 +220,45 @@ export default function LoginPage() {
                 requiredMark={false}
                 initialValues={{ remember: false }}
               >
-                <div className={styles.labelRow}>
-                  <label htmlFor="login_email" className={styles.fieldLabel}>
-                    Email
-                  </label>
-                  <span className={styles.fieldHint}>
-                    {mode === "patient" ? "Bệnh nhân" : "Nhân viên"}
-                  </span>
-                </div>
-                <Form.Item
-                  name="email"
-                  className={styles.formItem}
-                  rules={[
-                    { required: true, message: "Vui lòng nhập email." },
-                    {
-                      type: "email",
-                      message: "Email chưa đúng định dạng.",
-                      transform: (value) => value?.trim(),
-                    },
-                  ]}
-                >
-                  <Input
-                    id="login_email"
-                    type="email"
-                    autoComplete="username"
-                    prefix={
-                      <Image
-                        src="/login/patient-id.svg"
-                        alt=""
-                        width={16}
-                        height={16}
-                        aria-hidden
-                      />
-                    }
-                    placeholder="email@example.com"
-                    size="large"
-                    className={styles.inputCustom}
-                    disabled={loading || !!otpEmail}
-                  />
-                </Form.Item>
-
-                {mode === "staff" && (
+                {view === "login" && (
                   <>
+                    <div className={styles.labelRow}>
+                      <label htmlFor="login_email" className={styles.fieldLabel}>
+                        Email
+                      </label>
+                    </div>
+                    <Form.Item
+                      name="email"
+                      className={styles.formItem}
+                      rules={[
+                        { required: true, message: "Vui lòng nhập email." },
+                        {
+                          type: "email",
+                          message: "Email chưa đúng định dạng.",
+                          transform: (value) => value?.trim(),
+                        },
+                      ]}
+                    >
+                      <Input
+                        id="login_email"
+                        type="email"
+                        autoComplete="username"
+                        prefix={
+                          <Image
+                            src="/login/patient-id.svg"
+                            alt=""
+                            width={16}
+                            height={16}
+                            aria-hidden
+                          />
+                        }
+                        placeholder="email@example.com"
+                        size="large"
+                        className={styles.inputCustom}
+                        disabled={loading}
+                      />
+                    </Form.Item>
+
                     <div className={styles.labelRow}>
                       <label htmlFor="login_password" className={styles.fieldLabel}>
                         Mật khẩu
@@ -288,10 +294,270 @@ export default function LoginPage() {
                         disabled={loading}
                       />
                     </Form.Item>
+
+                    <div className={styles.checkboxRow}>
+                      <Form.Item name="remember" valuePropName="checked" noStyle>
+                        <Checkbox disabled={loading} className={styles.checkboxLabel}>
+                          Ghi nhớ đăng nhập
+                        </Checkbox>
+                      </Form.Item>
+                      <button
+                        type="button"
+                        onClick={handleToggleForgot}
+                        className={styles.forgotBtn}
+                        aria-expanded={forgotInfo}
+                      >
+                        Quên mật khẩu?
+                      </button>
+                    </div>
+
+                    {forgotInfo && (
+                      <Alert
+                        className={styles.feedback}
+                        type="info"
+                        showIcon
+                        title="Hỗ trợ cấp lại mật khẩu"
+                        description="Vui lòng liên hệ quản trị viên hoặc quầy tiếp đón để xác minh danh tính và cấp lại mật khẩu."
+                      />
+                    )}
+
+                    <Form.Item className={styles.formItem}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        aria-label="Đăng nhập"
+                        size="large"
+                        loading={loading}
+                        disabled={loading}
+                        className={styles.submitBtn}
+                      >
+                        <span>Đăng nhập</span>
+                        {!loading && (
+                          <Image src="/login/arrow.svg" alt="" width={12} height={12} aria-hidden />
+                        )}
+                      </Button>
+                    </Form.Item>
+
+                    <div className={styles.registerGuidance}>
+                      <p className={styles.registerGuidanceTitle}>Chưa có tài khoản bệnh nhân?</p>
+                      <p className={styles.registerGuidanceDesc}>
+                        Đăng ký để chủ động theo dõi lịch khám và hồ sơ bệnh án.
+                      </p>
+                      <div className={styles.registerGuidanceAction}>
+                        <Button
+                          type="link"
+                          onClick={() => {
+                            form.resetFields();
+                            goToRegister();
+                          }}
+                          className={styles.linkBtn}
+                        >
+                          Đăng ký tài khoản ngay
+                        </Button>
+                      </div>
+                    </div>
                   </>
                 )}
 
-                {mode === "patient" && otpEmail && (
+                {view === "register" && (
+                  <>
+                    <div className={styles.labelRow}>
+                      <label htmlFor="register_name" className={styles.fieldLabel}>
+                        Họ và tên
+                      </label>
+                    </div>
+                    <Form.Item
+                      name="name"
+                      className={styles.formItem}
+                      rules={[{ required: true, message: "Vui lòng nhập họ và tên." }]}
+                    >
+                      <Input
+                        id="register_name"
+                        autoComplete="name"
+                        placeholder="Nguyễn Văn A"
+                        size="large"
+                        className={styles.inputCustom}
+                        disabled={loading}
+                      />
+                    </Form.Item>
+
+                    <div className={styles.labelRow}>
+                      <label htmlFor="register_phone" className={styles.fieldLabel}>
+                        Số điện thoại
+                      </label>
+                    </div>
+                    <Form.Item
+                      name="phone"
+                      className={styles.formItem}
+                      rules={[
+                        { required: true, message: "Vui lòng nhập số điện thoại." },
+                        {
+                          pattern: /^[0-9+() -]{9,15}$/,
+                          message: "Số điện thoại chưa đúng định dạng.",
+                        },
+                      ]}
+                    >
+                      <Input
+                        id="register_phone"
+                        type="tel"
+                        autoComplete="tel"
+                        placeholder="0912345678"
+                        size="large"
+                        className={styles.inputCustom}
+                        disabled={loading}
+                      />
+                    </Form.Item>
+
+                    <div className={styles.labelRow}>
+                      <label htmlFor="register_email" className={styles.fieldLabel}>
+                        Email
+                      </label>
+                    </div>
+                    <Form.Item
+                      name="email"
+                      className={styles.formItem}
+                      rules={[
+                        { required: true, message: "Vui lòng nhập email." },
+                        {
+                          type: "email",
+                          message: "Email chưa đúng định dạng.",
+                          transform: (value) => value?.trim(),
+                        },
+                      ]}
+                    >
+                      <Input
+                        id="register_email"
+                        type="email"
+                        autoComplete="username"
+                        prefix={
+                          <Image
+                            src="/login/patient-id.svg"
+                            alt=""
+                            width={16}
+                            height={16}
+                            aria-hidden
+                          />
+                        }
+                        placeholder="email@example.com"
+                        size="large"
+                        className={styles.inputCustom}
+                        disabled={loading}
+                      />
+                    </Form.Item>
+
+                    <div className={styles.labelRow}>
+                      <label htmlFor="register_password" className={styles.fieldLabel}>
+                        Mật khẩu
+                      </label>
+                    </div>
+                    <Form.Item
+                      name="password"
+                      className={styles.formItem}
+                      rules={[
+                        { required: true, message: "Vui lòng nhập mật khẩu." },
+                        {
+                          min: STAFF_PASSWORD_MIN_LENGTH,
+                          message: `Mật khẩu cần ít nhất ${STAFF_PASSWORD_MIN_LENGTH} ký tự.`,
+                        },
+                      ]}
+                    >
+                      <Input.Password
+                        id="register_password"
+                        autoComplete="new-password"
+                        prefix={
+                          <Image
+                            src="/login/lock.svg"
+                            alt=""
+                            width={14}
+                            height={18}
+                            style={{ height: "auto" }}
+                            aria-hidden
+                          />
+                        }
+                        placeholder="Tối thiểu 6 ký tự"
+                        size="large"
+                        className={styles.inputCustom}
+                        disabled={loading}
+                      />
+                    </Form.Item>
+
+                    <div className={styles.labelRow}>
+                      <label htmlFor="register_confirm_password" className={styles.fieldLabel}>
+                        Xác nhận mật khẩu
+                      </label>
+                    </div>
+                    <Form.Item
+                      name="confirmPassword"
+                      dependencies={["password"]}
+                      className={styles.formItem}
+                      rules={[
+                        { required: true, message: "Vui lòng xác nhận mật khẩu." },
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            if (!value || getFieldValue("password") === value) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(new Error("Mật khẩu xác nhận không khớp."));
+                          },
+                        }),
+                      ]}
+                    >
+                      <Input.Password
+                        id="register_confirm_password"
+                        autoComplete="new-password"
+                        prefix={
+                          <Image
+                            src="/login/lock.svg"
+                            alt=""
+                            width={14}
+                            height={18}
+                            style={{ height: "auto" }}
+                            aria-hidden
+                          />
+                        }
+                        placeholder="Nhập lại mật khẩu"
+                        size="large"
+                        className={styles.inputCustom}
+                        disabled={loading}
+                      />
+                    </Form.Item>
+
+                    <Form.Item className={styles.formItem}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        aria-label="Đăng ký tài khoản"
+                        size="large"
+                        loading={loading}
+                        disabled={loading}
+                        className={styles.submitBtn}
+                      >
+                        <span>Đăng ký</span>
+                        {!loading && (
+                          <Image src="/login/arrow.svg" alt="" width={12} height={12} aria-hidden />
+                        )}
+                      </Button>
+                    </Form.Item>
+
+                    <div className={styles.registerGuidance}>
+                      <p className={styles.registerGuidanceTitle}>Đã có tài khoản?</p>
+                      <div className={styles.registerGuidanceAction}>
+                        <Button
+                          type="link"
+                          onClick={() => {
+                            form.resetFields();
+                            goToLogin();
+                          }}
+                          className={styles.linkBtn}
+                        >
+                          Đăng nhập ngay
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {view === "verify-otp" && (
                   <>
                     <div className={styles.labelRow}>
                       <label htmlFor="login_otp" className={styles.fieldLabel}>
@@ -331,74 +597,46 @@ export default function LoginPage() {
                         disabled={loading}
                         onClick={() => {
                           resetOtp();
-                          form.resetFields(["otpCode"]);
+                          form.resetFields();
                         }}
                       >
-                        Đổi email
+                        Đổi thông tin
                       </Button>
                     </div>
+
+                    <div className={styles.checkboxRow}>
+                      <Form.Item name="remember" valuePropName="checked" noStyle>
+                        <Checkbox disabled={loading} className={styles.checkboxLabel}>
+                          Ghi nhớ đăng nhập
+                        </Checkbox>
+                      </Form.Item>
+                    </div>
+
+                    <Form.Item className={styles.formItem}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        aria-label="Xác nhận & Đăng nhập"
+                        size="large"
+                        loading={loading}
+                        disabled={loading}
+                        className={styles.submitBtn}
+                      >
+                        <span>Xác nhận &amp; Đăng nhập</span>
+                        {!loading && (
+                          <Image src="/login/arrow.svg" alt="" width={12} height={12} aria-hidden />
+                        )}
+                      </Button>
+                    </Form.Item>
                   </>
                 )}
-
-                <div className={styles.checkboxRow}>
-                  <Form.Item name="remember" valuePropName="checked" noStyle>
-                    <Checkbox disabled={loading} className={styles.checkboxLabel}>
-                      Ghi nhớ đăng nhập
-                    </Checkbox>
-                  </Form.Item>
-                  {mode === "staff" && (
-                    <button
-                      type="button"
-                      onClick={handleToggleForgot}
-                      className={styles.forgotBtn}
-                      aria-expanded={forgotInfo}
-                    >
-                      Quên mật khẩu?
-                    </button>
-                  )}
-                </div>
-                {forgotInfo && (
-                  <Alert
-                    className={styles.feedback}
-                    type="info"
-                    showIcon
-                    title="Hỗ trợ cấp lại mật khẩu"
-                    description="Vui lòng liên hệ quản trị viên hoặc quầy tiếp đón để xác minh danh tính và cấp lại mật khẩu."
-                  />
-                )}
-                <Form.Item className={styles.formItem}>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    aria-label={mode === "patient" && !otpEmail ? "Nhận mã OTP" : "Đăng nhập"}
-                    size="large"
-                    loading={loading}
-                    disabled={loading}
-                    className={styles.submitBtn}
-                  >
-                    <span>{mode === "patient" && !otpEmail ? "Nhận mã OTP" : "Đăng nhập"}</span>
-                    {!loading && (
-                      <Image src="/login/arrow.svg" alt="" width={12} height={12} aria-hidden />
-                    )}
-                  </Button>
-                </Form.Item>
               </Form>
-
-              {/* Guidance under Submit */}
-              {mode === "patient" && !otpEmail && (
-                <div className={styles.registerGuidance}>
-                  <p className={styles.registerGuidanceTitle}>Chưa có tài khoản bệnh nhân?</p>
-                  <p className={styles.registerGuidanceDesc}>
-                    Dùng email và mã OTP để đăng nhập hoặc tạo tài khoản bệnh nhân.
-                  </p>
-                </div>
-              )}
 
               {/* Support / Hotline Box */}
               <div className={styles.supportBox}>
                 <div className={styles.supportLeft}>
                   <Image src="/login/support.svg" alt="" width={17} height={15} aria-hidden />
-                  <span>Cần hỗ trợ tra cứu mã?</span>
+                  <span>Cần hỗ trợ?</span>
                 </div>
                 <a
                   href="tel:19008080"
