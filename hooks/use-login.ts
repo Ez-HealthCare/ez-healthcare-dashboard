@@ -58,9 +58,12 @@ export function useLogin() {
   }, [retryAt]);
 
   const requestOtp = async (email: string) => {
-    await authService.requestPatientOtp(email);
+    const res = await authService.requestPatientOtp(email);
     setOtpEmail(email);
     setRetryAt(Date.now() + OTP_RESEND_DELAY_MS);
+    if (res?.debugOtp) {
+      setSuccessMessage(`Mã xác thực đã tạo. (Demo OTP: ${res.debugOtp})`);
+    }
   };
 
   const submitLogin = async (values: { email: string; password?: string; remember?: boolean }) => {
@@ -125,11 +128,15 @@ export function useLogin() {
         password: values.password,
       };
       pendingRegisterData.current = payload;
-      await authService.registerPatient(payload);
+      const res = await authService.registerPatient(payload);
       setOtpEmail(email);
       setRetryAt(Date.now() + OTP_RESEND_DELAY_MS);
       setView("verify-otp");
-      setSuccessMessage("Mã xác thực 6 số đã được gửi tới email của bạn.");
+      setSuccessMessage(
+        res?.debugOtp
+          ? `Mã xác thực đã tạo. (Demo OTP: ${res.debugOtp})`
+          : "Mã xác thực 6 số đã được gửi tới email của bạn."
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đăng ký thất bại.");
     } finally {
@@ -230,13 +237,18 @@ export function useLogin() {
     setLoading(true);
     setError("");
     try {
+      let res: { debugOtp?: string } | undefined;
       if (pendingRegisterData.current) {
-        await authService.registerPatient(pendingRegisterData.current);
+        res = await authService.registerPatient(pendingRegisterData.current);
       } else {
-        await authService.requestPatientOtp(otpEmail);
+        res = await authService.requestPatientOtp(otpEmail);
       }
       setRetryAt(Date.now() + OTP_RESEND_DELAY_MS);
-      setSuccessMessage("Mã xác thực mới đã được gửi tới email của bạn.");
+      setSuccessMessage(
+        res?.debugOtp
+          ? `Mã xác thực mới đã tạo. (Demo OTP: ${res.debugOtp})`
+          : "Mã xác thực mới đã được gửi tới email của bạn."
+      );
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không thể gửi lại mã.");

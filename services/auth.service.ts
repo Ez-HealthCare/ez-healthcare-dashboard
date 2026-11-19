@@ -78,7 +78,7 @@ export const authService = {
   login: (body: { email: string; password: string; rememberMe: boolean }) =>
     request(AUTH_PATHS.LOGIN, body),
   registerPatient: (body: { email: string; password: string; name: string; phone: string }) =>
-    request<{ success: boolean; message: string; retryAfterSeconds?: number }>(
+    request<{ success: boolean; message: string; retryAfterSeconds?: number; debugOtp?: string }>(
       AUTH_PATHS.REGISTER_PATIENT,
       body
     ),
@@ -86,7 +86,11 @@ export const authService = {
     request(AUTH_PATHS.VERIFY_REGISTER, body),
   loginStaff: (body: { email: string; password: string; rememberMe: boolean }) =>
     request(AUTH_PATHS.STAFF_LOGIN, body),
-  requestPatientOtp: (email: string) => request(AUTH_PATHS.REQUEST_OTP, { email }),
+  requestPatientOtp: (email: string) =>
+    request<{ success: boolean; message: string; retryAfterSeconds?: number; debugOtp?: string }>(
+      AUTH_PATHS.REQUEST_OTP,
+      { email }
+    ),
   verifyPatientOtp: (body: { email: string; otpCode: string; rememberMe: boolean }) =>
     request(AUTH_PATHS.VERIFY_OTP, body),
   logout: () => request(AUTH_PATHS.LOGOUT),
