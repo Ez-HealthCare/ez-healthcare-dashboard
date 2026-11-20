@@ -12,6 +12,7 @@ import styles from "./role-workspace.module.css";
 import { NurseWorkspace } from "@/components/clinical/nurse-workspace";
 import { DoctorWorkspace } from "@/components/doctor/doctor-workspace";
 import { ReceptionShell } from "@/components/reception/reception-shell";
+import { AdminWorkspace } from "@/components/admin/admin-workspace";
 
 export function RoleWorkspace({
   workspace,
@@ -26,6 +27,7 @@ export function RoleWorkspace({
   if (workspace === "nurse") return <NurseWorkspace section={section} />;
   if (workspace === "receptionist") return <ReceptionShell section={section} />;
   if (workspace === "doctor") return <DoctorWorkspace section={section} />;
+  if (workspace === "admin") return <AdminWorkspace section={section} />;
   const title = config.navigation.find(([key]) => key === section)?.[1] || config.label;
   const name = user.name || user.email;
   return (

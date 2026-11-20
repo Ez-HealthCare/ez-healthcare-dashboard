@@ -18,7 +18,7 @@ export function StaffWorkspaceShell({
   children,
   stationLabel,
 }: {
-  workspace: "nurse" | "receptionist" | "doctor";
+  workspace: "nurse" | "receptionist" | "doctor" | "admin";
   section: string;
   children: ReactNode;
   stationLabel?: string;
@@ -31,7 +31,9 @@ export function StaffWorkspaceShell({
       ? "Phòng sàng lọc 102"
       : workspace === "doctor"
         ? "Phòng khám bác sĩ"
-        : "Quầy tiếp đón 02");
+        : workspace === "admin"
+          ? "Trung tâm Quản trị Hệ thống"
+          : "Quầy tiếp đón 02");
   const user = useIdentity();
   const notifications = useClinicalData(
     clinicalActions.notifications,

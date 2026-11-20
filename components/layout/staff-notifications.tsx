@@ -19,7 +19,7 @@ export function StaffNotifications({
   refresh,
   onNavigate,
 }: {
-  workspace: "doctor" | "nurse" | "receptionist";
+  workspace: "doctor" | "nurse" | "receptionist" | "admin";
   data?: NotificationItem[];
   loading: boolean;
   error: string;

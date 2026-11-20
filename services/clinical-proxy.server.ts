@@ -27,6 +27,7 @@ const ALLOWED = [
   /^reception-requests\/reception\/pending$/,
   /^reception-requests\/reception\/[0-9a-f-]+\/(confirm|reject)$/i,
   /^notifications(\/page|\/[0-9a-f-]+\/read|\/read-all)?$/i,
+  /^admin\/.+$/i,
 ];
 
 export function isClinicalProxyPath(path: string) {
