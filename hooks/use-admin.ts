@@ -44,4 +44,13 @@ export type {
   AdminStats,
   AdminDepartmentItem,
   AdminScheduleItem,
+  ReportSummary,
+  DepartmentReportItem,
+  EtaPerformanceReport,
+  TriageRiskReport,
+  AuditLogItem,
+  AuditLogsResponse,
+  SystemConfigItem,
+  TriageRuleItem,
+  ReceptionShiftItem,
 } from "@/services/admin.service";

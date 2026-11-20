@@ -44,13 +44,14 @@ export const WORKSPACES = {
   admin: {
     label: "Quản trị viên",
     path: ROUTES.ADMIN,
-    description:
-      "Quản lý tài khoản, danh mục, lịch trực và cấu hình. Không thực hiện thay nghiệp vụ lâm sàng.",
+    description: "Quản lý tài khoản, danh mục, lịch trực, báo cáo thống kê và cấu hình hệ thống.",
     navigation: [
       ["", "Tổng quan"],
       ["users", "Tài khoản"],
       ["departments", "Khoa / Phòng"],
       ["schedules", "Lịch trực"],
+      ["analytics", "Báo cáo & Phân tích"],
+      ["audit-logs", "Nhật ký hoạt động"],
       ["settings", "Cấu hình"],
     ],
   },
